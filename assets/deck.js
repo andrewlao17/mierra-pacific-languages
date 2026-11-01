@@ -125,7 +125,7 @@
       const accent = getComputedStyle(s).getPropertyValue("--accent").trim();
       if (accent) progress.style.background = accent;
     }
-    history.replaceState(null, "", "#" + (n + 1));
+           document.dispatchEvent(new CustomEvent("slidechange", { detail: { index: n, total: slides.length, slide: s } }));
     stopSpeak();
     focusOn(s);
     drawArcs(s);
