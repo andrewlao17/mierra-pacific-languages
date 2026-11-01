@@ -1,0 +1,189 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Liki: An Island Language of Papua</title>
+<link rel="stylesheet" href="../assets/deck.css">
+<style>
+@import url("https://fonts.googleapis.com/css2?family=Zilla+Slab:wght@600;700&family=Work+Sans:wght@400;500;600;700&family=Caveat:wght@600&display=swap");
+
+/* ---------- Liki theme: sea chart and field notebook (light) ---------- */
+:root {
+  --bg: #efe7d4;
+  --ink: #1f2d3a;
+  --muted: #5b6670;
+  --line: rgba(31, 45, 58, .18);
+  --panel: rgba(255, 252, 244, .86);
+  --blue: #2a7f8f;
+  --green: #4f9a6a;
+  --gold: #d9a23a;
+  --rose: #e06a4e;
+  --lilac: #8f7ab8;
+  --accent: var(--rose);
+  --serif: "Zilla Slab", Georgia, serif;
+  --sans: "Work Sans", system-ui, sans-serif;
+  --hand: "Caveat", cursive;
+}
+strong { color: var(--ink); }
+.hl { color: var(--rose); }
+h1 { font-size: 7rem; }
+.chip { color: #fff; } .chip.c3 { color: var(--ink); }
+.dotgrid i { background: rgba(31,45,58,.16); }
+.opt { background: rgba(31,45,58,.04); }
+.controls button { background: rgba(255,252,244,.95); color: var(--ink); }
+.fine summary { background: rgba(255,252,244,.9); }
+.fine .box { background: rgba(255,252,244,.97); }
+.loc .tint { background: #d8c79a; } .loc .sea { background: #2a7f8f; }
+
+/* Sea-chart version of the world map */
+#world { background: radial-gradient(ellipse at 70% 60%, #f7f0de, #e6dcc3 70%, #d9ceb2); }
+#world .map img { filter: sepia(.7) saturate(.9); mix-blend-mode: multiply; opacity: .6; }
+#world .grid {
+  opacity: .9;
+  background-image: linear-gradient(rgba(42,127,143,.16) 1px, transparent 1px),
+                    linear-gradient(90deg, rgba(42,127,143,.16) 1px, transparent 1px);
+}
+#world .fade { background: linear-gradient(90deg, rgba(239,231,212,.97) 0%, rgba(239,231,212,.86) 38%, rgba(239,231,212,.12) 75%); }
+#world[data-fade="center"] .fade { background: radial-gradient(ellipse at center, rgba(239,231,212,.96), rgba(239,231,212,.72) 60%, rgba(239,231,212,.45)); }
+#world[data-fade="none"] .fade { background: linear-gradient(0deg, rgba(239,231,212,.92), transparent 35%); }
+.pin .lbl { color: var(--ink); text-shadow: 0 0 6px #fff, 0 0 2px #fff; }
+.pin .dot { background: rgba(224,106,78,.45); border-color: var(--rose); box-shadow: 0 0 10px rgba(224,106,78,.6); }
+.arc-pin circle { fill: rgba(224,106,78,.55); stroke: var(--rose); }
+.arc-pin text { fill: var(--ink); paint-order: stroke; stroke: #f6efdd; stroke-width: 4px; }
+.arc-pin .ripple { stroke: var(--rose); }
+
+/* Compass rose */
+#compass { position: fixed; top: 1.4rem; right: 1.6rem; width: 6.5rem; height: 6.5rem; z-index: 15; opacity: .8; transition: transform 1.4s cubic-bezier(.65,0,.25,1); pointer-events: none; }
+
+/* Field-notebook photos */
+.fn {
+  position: absolute; margin: 0; width: var(--w, 18vw); z-index: 2;
+  background: #fffdf6; padding: .6rem .6rem 2.6rem;
+  box-shadow: 0 14px 30px rgba(60,40,10,.25);
+  transform: rotate(var(--r, 0deg));
+  transition: transform .9s cubic-bezier(.2,.8,.2,1), opacity .6s ease;
+}
+.slide:not(.active) .fn { opacity: 0; transform: rotate(calc(var(--r, 0deg) * 3)) scale(1.12); }
+.slide.active .fn { transition-delay: calc(.5s + var(--d, 0) * .15s); }
+.fn::before, .fn::after { content: ""; position: absolute; top: -.7rem; width: 4.6rem; height: 1.3rem; }
+.fn::before { left: -1.2rem; transform: rotate(-24deg); background: rgba(224,106,78,.55); }
+.fn::after { right: -1.2rem; transform: rotate(24deg); background: rgba(42,127,143,.5); }
+.fn img { display: block; width: 100%; aspect-ratio: var(--ar, 4 / 3); object-fit: cover; }
+.fn figcaption { position: absolute; left: .7rem; right: .7rem; bottom: .3rem; font-family: var(--hand); font-size: 1.2rem; color: #2b3a47; line-height: 1.05; }
+
+/* Ruled notebook panels and stamps */
+.ruled {
+  background: repeating-linear-gradient(#fffdf6 0 1.75rem, rgba(42,127,143,.22) 1.75rem calc(1.75rem + 1px));
+  border-left: 4px double rgba(224,106,78,.6); border-radius: .4rem; padding: .9rem 1.2rem;
+  box-shadow: 0 10px 24px rgba(60,40,10,.15);
+}
+.hand { font-family: var(--hand); font-size: 1.5rem; color: var(--blue); }
+.stamp {
+  display: inline-block; border: 3px solid var(--rose); color: var(--rose); border-radius: .3rem;
+  font-family: var(--serif); font-weight: 700; padding: .15em .6em; letter-spacing: .12em;
+  transform: rotate(-6deg); opacity: .9;
+}
+
+/* Word-detective matching game */
+.match { display: grid; grid-template-columns: 1fr 1fr; gap: 1.4rem; max-width: 62vw; margin: 1rem auto 0; }
+.match .col { display: flex; flex-direction: column; gap: .55rem; }
+.mbtn {
+  font: inherit; font-size: 1.15rem; font-weight: 600; text-align: center; cursor: pointer;
+  padding: .6em 1em; border-radius: .7rem; border: 2px solid var(--line); background: #fffdf6; color: var(--ink);
+  transition: transform .2s, background .2s, border-color .2s;
+}
+.mbtn.word { font-family: var(--serif); font-size: 1.5rem; }
+.mbtn:hover { transform: translateY(-2px); border-color: var(--rose); }
+.mbtn.sel { border-color: var(--rose); background: #fde7e1; }
+.mbtn.done { background: var(--green); color: #fff; border-color: var(--green); cursor: default; }
+.mbtn.bad { animation: shake .4s; }
+.matchmsg { min-height: 2.6em; margin-top: .9rem; color: var(--ink); }
+.matchmsg b { color: var(--rose); }
+
+/* Archive cards */
+.archive .card .word { font-size: 1.5rem; }
+
+@media (max-width: 820px) {
+  .fn { position: relative !important; left: auto !important; right: auto !important; top: auto !important; bottom: auto !important; width: 42vw; }
+  .match { max-width: none; }
+  #compass { display: none; }
+}
+</style>
+</head>
+<body data-map="BlankMap-Equirectangular.svg">
+
+<div id="world"><div class="map"><img alt=""></div><div class="grid"></div><div class="fade"></div></div>
+<svg id="compass" viewBox="0 0 100 100" aria-hidden="true">
+  <circle cx="50" cy="50" r="46" fill="none" stroke="#2a7f8f" stroke-width="1.5"/>
+  <circle cx="50" cy="50" r="38" fill="none" stroke="#2a7f8f" stroke-width=".8" stroke-dasharray="2 3"/>
+  <path d="M50 6 L57 50 L50 94 L43 50 Z" fill="#e06a4e" opacity=".85"/>
+  <path d="M6 50 L50 43 L94 50 L50 57 Z" fill="#2a7f8f" opacity=".7"/>
+  <text x="50" y="18" text-anchor="middle" font-size="10" font-family="Zilla Slab, serif" font-weight="700" fill="#1f2d3a">N</text>
+</svg>
+<div class="progress"></div>
+
+<main>
+
+<!-- 1. Title -->
+<section class="slide" data-focus="-1.7|138.7|22|0.72|0.5" data-pins="Liki Island|-1.6|138.73;Sarmi|-1.86|138.74" style="--accent: var(--rose)">
+  <div class="text">
+    <p class="kicker in">Rare Languages of the Asia-Pacific · Module 6</p>
+    <h1 class="in" style="--d:1">Liki</h1>
+    <div class="bar in" style="--d:2"></div>
+    <p class="lead in" style="--d:3">An island language of Papua, Indonesia, also called <strong>Moar</strong></p>
+    <p class="hand in" style="--d:4">Field notes: one of the least-documented languages on Earth…</p>
+  </div>
+  <figure class="fn" style="--w:17vw; --r:4deg; --d:1; right:5vw; bottom:12vh">
+    <img data-wiki="Sarmi Regency" alt="Sarmi Regency">
+    <figcaption>Sarmi Regency, north coast of Papua</figcaption>
+  </figure>
+</section>
+
+<!-- 2. Where and who -->
+<section class="slide" data-focus="-3.5|138|6|0.7|0.5" data-pins="Liki Island|-1.6|138.73;Jayapura|-2.53|140.7" data-tr="left" style="--accent: var(--blue)">
+  <div class="text">
+    <p class="kicker in">Where and who</p>
+    <h2 class="in" style="--d:1">Two small islands</h2>
+    <div class="bar in" style="--d:2"></div>
+    <ul class="dots">
+      <li class="in" style="--d:3">Liki is spoken on <strong>Liki</strong> and <strong>Nirumoar</strong>, small islands off the north coast of <strong>Sarmi</strong>, in Papua province, Indonesia.</li>
+      <li class="in" style="--d:4">About <strong>320</strong> people are Liki.</li>
+      <li class="in" style="--d:5">Its neighbourhood is crowded with languages: the Sarmi area alone has <strong>23 Papuan</strong> and <strong>11 Austronesian</strong> languages.</li>
+      <li class="in" style="--d:6">For everyday life, most people now use <strong>Papuan Malay</strong>, and Indonesian at school and work.</li>
+    </ul>
+  </div>
+  <figure class="fn" style="--w:18vw; --r:-3deg; --d:1; right:6vw; top:12vh">
+    <img data-wiki="New Guinea" alt="New Guinea from space">
+    <figcaption>New Guinea, the world's second-largest island</figcaption>
+  </figure>
+</section>
+
+<!-- 3. How endangered -->
+<section class="slide" data-focus="-1.7|138.7|14|0.75|0.55" data-tr="zoom" style="--accent: var(--rose)">
+  <div class="text">
+    <p class="kicker in">How endangered?</p>
+    <h2 class="in" style="--d:1">Eleven speakers</h2>
+    <div class="bar in" style="--d:2"></div>
+    <div class="panel in" style="--d:3">
+      <div class="dotgrid" data-total="320" data-on="11" style="grid-template-columns: repeat(32, 1fr); gap: .22rem"></div>
+      <div class="legend"><span style="--c: var(--rose)">native speakers (11, in 2005)</span><span style="--c: rgba(31,45,58,.3)">Liki people (about 320)</span></div>
+    </div>
+    <ul class="dots" style="margin-top:.8rem">
+      <li class="in" style="--d:4">Today's active speakers are of the <strong>grandparent generation</strong> or older. Children are no longer learning it.</li>
+      <li class="in" style="--d:5">Why? Researchers point to <strong>people moving to towns</strong>, and the pull of a powerful <strong>national language</strong>.</li>
+    </ul>
+    <p class="in" style="--d:6; margin-top:.6rem"><span class="stamp">NEARLY EXTINCT</span></p>
+  </div>
+</section>
+
+<!-- 4. The Oceanic family -->
+<section class="slide" data-focus="-14|160|2.6|0.62|0.5" data-fade="none" data-markers="Liki|-1.6|138.73;Solomon Is.|-9.4|160;Vanuatu|-16|167;Fiji|-17.7|178;Aotearoa NZ|-41|174.8">
+  <svg class="arcs" aria-hidden="true"></svg>
+  <div class="text">
+    <p class="kicker in">A huge family</p>
+    <h2 class="in" style="--d:1">At the western edge of the Oceanic family</h2>
+    <div class="bar in" style="--d:2"></div>
+    <ul class="dots">
+      <li class="in" style="--d:3">Liki is an <strong>Oceanic</strong> language, part of the great <strong>Austronesian</strong> family.</li>
+      <li class="in" style="--d:4">Its
