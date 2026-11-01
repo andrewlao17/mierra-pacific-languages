@@ -1,0 +1,558 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Jejueo: The Language of Jeju Island</title>
+<link rel="stylesheet" href="../assets/deck.css">
+<style>
+@import url("https://fonts.googleapis.com/css2?family=Gowun+Batang:wght@400;700&family=Noto+Sans+KR:wght@400;500;700&display=swap");
+
+/* ---------- Jeju theme: the sea, basalt and tangerines ---------- */
+:root {
+  --bg: #03141f;
+  --ink: #f4fbf8;
+  --muted: #a9cdd0;
+  --line: rgba(255, 255, 255, .15);
+  --panel: rgba(3, 30, 45, .58);
+  --blue: #7fd3e6;
+  --green: #8fe3c8;
+  --gold: #ffb347;
+  --rose: #ff8a65;
+  --lilac: #c7d8ff;
+  --accent: var(--gold);
+  --serif: "Gowun Batang", "Apple SD Gothic Neo", serif;
+  --sans: "Noto Sans KR", "Apple SD Gothic Neo", system-ui, sans-serif;
+  --depth: 0;
+}
+h1 { font-weight: 700; letter-spacing: -.01em; }
+h2 { font-weight: 700; }
+.stage { right: 6vw; width: 46vw; }
+
+/* The ocean, which darkens as we dive */
+#ocean {
+  position: fixed; inset: 0; z-index: 0; overflow: hidden; pointer-events: none;
+  background: linear-gradient(180deg, #0b4f6c 0%, #06283d 45%, #03141f 100%);
+}
+#ocean .surface {
+  position: absolute; inset: 0;
+  background: linear-gradient(180deg, #5fd0d8 0%, #1f9bb5 30%, #0b5a78 65%, #073247 100%);
+  opacity: calc(1 - var(--depth)); transition: opacity 1.6s ease;
+}
+body.holding #ocean .surface { opacity: 0; }
+#ocean .rays {
+  position: absolute; inset: -20% -10% 30%; mix-blend-mode: screen; filter: blur(10px);
+  background: repeating-linear-gradient(100deg, rgba(255,255,255,0) 0 6%, rgba(255,255,255,.12) 8%, rgba(255,255,255,0) 11%);
+  opacity: calc(.9 - var(--depth)); transform-origin: top;
+  animation: sway 9s ease-in-out infinite alternate; transition: opacity 1.6s ease;
+}
+@keyframes sway { from { transform: skewX(-4deg); } to { transform: skewX(4deg); } }
+#ocean .waves {
+  position: absolute; left: 0; right: 0; top: 0; height: 16vh;
+  transform: translateY(calc(var(--depth) * -18vh)); transition: transform 1.6s ease;
+}
+#ocean .waves svg { position: absolute; top: 0; left: 0; width: 200%; height: 100%; animation: drift 14s linear infinite; }
+#ocean .waves svg.w2 { animation-duration: 22s; }
+@keyframes drift { to { transform: translateX(-50%); } }
+#ocean .bubble {
+  position: absolute; bottom: -5vh; border-radius: 50%;
+  border: 1px solid rgba(255,255,255,.45);
+  background: radial-gradient(circle at 30% 30%, rgba(255,255,255,.55), rgba(255,255,255,.05) 60%);
+  animation: rise linear infinite;
+}
+@keyframes rise { to { transform: translate(var(--sx, 20px), -115vh); } }
+#ocean .vignette { position: absolute; inset: 0; background: radial-gradient(ellipse at center, transparent 40%, rgba(0,8,15,.65)); }
+
+/* Depth gauge */
+#gauge { position: fixed; right: 1.6rem; top: 12vh; bottom: 18vh; width: 3rem; z-index: 15; pointer-events: none; }
+#gauge .rule { position: absolute; right: 0; top: 0; bottom: 0; width: 2px; background: linear-gradient(var(--blue), var(--rose)); }
+#gauge .ticks { position: absolute; right: 0; top: 0; bottom: 0; width: 10px; background: repeating-linear-gradient(180deg, rgba(255,255,255,.45) 0 1px, transparent 1px 10%); }
+#gauge .end { position: absolute; right: 16px; font-size: .62rem; color: var(--muted); }
+#gauge .end.top { top: -.4rem; } #gauge .end.bottom { bottom: -.4rem; }
+#gauge .mark {
+  position: absolute; right: -6px; top: calc(var(--depth) * 100%); transform: translateY(-50%);
+  display: flex; align-items: center; gap: .45rem; transition: top 1.6s cubic-bezier(.65,0,.25,1);
+}
+#gauge .mark b { font: 700 .82rem var(--sans); color: var(--gold); white-space: nowrap; }
+#gauge .mark i { width: 14px; height: 14px; border-radius: 50%; background: var(--gold); box-shadow: 0 0 12px var(--gold); }
+
+/* Photos as smooth sea pebbles that bob gently */
+.pebble { position: absolute; margin: 0; width: var(--w, 18vw); z-index: 2; animation: bob 7s ease-in-out infinite; animation-delay: var(--bd, 0s); }
+.pebble .shape {
+  overflow: hidden; aspect-ratio: var(--ar, 1);
+  border-radius: 58% 42% 50% 50% / 52% 48% 52% 48%;
+  border: 3px solid rgba(255,255,255,.55);
+  box-shadow: 0 0 0 6px rgba(255,255,255,.08), 0 25px 50px rgba(0,0,0,.45);
+  transition: transform 1s cubic-bezier(.2,.8,.2,1), opacity .8s ease;
+}
+.slide:not(.active) .pebble .shape { transform: translateY(8vh) scale(.85); opacity: 0; }
+.slide.active .pebble .shape { transition-delay: calc(.5s + var(--d, 0) * .15s); }
+.pebble img { width: 100%; height: 100%; object-fit: cover; display: block; }
+.pebble .img-missing { height: 100%; aspect-ratio: auto; }
+.pebble figcaption {
+  display: table; margin: .6rem auto 0; padding: .25em .9em; border-radius: 999px;
+  font-size: .72rem; text-align: center; background: rgba(3,20,31,.6); border: 1px solid var(--line);
+}
+@keyframes bob { 50% { transform: translateY(-10px); } }
+
+/* Giant faint Hangul behind the slide */
+.glyph { position: absolute; z-index: 0; pointer-events: none; font-family: var(--serif); font-weight: 700; line-height: 1; color: rgba(255,255,255,.05); }
+
+/* Intelligibility test bars */
+.bars { display: grid; gap: .9rem; margin: 1rem 0 .8rem; }
+.barrow { display: grid; grid-template-columns: 12rem 1fr 4.5rem; align-items: center; gap: .9rem; font-size: .95rem; text-align: left; }
+.track { height: 1.4rem; border-radius: 999px; background: rgba(255,255,255,.1); overflow: hidden; }
+.fill { height: 100%; width: 0; border-radius: 999px; background: var(--c, var(--blue)); transition: width 1.4s cubic-bezier(.2,.8,.2,1); }
+.bars.shown .fill { width: var(--v); }
+.val { opacity: 0; font-weight: 700; transition: opacity .6s ease .9s; }
+.bars.shown .val { opacity: 1; }
+
+/* Letter builder */
+.builder { display: flex; align-items: center; gap: .9rem; flex-wrap: wrap; margin-top: .8rem; }
+.jamo {
+  width: 4.6rem; height: 4.6rem; border-radius: 1rem; display: grid; place-items: center; cursor: pointer;
+  font: 700 2.8rem "Apple SD Gothic Neo", "Noto Sans KR", sans-serif;
+  background: var(--panel); color: var(--ink); border: 2px solid var(--line); transition: transform .3s, background .3s;
+}
+.jamo:hover { transform: translateY(-4px); }
+.jamo.used { background: var(--gold); color: #1b1407; border-color: var(--gold); }
+.op { font-size: 1.8rem; color: var(--muted); }
+.result { min-width: 7rem; text-align: center; }
+.result .syll {
+  font: 700 4.2rem/1 "Apple SD Gothic Neo", "Noto Sans KR", sans-serif;
+  opacity: 0; transform: scale(.6); transition: all .6s cubic-bezier(.3,1.6,.5,1);
+}
+.result small { display: block; color: var(--gold); opacity: 0; transition: opacity .5s ease .4s; }
+.builder.done .result .syll { opacity: 1; transform: none; }
+.builder.done .result small { opacity: 1; }
+.linkbtn { background: none; border: 0; color: var(--muted); text-decoration: underline; cursor: pointer; font: inherit; font-size: .8rem; }
+.bigdot {
+  position: absolute; width: 9vw; height: 9vw; border-radius: 50%;
+  background: radial-gradient(circle at 35% 35%, #fff6e3, var(--gold) 40%, #c8701d);
+  box-shadow: 0 0 60px rgba(255,179,71,.6); animation: bob 6s ease-in-out infinite;
+}
+.bigdot-label { position: absolute; font-size: .8rem; color: var(--muted); text-align: center; }
+
+/* Rowing and breath challenge */
+.duo { display: grid; grid-template-columns: 1.2fr 1fr; gap: 1.2rem; margin-top: 1.2rem; text-align: center; }
+.boat { display: inline-block; font-size: 2.6rem; animation: rock 2.4s ease-in-out infinite; }
+@keyframes rock { 0%, 100% { transform: rotate(-8deg) translateY(0); } 50% { transform: rotate(8deg) translateY(-6px); } }
+.breath .timer { font-family: var(--serif); font-size: 3.8rem; line-height: 1; margin: .5rem 0; color: var(--blue); }
+.breath.diving .timer { color: var(--gold); }
+.breath .msg { min-height: 3.2em; color: var(--muted); font-size: .88rem; margin-top: .6rem; }
+.breath h3, .speak h3 { margin: 0 0 .3rem; font-family: var(--serif); font-size: 1.4rem; }
+
+/* Haenyeo numbers chart */
+.colchart { display: flex; align-items: flex-end; gap: 2.4rem; height: 32vh; padding: 1rem 2rem 0; }
+.col { flex: 1; height: 100%; display: flex; flex-direction: column; align-items: center; justify-content: flex-end; }
+.col .n { font-family: var(--serif); font-size: 2rem; font-weight: 700; }
+.col .colbar { width: 100%; max-width: 7rem; height: 0; border-radius: .8rem .8rem 0 0; background: var(--c); transition: height 1.6s cubic-bezier(.2,.8,.2,1) .8s; }
+.slide.active .col .colbar { height: var(--h); }
+.col .y { color: var(--muted); font-size: .85rem; margin-top: .4rem; }
+
+.say .ko { font-family: "Apple SD Gothic Neo", "Noto Sans KR", sans-serif; color: var(--ink); }
+
+@media (max-width: 820px) {
+  #gauge { display: none; }
+  .pebble { position: relative !important; left: auto !important; right: auto !important; top: auto !important; bottom: auto !important; width: 42vw; }
+  .duo, .barrow { grid-template-columns: 1fr; }
+  .bigdot, .bigdot-label { display: none; }
+}
+</style>
+</head>
+<body data-map="BlankMap-Equirectangular.svg">
+
+<div id="ocean">
+  <div class="surface"></div>
+  <div class="rays"></div>
+  <div class="waves">
+    <svg class="w1" viewBox="0 0 1440 120" preserveAspectRatio="none"><path d="M0 70 Q90 40 180 70 T360 70 T540 70 T720 70 T900 70 T1080 70 T1260 70 T1440 70 V0 H0 Z" fill="rgba(210,250,255,.16)"/></svg>
+    <svg class="w2" viewBox="0 0 1440 120" preserveAspectRatio="none"><path d="M0 50 Q90 80 180 50 T360 50 T540 50 T720 50 T900 50 T1080 50 T1260 50 T1440 50 V0 H0 Z" fill="rgba(210,250,255,.10)"/></svg>
+  </div>
+  <div class="vignette"></div>
+</div>
+<div id="gauge" aria-hidden="true">
+  <div class="rule"></div><div class="ticks"></div>
+  <span class="end top">0 m</span><span class="end bottom">10 m</span>
+  <div class="mark"><b>0 m</b><i></i></div>
+</div>
+<div class="progress"></div>
+
+<main>
+
+<!-- 1. Title: the surface -->
+<section class="slide" style="--accent: var(--gold)">
+  <div class="glyph" style="font-size:30vh; right:-2vw; bottom:-6vh">제주어</div>
+  <div class="text">
+    <p class="kicker in">Rare Languages of the Asia-Pacific · Module 2</p>
+    <h1 class="in" style="--d:1">Jejueo</h1>
+    <div class="bar in" style="--d:2"></div>
+    <p class="lead in" style="--d:3">The language of Korea's volcanic island</p>
+    <p class="muted in" style="--d:4">Today's first phrase: <span class="hl">honjeo opseoye</span>, "welcome!"</p>
+  </div>
+  <div class="stage">
+    <figure class="pebble" style="--w:22vw; --d:0; left:4%; top:2%">
+      <div class="shape"><img data-wiki="Jeju Island" data-width="1200" alt="Jeju Island"></div>
+      <figcaption>Jeju Island</figcaption>
+    </figure>
+    <figure class="pebble" style="--w:16vw; --d:1; --bd:-2s; right:0; top:34%">
+      <div class="shape"><img data-wiki="Seongsan Ilchulbong" alt="Seongsan Ilchulbong"></div>
+      <figcaption>Seongsan Ilchulbong crater</figcaption>
+    </figure>
+    <figure class="pebble" style="--w:13vw; --ar:3/4; --d:2; --bd:-4s; left:30%; bottom:0">
+      <div class="shape"><img data-wiki="Dol hareubang" alt="Dol hareubang statue"></div>
+      <figcaption>A dol hareubang ("stone grandfather")</figcaption>
+    </figure>
+  </div>
+</section>
+
+<!-- 2. An island language -->
+<section class="slide" data-tr="left" style="--accent: var(--blue)">
+  <div class="text">
+    <p class="kicker in">Where and who</p>
+    <h2 class="in" style="--d:1">An island language</h2>
+    <div class="bar in" style="--d:2"></div>
+    <ul class="dots">
+      <li class="in" style="--d:3">Spoken on <strong>Jeju</strong>, a volcanic island off the southern tip of Korea.</li>
+      <li class="in" style="--d:4">A <strong>Koreanic</strong> language: related to Korean, but most Korean speakers can't understand it.</li>
+      <li class="in" style="--d:5">UNESCO and Jeju's own laws call it a <strong>separate language</strong>. South Korea's national language institute still officially calls it a dialect.</li>
+      <li class="in" style="--d:6">UNESCO lists it as <strong>critically endangered</strong> (2010), with about 5,000–10,000 fluent speakers, most of them elderly.</li>
+    </ul>
+  </div>
+  <div class="stage">
+    <div class="loc" data-lat="33.38" data-lon="126.55" data-zoom="18" style="--s:15vw; --d:0; left:2%; top:8%">
+      <div class="disc"><div class="lmap"></div><div class="tint"></div><div class="sea"></div><span class="pinpt"></span></div>
+      <span class="tag">Jeju Island, South Korea</span>
+    </div>
+    <figure class="pebble" style="--w:19vw; --d:1; --bd:-3s; right:0; top:0">
+      <div class="shape"><img data-wiki="Hallasan" alt="Hallasan"></div>
+      <figcaption>Hallasan, the volcano at Jeju's heart</figcaption>
+    </figure>
+    <figure class="pebble" style="--w:16vw; --d:2; --bd:-5s; left:32%; bottom:0">
+      <div class="shape"><img data-wiki="Jeju Olle Trail" alt="Jeju Olle Trail"></div>
+      <figcaption>A Jeju Olle walking trail</figcaption>
+    </figure>
+  </div>
+</section>
+
+<!-- 3. Could you understand it? -->
+<section class="slide" data-tr="zoom" style="--accent: var(--rose)">
+  <div class="text wide center">
+    <p class="kicker in">Guess first!</p>
+    <h2 class="in" style="--d:1">Could you understand Jejueo?</h2>
+    <div class="bar in" style="--d:2"></div>
+    <p class="in" style="--d:3; max-width:60vw; margin:0 auto">In a 2014 test, Korean speakers from Seoul, Busan and Yeosu listened to one minute of Jejueo, then answered simple questions about it. How much do you think they understood?</p>
+    <div class="panel in" style="--d:4; max-width:62vw; margin:1.2rem auto 0">
+      <div class="bars" id="test">
+        <div class="barrow"><span>Korean speakers from the mainland</span><div class="track"><div class="fill" style="--v:9%; --c: var(--rose)"></div></div><span class="val">under 10%</span></div>
+        <div class="barrow"><span>Native Jejueo speakers</span><div class="track"><div class="fill" style="--v:89%; --c: var(--green)"></div></div><span class="val">over 89%</span></div>
+      </div>
+      <button class="btn" data-reveal="test">Reveal the results</button>
+    </div>
+    <p class="muted in" style="--d:5; font-size:.85rem; margin-top:1rem">That's about how well Dutch speakers understand Norwegian: two related, but different, languages.</p>
+  </div>
+  <figure class="pebble" style="--w:13vw; --d:2; left:4vw; bottom:10vh">
+    <div class="shape"><img data-wiki="Udo (island)" alt="Udo island"></div>
+    <figcaption>Udo, a small island off Jeju</figcaption>
+  </figure>
+  <figure class="pebble" style="--w:12vw; --d:3; --bd:-3s; right:7vw; top:9vh">
+    <div class="shape"><img data-wiki="Jeju horse" alt="Jeju horse"></div>
+    <figcaption>A Jeju horse</figcaption>
+  </figure>
+</section>
+
+<!-- 4. Speak-along: greetings -->
+<section class="slide" style="--accent: var(--green)">
+  <div class="glyph" style="font-size:24vh; right:4vw; top:4vh">옵서예</div>
+  <div class="text">
+    <p class="kicker in">Speak along</p>
+    <h2 class="in" style="--d:1">Welcome to Jeju!</h2>
+    <div class="bar in" style="--d:2"></div>
+    <p class="in" style="--d:3">Say each phrase together, then click to reveal its meaning.</p>
+    <div class="cards in" style="--d:4; grid-template-columns:1fr; max-width:38vw">
+      <div class="card" style="--cardc: var(--gold)"><div class="word">honjeo opseoye</div><div class="say"><span class="ko">혼저 옵서예</span> · hon-juh op-suh-yeh</div><div class="meaning">"Welcome!" (literally, "come in quickly")</div><div class="tap">click to reveal</div></div>
+      <div class="card" style="--cardc: var(--blue)"><div class="word">gomapsuda</div><div class="say"><span class="ko">고맙수다</span> · go-map-su-da</div><div class="meaning">"Thank you"</div><div class="tap">click to reveal</div></div>
+      <div class="card" style="--cardc: var(--rose)"><div class="word">poksak sogatsuda</div><div class="say"><span class="ko">폭싹 속았수다</span> · pok-sak so-gat-su-da</div><div class="meaning">"You've worked so hard!" (a thank-you for someone's effort)</div><div class="tap">click to reveal</div></div>
+    </div>
+    <p class="muted in" style="--d:5; font-size:.82rem">Fun fact: <em>Poksak sogatsuda</em> is the Korean title of the 2025 Netflix drama <em>When Life Gives You Tangerines</em>.</p>
+  </div>
+  <div class="stage">
+    <figure class="pebble" style="--w:20vw; --d:1; right:4%; bottom:6%">
+      <div class="shape"><img data-wiki="Citrus unshiu" alt="Tangerines"></div>
+      <figcaption>Tangerines, a Jeju favourite</figcaption>
+    </figure>
+  </div>
+</section>
+
+<!-- 5. The arae-a letter -->
+<section class="slide" data-tr="zoom" style="--accent: var(--gold)">
+  <div class="text">
+    <p class="kicker in">A letter from 1446</p>
+    <h2 class="in" style="--d:1">The dot that survived</h2>
+    <div class="bar in" style="--d:2"></div>
+    <p class="in" style="--d:3">Korean is written in <strong>Hangul</strong>, published under King Sejong in 1446. One of its original vowels was a single dot, <strong>ㆍ</strong>, called <span class="hl">arae-a</span> ("lower a").</p>
+    <p class="in" style="--d:4">Standard Korean lost the sound and later stopped writing it. Jejueo still has the sound, and Jeju's official spelling rules (2014) still use the letter.</p>
+    <div class="panel in" style="--d:5; margin-top:.8rem">
+      <strong>Build a Jeju word:</strong> click each piece.
+      <div class="builder">
+        <button class="jamo">ㅁ</button><span class="op">+</span>
+        <button class="jamo">ㆍ</button><span class="op">+</span>
+        <button class="jamo">ㄹ</button><span class="op">=</span>
+        <div class="result"><div class="syll">ᄆᆞᆯ</div><small>"horse" (sounds a bit like "mawl")</small></div>
+      </div>
+      <button class="linkbtn reset">start again</button>
+    </div>
+    <p class="muted in" style="--d:6; font-size:.8rem">In Hangul's original design, the dot stood for <strong>heaven</strong>, the flat line ㅡ for <strong>earth</strong>, and the upright line ㅣ for <strong>people</strong>.</p>
+  </div>
+  <div class="stage">
+    <div class="bigdot" style="left:6%; top:8%"></div>
+    <div class="bigdot-label" style="left:2%; top:calc(8% + 10vw); width:17vw">ㆍ arae-a, still alive in Jeju</div>
+    <figure class="pebble" style="--w:20vw; --ar:3/4; --d:1; --bd:-3s; right:4%; top:14%">
+      <div class="shape"><img data-wiki="Hunminjeongeum" alt="Hunminjeongeum"></div>
+      <figcaption>Hunminjeongeum, the 1446 book that introduced Hangul</figcaption>
+    </figure>
+  </div>
+</section>
+
+<!-- 6. The haenyeo -->
+<section class="slide" style="--accent: var(--blue)">
+  <div class="bleed"><img data-wiki="Haenyeo" data-width="1600" alt="Haenyeo divers"></div>
+  <p class="bleed-cap" style="right:6vw">Haenyeo, the women divers of Jeju</p>
+  <div class="text">
+    <p class="kicker in">Women of the sea</p>
+    <h2 class="in" style="--d:1">The haenyeo</h2>
+    <div class="bar in" style="--d:2"></div>
+    <ul class="dots">
+      <li class="in" style="--d:3"><span class="hl">Haenyeo</span> ("sea women") dive about <strong>10 m</strong> down with no oxygen tanks, gathering shellfish like abalone and sea urchins. Some are in their 80s.</li>
+      <li class="in" style="--d:4">They hold their breath for about <strong>a minute or two</strong> per dive. Surfacing, they let out a whistling breath called <span class="hl">sumbisori</span>.</li>
+      <li class="in" style="--d:5">Divers are ranked by skill, not age, and the most skilled lead the others:</li>
+    </ul>
+    <div class="chips in" style="--d:6">
+      <div class="chip c1">hagun<small>beginners</small></div>
+      <div class="chip c2">junggun<small>middle rank</small></div>
+      <div class="chip c3">sanggun<small>the most skilled</small></div>
+    </div>
+    <p class="muted in" style="--d:7; font-size:.85rem">In 2016, UNESCO added haenyeo culture to its list of the world's Intangible Cultural Heritage.</p>
+  </div>
+</section>
+
+<!-- 7. Row and breathe -->
+<section class="slide" data-tr="zoom" style="--accent: var(--green)">
+  <div class="text wide center">
+    <p class="kicker in">Your turn</p>
+    <h2 class="in" style="--d:1">Row like a haenyeo</h2>
+    <div class="bar in" style="--d:2"></div>
+    <div class="duo">
+      <div class="speak panel in" data-tempo="520" style="--d:3">
+        <h3>The rowing song</h3>
+        <div class="boat" aria-hidden="true">🚣‍♀️</div>
+        <div class="line" data-syl="i·eo·do sa·na"></div>
+        <div class="line" data-syl="i·eo·do sa·na"></div>
+        <p class="gloss">ee-uh-do sah-nah: the chant haenyeo sing as they row out to sea</p>
+        <button class="btn play">▶ Row along</button>
+        <p class="muted" style="font-size:.78rem; margin-top:.7rem">Ieodo is a legendary island in Jeju folk tales. Sway as you sing, like rowing!</p>
+      </div>
+      <div class="breath panel in" style="--d:4">
+        <h3>The sumbisori challenge</h3>
+        <p class="muted" style="font-size:.85rem">Take a breath, press the button, and see how long you can hold it.</p>
+        <div class="timer">0.0 s</div>
+        <button class="btn">Take a breath and dive</button>
+        <div class="msg"></div>
+      </div>
+    </div>
+  </div>
+  <figure class="pebble" style="--w:12vw; --d:3; left:3vw; bottom:9vh">
+    <div class="shape"><img data-wiki="Seongsan Ilchulbong" alt="Seongsan Ilchulbong"></div>
+    <figcaption>Haenyeo sing before diving here</figcaption>
+  </figure>
+</section>
+
+<!-- 8. Why it's fading -->
+<section class="slide" data-tr="left" style="--accent: var(--rose)">
+  <div class="text">
+    <p class="kicker in">Under pressure</p>
+    <h2 class="in" style="--d:1">Why is Jejueo fading?</h2>
+    <div class="bar in" style="--d:2"></div>
+    <ul class="dots">
+      <li class="in" style="--d:3">The violence of the <strong>1948 Jeju uprising</strong>, the <strong>Korean War</strong> and fast modernization badly disrupted island life and its language.</li>
+      <li class="in" style="--d:4">For a long time, Jejueo was looked down on as <strong>inferior</strong> to Standard Korean.</li>
+      <li class="in" style="--d:5">Many fluent speakers are now <strong>over 70</strong>, and few children grow up speaking it.</li>
+      <li class="in" style="--d:6">Haenyeo culture, which carries many Jejueo words and songs, is shrinking too.</li>
+    </ul>
+  </div>
+  <div class="stage">
+    <div class="panel in" style="--d:4; position:absolute; left:6%; right:4%; top:10%">
+      <strong>Registered haenyeo on Jeju</strong>
+      <div class="colchart">
+        <div class="col"><div class="n">4,005</div><div class="colbar" style="--h:100%; --c: var(--blue)"></div><div class="y">2016</div></div>
+        <div class="col"><div class="n">2,371</div><div class="colbar" style="--h:59%; --c: var(--rose)"></div><div class="y">end of 2025</div></div>
+      </div>
+      <p class="muted" style="font-size:.85rem; margin-top:.8rem">Down about 41% in under ten years.</p>
+    </div>
+  </div>
+</section>
+
+<!-- 9. Keeping it alive -->
+<section class="slide" style="--accent: var(--green)">
+  <div class="text">
+    <p class="kicker in">Hope</p>
+    <h2 class="in" style="--d:1">Keeping Jejueo alive</h2>
+    <div class="bar in" style="--d:2"></div>
+    <div class="stats">
+      <div class="stat panel in" style="--d:3"><div class="num">2007</div><div class="lbl">Jeju passes a law to <strong>preserve and promote</strong> the Jeju language.</div></div>
+      <div class="stat panel in" style="--d:4"><div class="num">2014</div><div class="lbl">Official <strong>Jejueo spelling rules</strong>, keeping the arae-a.</div></div>
+      <div class="stat panel in" style="--d:5"><div class="num">2017–19</div><div class="lbl">Jejueo <strong>textbooks</strong> and the first English-language book on the language.</div></div>
+    </div>
+    <ul class="dots" style="margin-top:1rem">
+      <li class="in" style="--d:6">Children's storybooks, newspaper stories and a bimonthly magazine in Jejueo.</li>
+      <li class="in" style="--d:7">A <strong>talking dictionary</strong> with recordings of speakers.</li>
+      <li class="in" style="--d:8">New haenyeo, from their 20s to their 50s, train at the Hansupul Haenyeo School, open since 2008.</li>
+    </ul>
+  </div>
+  <div class="stage">
+    <figure class="pebble" style="--w:18vw; --d:1; right:6%; top:6%">
+      <div class="shape"><img data-wiki="Jeju National University" alt="Jeju National University"></div>
+      <figcaption>Jeju National University, a centre of Jejueo research</figcaption>
+    </figure>
+    <figure class="pebble" style="--w:15vw; --d:2; --bd:-3s; left:18%; bottom:4%">
+      <div class="shape"><img data-wiki="Haenyeo" alt="Haenyeo"></div>
+      <figcaption>Haenyeo heading out to dive</figcaption>
+    </figure>
+  </div>
+</section>
+
+<!-- 10. Closing: the deep -->
+<section class="slide end" style="--accent: var(--gold)">
+  <div class="glyph" style="font-size:20vh; right:3vw; top:6vh; text-align:right">폭싹<br>속았수다</div>
+  <div class="text">
+    <h1 class="in">Poksak sogatsuda!</h1>
+    <p class="lead in" style="--d:1; color: var(--gold); font-family: var(--serif)">You've worked so hard. Thank you! Questions?</p>
+    <p class="muted in" style="--d:2">A haenyeo brings something precious back with every dive. Every word we learn can do the same for a language.</p>
+  </div>
+  <details class="fine in" style="--d:3">
+    <summary>Sources &amp; image credits</summary>
+    <div class="box">
+      <h4>Sources</h4>
+      <ul>
+        <li><a href="https://en.wikipedia.org/wiki/Jeju_language">Jeju language (Wikipedia)</a></li>
+        <li><a href="https://linguistlist.org/issues/26/3009/">LINGUIST List: review of Kiaer, Jeju Language (2015)</a></li>
+        <li><a href="https://en.wikipedia.org/wiki/Araea">Araea (Wikipedia)</a></li>
+        <li><a href="https://en.wikipedia.org/wiki/Hangul">Hangul (Wikipedia)</a></li>
+        <li><a href="https://ko.wikisource.org/wiki/%EC%A0%9C%EC%A3%BC%EC%96%B4_%ED%91%9C%EA%B8%B0%EB%B2%95">Jeju orthography, 2014 (Wikisource, Korean)</a></li>
+        <li><a href="https://koreanclass101.com/lesson/particles-10-possessive-and-directional-particles">KoreanClass101: honjeo opseoye</a></li>
+        <li><a href="https://sublearn.com/ja/learn/ko/grammar/ko-jeju-dialect-features">SubLearn: Jeju phrases</a></li>
+        <li><a href="https://www.koreatimes.co.kr/www/art/2025/03/688_394212.html">Korea Times: Pokssak Sogatsuda (2025)</a></li>
+        <li><a href="https://www.koreajoongangdaily.com/entertainment/diving-into-jejus-distinct-culture-with-hit-drama-when-life-gives-you-tangerines/12266478">Korea JoongAng Daily: Jeju culture and the drama</a></li>
+        <li><a href="https://www.visitjeju.net/u/5JS">Visit Jeju: the culture of Jeju haenyeo</a></li>
+        <li><a href="https://www.icsf.net/wp-content/uploads/2021/06/2238_art_yem53_e_milestone.pdf">ICSF Yemaya: haenyeo and UNESCO (2017)</a></li>
+        <li><a href="https://www.koreajoongangdaily.com/lifestyle/take-a-deep-breath-jejus-haenyeo-festival-dives-into-10-years-of-unesco-heritage/12881337">Korea JoongAng Daily: haenyeo numbers</a></li>
+        <li><a href="https://www.koreajoongangdaily.com/lifestyle/as-jejus-haenyeo-numbers-sink-young-recruits-dive-in-to-save-tradition/12596927">Korea JoongAng Daily: Hansupul Haenyeo School</a></li>
+        <li><a href="https://afar.com/magazine/9-cool-unesco-experiences-of-intangible-cultural-heritage">Afar: haenyeo sing Ieodo Sana</a></li>
+        <li><a href="https://www.funex.com/tickets/ptw-vi19/sms:+19493671900">Ieodo Sana and the Ieodo tale</a></li>
+        <li><a href="https://thelanguagecloset.com/2020/05/12/koreas-other-language-jejueo-jejumal-%EC%A0%9C%EC%A3%BC%EC%96%B4-%EC%A0%9C%EC%A3%BC%EB%A7%90/">The Language Closet: Korea's other language</a></li>
+        <li><a href="https://sites.google.com/a/hawaii.edu/jejueo/the-jejueo-education-research-committee-제주어교육연구위원회">Jejueo Education Research Committee</a></li>
+        <li><a href="https://manoa.hawaii.edu/linguistics/staff-member/william-ogrady">William O'Grady, University of Hawai‘i</a></li>
+        <li><a href="https://endangeredlanguages.com/lang/8409">Endangered Languages Project: Jejueo</a></li>
+      </ul>
+      <h4>Images (Wikimedia Commons)</h4>
+      <ul id="credits"></ul>
+    </div>
+  </details>
+</section>
+
+</main>
+
+<nav class="controls">
+  <button id="prev" aria-label="Previous slide">‹</button>
+  <span id="counter">1 / 10</span>
+  <button id="next" aria-label="Next slide">›</button>
+  <button id="fs" aria-label="Fullscreen">⤢</button>
+</nav>
+<p class="hint">Use ← → to move. Press F for fullscreen.</p>
+
+<!-- Jeju-only effects: bubbles, depth gauge, reveal bars, letter builder, breath challenge -->
+<script>
+(function () {
+  var ocean = document.getElementById("ocean");
+  for (var k = 0; k < 24; k++) {
+    var b = document.createElement("span");
+    var size = 4 + Math.random() * 16;
+    b.className = "bubble";
+    b.style.width = size + "px";
+    b.style.height = size + "px";
+    b.style.left = Math.random() * 100 + "%";
+    b.style.animationDuration = (9 + Math.random() * 12) + "s";
+    b.style.animationDelay = (-Math.random() * 20) + "s";
+    b.style.setProperty("--sx", (Math.random() * 60 - 30) + "px");
+    ocean.appendChild(b);
+  }
+
+  var breath = document.querySelector(".breath");
+  var breathBtn = breath && breath.querySelector("button");
+  var timerEl = breath && breath.querySelector(".timer");
+  var msgEl = breath && breath.querySelector(".msg");
+  var start = 0, raf = 0;
+  function tick() {
+    timerEl.textContent = ((performance.now() - start) / 1000).toFixed(1) + " s";
+    raf = requestAnimationFrame(tick);
+  }
+  function surface(showResult) {
+    cancelAnimationFrame(raf);
+    breath.classList.remove("diving");
+    document.body.classList.remove("holding");
+    breathBtn.textContent = "Dive again";
+    if (showResult) {
+      var secs = ((performance.now() - start) / 1000).toFixed(1);
+      msgEl.textContent = "You held your breath for " + secs + " seconds. A haenyeo holds hers for about a minute or two on each dive, then dives again and again for hours.";
+    }
+  }
+  if (breath) {
+    breathBtn.addEventListener("click", function () {
+      if (!breath.classList.contains("diving")) {
+        breath.classList.add("diving");
+        document.body.classList.add("holding");
+        start = performance.now();
+        tick();
+        breathBtn.textContent = "Surface! (sumbisori)";
+        msgEl.textContent = "Only hold it as long as is comfortable!";
+      } else {
+        surface(true);
+      }
+    });
+  }
+
+  var mark = document.querySelector("#gauge .mark b");
+  document.addEventListener("slidechange", function (e) {
+    var depth = e.detail.index / (e.detail.total - 1);
+    document.body.style.setProperty("--depth", depth);
+    mark.textContent = Math.round(depth * 10) + " m";
+    if (breath && breath.classList.contains("diving")) surface(false);
+  });
+
+  document.querySelectorAll("[data-reveal]").forEach(function (btn) {
+    btn.addEventListener("click", function () {
+      var target = document.getElementById(btn.dataset.reveal);
+      target.classList.toggle("shown");
+      btn.textContent = target.classList.contains("shown") ? "Hide the results" : "Reveal the results";
+    });
+  });
+
+  document.querySelectorAll(".builder").forEach(function (builder) {
+    var tiles = builder.querySelectorAll(".jamo");
+    tiles.forEach(function (tile) {
+      tile.addEventListener("click", function () {
+        tile.classList.add("used");
+        if (builder.querySelectorAll(".jamo.used").length === tiles.length) builder.classList.add("done");
+      });
+    });
+    var reset = builder.parentNode.querySelector(".reset");
+    if (reset) reset.addEventListener("click", function () {
+      builder.classList.remove("done");
+      tiles.forEach(function (tile) { tile.classList.remove("used"); });
+    });
+  });
+})();
+</script>
+<script src="../assets/deck.js"></script>
+</body>
+</html>
