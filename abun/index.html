@@ -1,0 +1,481 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Abun: A Language of the Turtle Coast</title>
+<link rel="stylesheet" href="../assets/deck.css">
+<style>
+@import url("https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,600;12..96,800&family=DM+Sans:wght@400;500;700&family=Space+Mono:wght@400;700&display=swap");
+
+/* ---------- Abun theme: moonlit turtle beach and satellite tracking ---------- */
+:root {
+  --bg: #0b1626;
+  --ink: #f4f1de;
+  --muted: #a9c0c9;
+  --line: rgba(244, 241, 222, .16);
+  --panel: rgba(11, 30, 48, .74);
+  --blue: #7cc6e8;
+  --green: #6fd3b5;
+  --gold: #f2cc8f;
+  --rose: #ff8c69;
+  --lilac: #b8a9e6;
+  --accent: var(--green);
+  --serif: "Bricolage Grotesque", system-ui, sans-serif;
+  --sans: "DM Sans", system-ui, sans-serif;
+  --mono: "Space Mono", ui-monospace, monospace;
+}
+h1 { font-weight: 800; font-size: 7rem; letter-spacing: -.02em; }
+h2 { font-weight: 800; letter-spacing: -.01em; }
+.kicker { font-family: var(--mono); }
+.slide { padding-top: 12vh; padding-bottom: 20vh; }
+.stage { top: 12vh; bottom: 18vh; }
+
+/* Night beach */
+#night { position: fixed; inset: 0; z-index: 0; pointer-events: none; overflow: hidden; }
+#night .sky { position: absolute; inset: 0; background: linear-gradient(180deg, #050b17 0%, #0b1e36 55%, #16395a 74%); }
+#night .stars {
+  position: absolute; inset: 0 0 30% 0; opacity: .9;
+  background-image:
+    radial-gradient(1.4px 1.4px at 20px 30px, #fff 50%, transparent 51%),
+    radial-gradient(1px 1px at 90px 120px, #fff 50%, transparent 51%),
+    radial-gradient(1.2px 1.2px at 160px 60px, #dfe9ff 50%, transparent 51%),
+    radial-gradient(1px 1px at 230px 170px, #fff 50%, transparent 51%),
+    radial-gradient(1.6px 1.6px at 300px 90px, #fff 50%, transparent 51%);
+  background-size: 320px 220px;
+  animation: twinkle 5s ease-in-out infinite alternate;
+}
+@keyframes twinkle { from { opacity: .55; } to { opacity: 1; } }
+#night .moon {
+  position: absolute; top: 12vh; width: 9vh; height: 9vh; border-radius: 50%;
+  background: radial-gradient(circle at 40% 40%, #fffdf2, #f4f1de 60%, #d9d4b8);
+  box-shadow: 0 0 60px 20px rgba(244,241,222,.25);
+  transition: right 1.8s cubic-bezier(.65,0,.25,1);
+}
+#night .sea { position: absolute; left: 0; right: 0; bottom: 6vh; height: 22vh; background: linear-gradient(180deg, #123c5c, #0a2338); }
+#night .glow {
+  position: absolute; bottom: 6vh; width: 14vw; height: 22vh; filter: blur(14px);
+  background: linear-gradient(180deg, rgba(244,241,222,.45), rgba(244,241,222,0));
+  transition: right 1.8s cubic-bezier(.65,0,.25,1);
+}
+#night .crest { position: absolute; left: 0; bottom: 6vh; width: 200%; height: 5vh; animation: lap 9s ease-in-out infinite alternate; }
+@keyframes lap { from { transform: translateX(0); } to { transform: translateX(-6%); } }
+#night .sand { position: absolute; left: 0; right: 0; bottom: 0; height: 6.5vh; background: linear-gradient(180deg, #b9a679, #8f7d55); }
+#night .shade { position: absolute; inset: 0; background: linear-gradient(90deg, rgba(5,11,23,.8) 0%, rgba(5,11,23,.45) 48%, rgba(5,11,23,0) 80%); }
+
+/* Satellite-tracking progress line */
+#trail { position: fixed; left: 8vw; right: 8vw; top: 1.6rem; height: 2.4rem; z-index: 15; pointer-events: none; font-family: var(--mono); font-size: .65rem; color: var(--muted); }
+#trail .path { position: absolute; left: 0; right: 0; top: 1.1rem; border-top: 2px dashed rgba(111,211,181,.45); }
+#trail .done { position: absolute; left: 0; top: 1.1rem; height: 2px; background: var(--green); box-shadow: 0 0 8px var(--green); width: calc(var(--p, 0) * 100%); transition: width 1.6s cubic-bezier(.65,0,.25,1); }
+#trail .turtle { position: absolute; top: .15rem; left: calc(var(--p, 0) * 100%); transform: translateX(-50%) scaleX(-1); font-size: 1.5rem; transition: left 1.6s cubic-bezier(.65,0,.25,1); }
+#trail .from { position: absolute; left: 0; top: 1.5rem; }
+#trail .to { position: absolute; right: 0; top: 1.5rem; }
+
+/* Photos as satellite-tag readouts */
+.tag {
+  position: absolute; margin: 0; width: var(--w, 18vw); z-index: 2; padding: .55rem;
+  background:
+    linear-gradient(var(--green), var(--green)) top left / 1.4rem 2px no-repeat,
+    linear-gradient(var(--green), var(--green)) top left / 2px 1.4rem no-repeat,
+    linear-gradient(var(--green), var(--green)) top right / 1.4rem 2px no-repeat,
+    linear-gradient(var(--green), var(--green)) top right / 2px 1.4rem no-repeat,
+    linear-gradient(var(--green), var(--green)) bottom left / 1.4rem 2px no-repeat,
+    linear-gradient(var(--green), var(--green)) bottom left / 2px 1.4rem no-repeat,
+    linear-gradient(var(--green), var(--green)) bottom right / 1.4rem 2px no-repeat,
+    linear-gradient(var(--green), var(--green)) bottom right / 2px 1.4rem no-repeat,
+    rgba(8,24,40,.7);
+  transition: opacity .7s ease, transform .9s cubic-bezier(.2,.8,.2,1), filter .9s ease;
+}
+.slide:not(.active) .tag { opacity: 0; transform: scale(.94); filter: blur(6px); }
+.slide.active .tag { transition-delay: calc(.5s + var(--d, 0) * .15s); }
+.tag img { display: block; width: 100%; aspect-ratio: var(--ar, 4 / 3); object-fit: cover; }
+.tag .scan { position: absolute; left: .55rem; right: .55rem; top: .55rem; height: 3px; background: linear-gradient(90deg, transparent, var(--green), transparent); opacity: .75; animation: scan 3.5s linear infinite; }
+@keyframes scan { to { top: calc(100% - 2.6rem); } }
+.tag figcaption { font-family: var(--mono); font-size: .66rem; color: var(--green); margin-top: .45rem; letter-spacing: .03em; }
+
+/* Tone switcher */
+.tone { display: grid; grid-template-columns: 1fr 1.25fr; gap: 1.6rem; align-items: center; margin-top: 1rem; }
+.tonebtns { display: flex; flex-direction: column; gap: .6rem; }
+.tbtn { font-family: var(--serif); font-size: 2rem; text-align: left; cursor: pointer; padding: .35em .8em; border-radius: .8rem; border: 2px solid var(--line); background: var(--panel); color: var(--ink); }
+.tbtn small { display: block; font-family: var(--sans); font-size: .78rem; color: var(--muted); }
+.tbtn.on { border-color: var(--green); background: rgba(111,211,181,.16); }
+.pitch { padding: 1rem; }
+.pitch svg { width: 100%; height: auto; display: block; }
+.pitch .lvl { stroke: rgba(244,241,222,.18); stroke-dasharray: 4 4; }
+.pitch .lbl { fill: var(--muted); font: 11px var(--mono); }
+.pitch polyline { fill: none; stroke: var(--green); stroke-width: 6; stroke-linecap: round; stroke-linejoin: round; filter: drop-shadow(0 0 6px rgba(111,211,181,.7)); }
+.pitch .meaning { font-family: var(--serif); font-size: 1.8rem; color: var(--gold); text-align: center; margin-top: .4rem; min-height: 2.4rem; }
+
+/* Click-to-gloss sentence and negation builder */
+.sent { display: flex; flex-wrap: wrap; gap: .55rem; justify-content: center; font-family: var(--serif); font-size: 2.2rem; margin: 1.2rem 0 .6rem; }
+.w {
+  display: flex; flex-direction: column; align-items: center; gap: .15rem; cursor: pointer; user-select: none;
+  padding: .25em .55em; border-radius: .6rem; background: var(--panel); border: 1px solid var(--line); transition: border-color .2s, transform .2s;
+}
+.w:hover { border-color: var(--green); transform: translateY(-3px); }
+.w small { font-family: var(--mono); font-size: .72rem; color: var(--gold); opacity: 0; transition: opacity .3s; }
+.w.open small, .glossall .w small { opacity: 1; }
+.w.neg { max-width: 0; padding: 0; opacity: 0; overflow: hidden; border-width: 0; transition: all .6s ease; }
+.sent.negative .w.neg { max-width: 7rem; padding: .25em .55em; opacity: 1; border-width: 1px; background: rgba(255,140,105,.22); border-color: var(--rose); }
+.sent.negative .w.neg small { opacity: 1; }
+.translation { font-size: 1.25rem; text-align: center; color: var(--ink); min-height: 1.8rem; }
+
+/* Turtle tracker */
+.tracker { padding: 1rem 1.2rem; }
+.tracker svg { width: 100%; height: auto; display: block; }
+.tracker .route { fill: none; stroke: rgba(111,211,181,.4); stroke-width: 3; stroke-dasharray: 6 8; }
+.tracker .land { fill: rgba(185,166,121,.35); }
+.tracker .readout { display: flex; justify-content: space-between; font-family: var(--mono); font-size: .9rem; color: var(--green); margin-top: .6rem; }
+.tracker .readout b { color: var(--gold); font-size: 1.15rem; }
+
+@media (max-width: 820px) {
+  .tag { position: relative !important; left: auto !important; right: auto !important; top: auto !important; bottom: auto !important; width: 42vw; }
+  .tone { grid-template-columns: 1fr; }
+  #trail { display: none; }
+}
+</style>
+</head>
+<body data-map="BlankMap-Equirectangular.svg">
+
+<div id="night">
+  <div class="sky"></div><div class="stars"></div>
+  <div class="moon" style="right:8vw"></div>
+  <div class="sea"></div>
+  <div class="glow" style="right:6vw"></div>
+  <svg class="crest" viewBox="0 0 1440 60" preserveAspectRatio="none"><path d="M0 40 Q60 20 120 40 T240 40 T360 40 T480 40 T600 40 T720 40 T840 40 T960 40 T1080 40 T1200 40 T1320 40 T1440 40" fill="none" stroke="rgba(111,211,181,.55)" stroke-width="3"/></svg>
+  <div class="sand"></div>
+  <div class="shade"></div>
+</div>
+<div id="trail" aria-hidden="true">
+  <div class="path"></div><div class="done"></div><div class="turtle">🐢</div>
+  <span class="from">ABUN COAST · 0.4°S 132.5°E</span><span class="to">CALIFORNIA COAST</span>
+</div>
+<div class="progress"></div>
+
+<main>
+
+<!-- 1. Title -->
+<section class="slide" style="--accent: var(--green)">
+  <div class="text">
+    <p class="kicker in">Rare Languages of the Asia-Pacific · Module 7</p>
+    <h1 class="in" style="--d:1">Abun</h1>
+    <div class="bar in" style="--d:2"></div>
+    <p class="lead in" style="--d:3">A language of the turtle coast of Papua, Indonesia</p>
+    <p class="muted in" style="--d:4">Its speakers call it <span class="hl">Abun</span> or <span class="hl">Anden</span>.</p>
+  </div>
+  <div class="stage">
+    <figure class="tag" style="--w:22vw; --d:0; left:4%; top:0">
+      <div class="scan"></div><img data-wiki="Leatherback sea turtle" data-width="1200" alt="Leatherback sea turtle">
+      <figcaption>◉ TARGET: LEATHERBACK SEA TURTLE</figcaption>
+    </figure>
+    <figure class="tag" style="--w:17vw; --d:1; right:2%; bottom:0">
+      <div class="scan"></div><img data-wiki="Bird's Head Peninsula" alt="Bird's Head Peninsula">
+      <figcaption>◉ BIRD'S HEAD PENINSULA, PAPUA</figcaption>
+    </figure>
+  </div>
+</section>
+
+<!-- 2. Who and where -->
+<section class="slide" data-tr="left" style="--accent: var(--blue)">
+  <div class="text">
+    <p class="kicker in">// who and where</p>
+    <h2 class="in" style="--d:1">On the Bird's Head coast</h2>
+    <div class="bar in" style="--d:2"></div>
+    <ul class="dots">
+      <li class="in" style="--d:3">Abun is spoken along the <strong>northern coast of the Bird's Head Peninsula</strong>, in Tambrauw Regency, Southwest Papua, Indonesia.</li>
+      <li class="in" style="--d:4">About <strong>3,000 speakers</strong> (counted in 1995), in around <strong>20 villages</strong> and hamlets.</li>
+      <li class="in" style="--d:5">It has several dialects: <strong>Abun Tat</strong>, <strong>Abun Ye</strong> and <strong>Abun Ji</strong>.</li>
+      <li class="in" style="--d:6">Neighbours have other names for it, like <em>Madik</em> or <em>Yimbun</em>. One outsiders' name, "Karon Pantai," is considered <strong>insulting</strong>, so it's best to use the speakers' own names: Abun or Anden.</li>
+    </ul>
+  </div>
+  <div class="stage">
+    <div class="loc" data-lat="-0.57" data-lon="132.42" data-zoom="16" style="--s:14vw; --d:0; left:6%; top:2%">
+      <div class="disc"><div class="lmap"></div><div class="tint"></div><div class="sea"></div><span class="pinpt"></span></div>
+      <span class="tag" style="position:static; display:table; margin:.9rem auto 0; padding:.35em 1.1em; border-radius:999px; background:#0b1e30; border:1px solid var(--line); font-size:.78rem; font-family: var(--mono)">TAMBRAUW, SW PAPUA</span>
+    </div>
+    <figure class="tag" style="--w:18vw; --d:1; right:2%; bottom:0">
+      <div class="scan"></div><img data-wiki="Tambrauw Regency" alt="Tambrauw Regency">
+      <figcaption>◉ TAMBRAUW REGENCY</figcaption>
+    </figure>
+  </div>
+</section>
+
+<!-- 3. A language on its own -->
+<section class="slide" data-tr="zoom" style="--accent: var(--gold)">
+  <div class="text">
+    <p class="kicker in">// family tree</p>
+    <h2 class="in" style="--d:1">A language on its own</h2>
+    <div class="bar in" style="--d:2"></div>
+    <ul class="dots">
+      <li class="in" style="--d:3">Abun is <strong>not closely related to any other language</strong>. Most experts now call it a <strong>language isolate</strong>; some link it to a "West Papuan" family.</li>
+      <li class="in" style="--d:4">Its neighbours include <strong>Moi</strong>, <strong>Mpur</strong> and <strong>Maybrat</strong>, all very different languages.</li>
+      <li class="in" style="--d:5">Living by the sea, Abun speakers borrowed <strong>sea and boat words</strong> from <strong>Biak</strong>, an Austronesian language of seafarers.</li>
+    </ul>
+    <div class="chips in" style="--d:6">
+      <span class="chip c2">Abun: isolate</span><span class="chip c1">Moi</span><span class="chip c5">Mpur</span><span class="chip c3">Maybrat</span><span class="chip c4">Biak (sea words)</span>
+    </div>
+  </div>
+  <div class="stage">
+    <figure class="tag" style="--w:18vw; --d:1; right:6%; top:6%">
+      <div class="scan"></div><img data-wiki="Biak" alt="Biak">
+      <figcaption>◉ BIAK ISLAND: SOURCE OF SEA WORDS</figcaption>
+    </figure>
+  </div>
+</section>
+
+<!-- 4. Tones -->
+<section class="slide" style="--accent: var(--green)">
+  <div class="text wide">
+    <p class="kicker in">// speak along</p>
+    <h2 class="in" style="--d:1">Pitch changes the meaning</h2>
+    <div class="bar in" style="--d:2"></div>
+    <p class="in" style="--d:3; max-width:70vw">Abun uses <strong>tone</strong>: whether your voice is <strong>high</strong>, <strong>middle</strong> or <strong>low</strong> can change a word. Click each phrase, watch the pitch line, and say it with that melody. (<strong>sh</strong> is written ʃ.)</p>
+    <div class="tone in" style="--d:4">
+      <div class="tonebtns">
+        <button class="tbtn on" data-y="120" data-mean="&quot;the water flows&quot;">ʃúr ʃè <small>shur she: second word LOW</small></button>
+        <button class="tbtn" data-y="40" data-mean="&quot;a big flood&quot;">ʃúr ʃé <small>shur she: second word HIGH</small></button>
+        <button class="tbtn" data-y="80" data-mean="&quot;a big river&quot;">ʃúr ʃe <small>shur she: second word MIDDLE</small></button>
+      </div>
+      <div class="pitch panel">
+        <svg viewBox="0 0 300 160" aria-hidden="true">
+          <line class="lvl" x1="30" y1="40" x2="290" y2="40"/><line class="lvl" x1="30" y1="80" x2="290" y2="80"/><line class="lvl" x1="30" y1="120" x2="290" y2="120"/>
+          <text class="lbl" x="0" y="44">HIGH</text><text class="lbl" x="0" y="84">MID</text><text class="lbl" x="0" y="124">LOW</text>
+          <text class="lbl" x="80" y="155">ʃúr</text><text class="lbl" x="215" y="155">ʃe</text>
+          <polyline id="pline" points="50,40 130,40 190,120 270,120"/>
+        </svg>
+        <div class="meaning" id="pmean">"the water flows"</div>
+      </div>
+    </div>
+    <p class="muted in" style="--d:5; font-size:.82rem; margin-top:.8rem">Abun once had three tones in full use. Today they matter in fewer words: a sign of how languages keep changing.</p>
+  </div>
+</section>
+
+<!-- 5. Words and a tone trick -->
+<section class="slide" data-tr="zoom" style="--accent: var(--gold)">
+  <div class="text">
+    <p class="kicker in">// speak along</p>
+    <h2 class="in" style="--d:1">First words</h2>
+    <div class="bar in" style="--d:2"></div>
+    <div class="speak panel in" data-tempo="700" style="--d:3; text-align:center">
+      <div class="line" data-syl="dik we"></div>
+      <p class="gloss">one · two</p>
+      <div class="line" data-syl="sur kam bot jok"></div>
+      <p class="gloss">water · sun · fire · stone</p>
+      <button class="btn play">▶ Speak along</button>
+    </div>
+    <div class="cards in" style="--d:4; margin-top:1rem; grid-template-columns: 1fr 1fr">
+      <div class="card" style="--cardc: var(--green)"><div class="word">ndam → ndám</div><div class="say">a rising, high tone…</div><div class="meaning">"bird" → "birds"! Tone can make a word plural.</div><div class="tap">click to reveal</div></div>
+      <div class="card" style="--cardc: var(--rose)"><div class="word">gum</div><div class="say">goom</div><div class="meaning">"name"</div><div class="tap">click to reveal</div></div>
+    </div>
+  </div>
+  <div class="stage">
+    <figure class="tag" style="--w:18vw; --d:1; right:6%; top:8%">
+      <div class="scan"></div><img data-wiki="Sorong" alt="Sorong">
+      <figcaption>◉ SORONG: GATEWAY TO THE BIRD'S HEAD</figcaption>
+    </figure>
+  </div>
+</section>
+
+<!-- 6. One word, one job -->
+<section class="slide" style="--accent: var(--blue)">
+  <div class="text wide center">
+    <p class="kicker in">// how it's built</p>
+    <h2 class="in" style="--d:1">One word, one job</h2>
+    <div class="bar in" style="--d:2"></div>
+    <p class="in" style="--d:3; max-width:62vw; margin:0 auto">English packs meaning into word endings (walk<strong>ed</strong>, cat<strong>s</strong>). Abun mostly doesn't. Each little word does <strong>one job</strong>. Click the words to decode this sentence:</p>
+    <div class="sent in" id="gloss" style="--d:4">
+      <span class="w">Men<small>we</small></span><span class="w">ben<small>do</small></span><span class="w">suk<small>things</small></span><span class="w">mo<small>at</small></span><span class="w">nggwe<small>garden</small></span><span class="w">yo,<small>then</small></span><span class="w">men<small>we</small></span><span class="w">ben<small>do</small></span><span class="w">suk<small>things</small></span><span class="w">sino.<small>together</small></span>
+    </div>
+    <p class="in" style="--d:5"><button class="btn" id="glossbtn">Reveal all</button></p>
+    <p class="translation in" id="glosstrans" style="--d:6">&nbsp;</p>
+  </div>
+</section>
+
+<!-- 7. Double negatives -->
+<section class="slide" data-tr="zoom" style="--accent: var(--rose)">
+  <div class="text wide center">
+    <p class="kicker in">// grammar game</p>
+    <h2 class="in" style="--d:1">Saying "not" twice</h2>
+    <div class="bar in" style="--d:2"></div>
+    <p class="in" style="--d:3; max-width:62vw; margin:0 auto">To make a sentence negative, Abun wraps it in <strong>two</strong> words: <span class="hl">yo</span> before the action and <span class="hl">nde</span> at the end. Both are required, a bit like French <em>ne… pas</em> ("je <strong>ne</strong> sais <strong>pas</strong>"). Press the button!</p>
+    <div class="sent in" id="negsent" style="--d:4">
+      <span class="w">Án<small>they</small></span><span class="w neg">yo<small>NOT</small></span><span class="w">ma<small>come</small></span><span class="w">mo<small>to</small></span><span class="w">nu<small>house</small></span><span class="w neg">nde<small>NOT</small></span>
+    </div>
+    <p class="translation in" id="negtrans" style="--d:5">"They came to the house." (without the negative words)</p>
+    <p class="in" style="--d:6"><button class="btn" id="negbtn">Make it negative</button></p>
+  </div>
+</section>
+
+<!-- 8. The turtle coast -->
+<section class="slide" data-tr="left" style="--accent: var(--green)">
+  <div class="text">
+    <p class="kicker in">// the turtle coast</p>
+    <h2 class="in" style="--d:1">Home of the giants</h2>
+    <div class="bar in" style="--d:2"></div>
+    <ul class="dots">
+      <li class="in" style="--d:3">Two Abun-area beaches, <strong>Jamursba Medi</strong> and <strong>Wermon</strong> (locally <em>Jeen Yessa</em> and <em>Jeen Syuab</em>), host the <strong>largest remaining nesting site of Pacific leatherback turtles</strong>, the world's biggest turtles.</li>
+      <li class="in" style="--d:4">About <strong>75%</strong> of all leatherback nesting in the western Pacific happens on this coast.</li>
+      <li class="in" style="--d:5">Local communities guard nests and run <strong>Turtle Camps for children</strong>.</li>
+    </ul>
+  </div>
+  <div class="stage">
+    <div class="tracker panel in" style="--d:3; position:absolute; left:2%; right:2%; top:4%">
+      <strong style="font-family: var(--mono); color: var(--green)">◉ SATELLITE TAG: ONE JAMURSBA MEDI LEATHERBACK</strong>
+      <svg viewBox="0 0 600 260" aria-hidden="true">
+        <path class="land" d="M10 150 q30 -30 70 -10 q20 20 10 40 q-40 20 -80 -30 Z"/>
+        <path class="land" d="M520 40 q50 10 70 60 l0 120 q-40 -10 -60 -60 q-20 -50 -10 -120 Z"/>
+        <path class="route" id="route" d="M70 160 C 160 60, 260 40, 340 80 S 470 150, 545 110"/>
+        <text x="20" y="200" fill="#a9c0c9" font-size="12" font-family="Space Mono">PAPUA</text>
+        <text x="500" y="240" fill="#a9c0c9" font-size="12" font-family="Space Mono">N. AMERICA</text>
+        <text id="tturtle" x="70" y="160" font-size="26" text-anchor="middle" dominant-baseline="middle">🐢</text>
+      </svg>
+      <div class="readout"><span>DISTANCE <b id="tkm">0</b> km</span><span>DAYS <b id="tdays">0</b></span></div>
+      <p style="text-align:center; margin:.6rem 0 0"><button class="btn" id="trackbtn">▶ Track the turtle</button></p>
+      <p class="muted" style="font-size:.75rem; margin:.5rem 0 0">One tagged female travelled at least 20,558 km in 647 days, reaching the coast of Oregon, USA. (A simplified route, not an exact map.)</p>
+    </div>
+  </div>
+</section>
+
+<!-- 9. Quiz -->
+<section class="slide" data-tr="zoom" style="--accent: var(--gold)">
+  <div class="text wide center">
+    <p class="kicker in">// check your data</p>
+    <h2 class="in" style="--d:1">Quick quiz!</h2>
+    <div class="bar in" style="--d:2"></div>
+    <div class="quizgrid">
+      <div class="quiz panel in" style="--d:3" data-right="Yes! A high tone on the second word means a big flood.">
+        <div class="q">In Abun, <strong>ʃúr ʃé</strong> (high tone) means…</div>
+        <div class="options"><button class="opt">the water flows</button><button class="opt" data-correct>a big flood</button><button class="opt">a big river</button></div>
+        <div class="feedback"></div>
+      </div>
+      <div class="quiz panel in" style="--d:4" data-right="Right! yo … nde, both required.">
+        <div class="q">How do you make an Abun sentence negative?</div>
+        <div class="options"><button class="opt">Add an ending to the verb</button><button class="opt" data-correct>Put yo before and nde after</button><button class="opt">Say it in a low tone</button></div>
+        <div class="feedback"></div>
+      </div>
+      <div class="quiz panel in" style="--d:5" data-right="Correct! The Pacific's largest remaining leatherback nesting site.">
+        <div class="q">The Abun coast's beaches are a world-famous nesting site for…</div>
+        <div class="options"><button class="opt">crocodiles</button><button class="opt" data-correct>leatherback turtles</button><button class="opt">flamingos</button></div>
+        <div class="feedback"></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- 10. Closing -->
+<section class="slide end" style="--accent: var(--green)">
+  <div class="text">
+    <h1 class="in" style="font-size:5.8rem">Thank you!</h1>
+    <p class="lead in" style="--d:1; color: var(--gold); font-family: var(--serif)">Questions?</p>
+    <p class="muted in" style="--d:2">Every year, tiny turtles race from Abun beaches into the Pacific. Protecting a coast, and the language that has named it for generations, gives both a future.</p>
+  </div>
+  <details class="fine in" style="--d:3">
+    <summary>Sources &amp; image credits</summary>
+    <div class="box">
+      <h4>Sources</h4>
+      <ul>
+        <li><a href="https://en.wikipedia.org/wiki/Abun_language">Abun language (Wikipedia; after Berry &amp; Berry 1999 and Holton &amp; Klamer 2018)</a></li>
+        <li><a href="https://wwf.id/en/blog/turtle-war-abun-tackle-feral-predation">WWF Indonesia: Turtle war in Abun</a></li>
+        <li><a href="https://www.frontiersin.org/article/10.3389/fmars.2020.549570/full">Frontiers in Marine Science (2020): the Abun leatherback population</a></li>
+        <li><a href="https://swfsc-publications.fisheries.noaa.gov/publications/CR/2013/2013Tapilatu.pdf">Tapilatu et al. (2013), NOAA: leatherback nesting at Bird's Head</a></li>
+        <li><a href="https://whitleyaward.org/?p=5021">Whitley Award (2014): the last stronghold of nesting Pacific leatherbacks</a></li>
+        <li><a href="https://seasia.co/2026/10/27/did-you-know-californias-state-marine-reptile-is-born-on-beaches-in-indonesia">Seasia (2026): California's state marine reptile is born in Indonesia</a></li>
+        <li><a href="https://www.internationalparks.org/indonesia/Jamursba%20Medi">International Parks: Jamursba Medi</a></li>
+      </ul>
+      <h4>Images (Wikimedia Commons)</h4>
+      <ul id="credits"></ul>
+    </div>
+  </details>
+</section>
+
+</main>
+
+<nav class="controls">
+  <button id="prev" aria-label="Previous slide">‹</button>
+  <span id="counter">1 / 10</span>
+  <button id="next" aria-label="Next slide">›</button>
+  <button id="fs" aria-label="Fullscreen">⤢</button>
+</nav>
+<p class="hint">Use ← → to move. Press F for fullscreen.</p>
+
+<!-- Abun-only effects: tracking line, moon, tone graph, glossing, negation, turtle tracker -->
+<script>
+(function () {
+  var trail = document.getElementById("trail");
+  var moon = document.querySelector("#night .moon");
+  var glow = document.querySelector("#night .glow");
+  var raf = 0;
+  document.addEventListener("slidechange", function (e) {
+    var p = e.detail.index / (e.detail.total - 1);
+    trail.style.setProperty("--p", p);
+    if (moon) moon.style.right = (8 + p * 70) + "vw";
+    if (glow) glow.style.right = (6 + p * 70) + "vw";
+    cancelAnimationFrame(raf);
+  });
+
+  var pline = document.getElementById("pline");
+  var pmean = document.getElementById("pmean");
+  document.querySelectorAll(".tbtn").forEach(function (b) {
+    b.addEventListener("click", function () {
+      document.querySelectorAll(".tbtn").forEach(function (x) { x.classList.remove("on"); });
+      b.classList.add("on");
+      var y = b.dataset.y;
+      pline.setAttribute("points", "50,40 130,40 190," + y + " 270," + y);
+      var len = 400;
+      pline.style.transition = "none";
+      pline.style.strokeDasharray = len;
+      pline.style.strokeDashoffset = len;
+      pline.getBoundingClientRect();
+      pline.style.transition = "stroke-dashoffset 1s ease";
+      pline.style.strokeDashoffset = 0;
+      pmean.textContent = b.dataset.mean;
+    });
+  });
+
+  var gloss = document.getElementById("gloss");
+  var glossTrans = document.getElementById("glosstrans");
+  if (gloss) {
+    gloss.querySelectorAll(".w").forEach(function (w) {
+      w.addEventListener("click", function () { w.classList.toggle("open"); });
+    });
+    document.getElementById("glossbtn").addEventListener("click", function () {
+      gloss.querySelectorAll(".w").forEach(function (w) { w.classList.add("open"); });
+      glossTrans.textContent = "\u201CIf we do things at the garden, then we do them together.\u201D";
+    });
+  }
+
+  var negSent = document.getElementById("negsent");
+  var negTrans = document.getElementById("negtrans");
+  var negBtn = document.getElementById("negbtn");
+  if (negBtn) negBtn.addEventListener("click", function () {
+    var on = negSent.classList.toggle("negative");
+    negTrans.textContent = on ? "\u201CThey didn't come to the house.\u201D" : "\u201CThey came to the house.\u201D (without the negative words)";
+    negBtn.textContent = on ? "Make it positive" : "Make it negative";
+  });
+
+  var route = document.getElementById("route");
+  var tt = document.getElementById("tturtle");
+  var tkm = document.getElementById("tkm");
+  var tdays = document.getElementById("tdays");
+  var trackBtn = document.getElementById("trackbtn");
+  if (trackBtn) trackBtn.addEventListener("click", function () {
+    cancelAnimationFrame(raf);
+    var total = route.getTotalLength();
+    var start = performance.now();
+    var dur = 6000;
+    function step(now) {
+      var t = Math.min(1, (now - start) / dur);
+      var pt = route.getPointAtLength(t * total);
+      tt.setAttribute("x", pt.x);
+      tt.setAttribute("y", pt.y);
+      tkm.textContent = Math.round(t * 20558).toLocaleString();
+      tdays.textContent = Math.round(t * 647);
+      if (t < 1) raf = requestAnimationFrame(step);
+    }
+    raf = requestAnimationFrame(step);
+  });
+})();
+</script>
+<script src="../assets/deck.js"></script>
+</body>
+</html>
