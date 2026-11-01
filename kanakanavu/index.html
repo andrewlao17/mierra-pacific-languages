@@ -1,0 +1,422 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Kanakanavu: A Language of the River Valley</title>
+<link rel="stylesheet" href="../assets/deck.css">
+<style>
+@import url("https://fonts.googleapis.com/css2?family=Alegreya:wght@600;800&family=Mulish:wght@400;600;700&display=swap");
+
+/* ---------- Kanakanavu theme: river, millet, woven baskets ---------- */
+:root {
+  --bg: #0f2a2e;
+  --ink: #f3f0e6;
+  --muted: #bdd6d1;
+  --line: rgba(243, 240, 230, .18);
+  --panel: rgba(12, 36, 40, .72);
+  --blue: #7fd0cc;
+  --green: #9cc46a;
+  --gold: #e8b93c;
+  --rose: #e08a5c;
+  --lilac: #c9b8e0;
+  --accent: var(--gold);
+  --serif: "Alegreya", Georgia, serif;
+  --sans: "Mulish", system-ui, sans-serif;
+}
+h1 { font-weight: 800; font-size: 6.4rem; }
+h2 { font-weight: 800; }
+.slide { padding-bottom: 24vh; padding-top: 9vh; }
+.stage { bottom: 22vh; top: 9vh; }
+
+/* Valley, river and millet */
+#valley { position: fixed; inset: 0; z-index: 0; pointer-events: none; overflow: hidden; }
+#valley .sky { position: absolute; inset: 0; background: radial-gradient(ellipse 90% 70% at 70% 30%, #23555a 0%, #143a3f 45%, #0b2226 100%); }
+#valley .hills { position: absolute; left: 0; right: 0; bottom: 16vh; height: 30vh; width: 100%; }
+#valley .river { position: absolute; left: 0; right: 0; bottom: 0; height: 20vh; overflow: hidden; background: linear-gradient(180deg, #2f9a96, #17565a); box-shadow: 0 -6px 20px rgba(0,0,0,.3); }
+#valley .river svg.flow { position: absolute; top: 0; left: 0; width: 200%; height: 100%; animation: flow 16s linear infinite; }
+#valley .river svg.flow.f2 { animation-duration: 26s; opacity: .6; }
+@keyframes flow { to { transform: translateX(-50%); } }
+#valley .bgfish { position: absolute; left: -10%; opacity: .45; animation: swim linear infinite; }
+@keyframes swim { to { left: 110%; } }
+#valley .millet { position: absolute; bottom: 0; height: 34vh; transform-origin: bottom center; animation: sway 6s ease-in-out infinite alternate; }
+#valley .millet.left { left: -1vw; }
+#valley .millet.right { right: -1vw; animation-delay: -3s; }
+@keyframes sway { from { transform: rotate(-2deg); } to { transform: rotate(2.5deg); } }
+#valley .shade { position: absolute; inset: 0; background: linear-gradient(90deg, rgba(8,26,29,.8) 0%, rgba(8,26,29,.45) 50%, rgba(8,26,29,.05) 85%); }
+
+/* Ripening millet progress indicator */
+#harvest { position: fixed; top: 1.2rem; right: 1.4rem; z-index: 15; display: flex; gap: .45rem; align-items: flex-end; }
+#harvest i { position: relative; display: block; width: .55rem; height: 1.9rem; }
+#harvest i::before { content: ""; position: absolute; left: 50%; bottom: 0; width: 2px; height: 100%; background: #7f9a4a; }
+#harvest i::after {
+  content: ""; position: absolute; left: 50%; top: 0; width: .55rem; height: 1.1rem; margin-left: -.1rem;
+  border-radius: 60% 60% 50% 50%; background: #6e8f43; transform: rotate(18deg); transform-origin: bottom left;
+  transition: background .8s ease, box-shadow .8s ease;
+}
+#harvest i.ripe::after { background: var(--gold); box-shadow: 0 0 8px rgba(232,185,60,.8); }
+
+/* Photos in woven basket frames */
+.woven {
+  position: absolute; margin: 0; width: var(--w, 18vw); z-index: 2; padding: .7rem .7rem .6rem;
+  border-radius: 1rem; box-shadow: 0 20px 40px rgba(0,0,0,.45);
+  background:
+    repeating-linear-gradient(45deg, rgba(255,255,255,.14) 0 5px, transparent 5px 10px),
+    repeating-linear-gradient(-45deg, #b98f52 0 5px, #9c7440 5px 10px);
+  transform: rotate(var(--r, 0deg));
+  transition: transform 1s cubic-bezier(.2,.8,.2,1), opacity .8s ease;
+}
+.slide:not(.active) .woven { opacity: 0; transform: translateY(70px) rotate(var(--r, 0deg)) scale(.92); }
+.slide.active .woven { transition-delay: calc(.5s + var(--d, 0) * .15s); }
+.woven img { display: block; width: 100%; aspect-ratio: var(--ar, 4 / 3); object-fit: cover; border-radius: .55rem; }
+.woven figcaption { margin-top: .5rem; text-align: center; font-size: .74rem; font-weight: 700; color: #2a1d0c; background: #f1e3c2; border-radius: .4rem; padding: .3em .5em; }
+
+/* Long word cards */
+.card .syl-split { font-family: var(--serif); font-size: 1.5rem; letter-spacing: .04em; }
+
+/* River game */
+.pond {
+  position: relative; height: 34vh; border-radius: 1.2rem; overflow: hidden; cursor: crosshair;
+  background: linear-gradient(180deg, #3fb0ac, #1d6b6e);
+  box-shadow: inset 0 0 40px rgba(0,0,0,.35);
+}
+.pond::before {
+  content: ""; position: absolute; inset: 0; opacity: .35;
+  background: repeating-linear-gradient(170deg, rgba(255,255,255,.18) 0 2px, transparent 2px 26px);
+  animation: ripple 6s linear infinite;
+}
+@keyframes ripple { to { background-position: 160px 0; } }
+.fish { position: absolute; left: -12%; cursor: pointer; animation: swimfish linear infinite; filter: drop-shadow(0 4px 6px rgba(0,0,0,.35)); }
+.fish svg { display: block; }
+.fish.released { animation: escape .9s ease-in forwards !important; pointer-events: none; }
+.fish.kept { animation: lift .7s ease-in forwards !important; pointer-events: none; }
+@keyframes swimfish { to { left: 112%; } }
+@keyframes escape { to { transform: translate(-40vw, 10vh) scaleX(-1); opacity: 0; } }
+@keyframes lift { to { transform: translateY(-30vh) rotate(-30deg); opacity: 0; } }
+.score { display: flex; gap: 1.4rem; justify-content: center; margin-top: .7rem; font-weight: 700; }
+.score span b { color: var(--gold); font-size: 1.3rem; }
+.gamemsg { min-height: 1.4em; color: var(--muted); text-align: center; margin-top: .3rem; }
+
+@media (max-width: 820px) {
+  .woven { position: relative !important; left: auto !important; right: auto !important; top: auto !important; bottom: auto !important; width: 42vw; }
+  #harvest { display: none; }
+}
+</style>
+</head>
+<body data-map="BlankMap-Equirectangular.svg">
+
+<div id="valley">
+  <div class="sky"></div>
+  <svg class="hills" viewBox="0 0 1000 200" preserveAspectRatio="none"><path d="M0 200 L0 120 Q120 40 240 110 T480 90 T720 120 T1000 80 L1000 200 Z" fill="#1d4a45"/><path d="M0 200 L0 160 Q150 100 300 150 T620 140 T1000 150 L1000 200 Z" fill="#163c38"/></svg>
+  <div class="river">
+    <svg class="flow" viewBox="0 0 1440 100" preserveAspectRatio="none"><path d="M0 30 Q90 10 180 30 T360 30 T540 30 T720 30 T900 30 T1080 30 T1260 30 T1440 30 V100 H0 Z" fill="rgba(255,255,255,.10)"/></svg>
+    <svg class="flow f2" viewBox="0 0 1440 100" preserveAspectRatio="none"><path d="M0 60 Q90 80 180 60 T360 60 T540 60 T720 60 T900 60 T1080 60 T1260 60 T1440 60 V100 H0 Z" fill="rgba(0,40,45,.25)"/></svg>
+    <svg class="bgfish" style="top:40%; animation-duration:28s" width="60" height="24" viewBox="0 0 60 24"><ellipse cx="24" cy="12" rx="20" ry="8" fill="#0d3f42"/><path d="M42 12 L58 2 L58 22 Z" fill="#0d3f42"/></svg>
+    <svg class="bgfish" style="top:68%; animation-duration:40s; animation-delay:-15s" width="40" height="16" viewBox="0 0 60 24"><ellipse cx="24" cy="12" rx="20" ry="8" fill="#0d3f42"/><path d="M42 12 L58 2 L58 22 Z" fill="#0d3f42"/></svg>
+  </div>
+  <svg class="millet left" viewBox="0 0 160 340" preserveAspectRatio="xMinYMax meet">
+    <g fill="none" stroke-linecap="round">
+      <path d="M30 340 Q34 220 50 120" stroke="#8a9a4a" stroke-width="4"/><path d="M50 120 q20 -24 46 -6 q16 16 10 56" stroke="#e8b93c" stroke-width="13" stroke-dasharray="4 3"/>
+      <path d="M70 340 Q72 240 92 160" stroke="#8a9a4a" stroke-width="4"/><path d="M92 160 q22 -20 44 0 q12 18 6 50" stroke="#d9a62f" stroke-width="12" stroke-dasharray="4 3"/>
+      <path d="M10 340 Q12 260 18 200" stroke="#8a9a4a" stroke-width="3"/><path d="M18 200 q16 -16 32 0 q8 14 4 38" stroke="#e8b93c" stroke-width="10" stroke-dasharray="3 3"/>
+    </g>
+  </svg>
+  <svg class="millet right" viewBox="0 0 160 340" preserveAspectRatio="xMaxYMax meet" style="transform: scaleX(-1)">
+    <g fill="none" stroke-linecap="round">
+      <path d="M30 340 Q34 220 50 120" stroke="#8a9a4a" stroke-width="4"/><path d="M50 120 q20 -24 46 -6 q16 16 10 56" stroke="#e8b93c" stroke-width="13" stroke-dasharray="4 3"/>
+      <path d="M70 340 Q72 240 92 160" stroke="#8a9a4a" stroke-width="4"/><path d="M92 160 q22 -20 44 0 q12 18 6 50" stroke="#d9a62f" stroke-width="12" stroke-dasharray="4 3"/>
+    </g>
+  </svg>
+  <div class="shade"></div>
+</div>
+<div id="harvest" aria-hidden="true"><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i></div>
+<div class="progress"></div>
+
+<main>
+
+<!-- 1. Title -->
+<section class="slide" style="--accent: var(--gold)">
+  <div class="text">
+    <p class="kicker in">Rare Languages of the Asia-Pacific · Module 5</p>
+    <h1 class="in" style="--d:1">Kanakanavu</h1>
+    <div class="bar in" style="--d:2"></div>
+    <p class="lead in" style="--d:3">A language of the river valleys of southern Taiwan</p>
+    <p class="muted in" style="--d:4">Our first word: <span class="hl">mikong</span>, "millet."</p>
+  </div>
+  <div class="stage">
+    <figure class="woven" style="--w:21vw; --r:-3deg; --d:0; left:6%; top:0">
+      <img data-wiki="Nanzixian River" alt="Nanzixian River">
+      <figcaption>The Nanzixian River, called Namasia</figcaption>
+    </figure>
+    <figure class="woven" style="--w:16vw; --r:4deg; --d:1; right:2%; bottom:2%">
+      <img data-wiki="Foxtail millet" alt="Foxtail millet">
+      <figcaption>Millet, at the heart of the harvest</figcaption>
+    </figure>
+  </div>
+</section>
+
+<!-- 2. Who and where -->
+<section class="slide" data-tr="left" style="--accent: var(--blue)">
+  <div class="text">
+    <p class="kicker in">Who and where</p>
+    <h2 class="in" style="--d:1">People of the Namasia valley</h2>
+    <div class="bar in" style="--d:2"></div>
+    <ul class="dots">
+      <li class="in" style="--d:3">The Kanakanavu live in <strong>Manga</strong> and <strong>Takanua</strong> villages in <strong>Namasia District</strong>, Kaohsiung, along the Nanzixian River.</li>
+      <li class="in" style="--d:4">They number <strong>fewer than 500</strong> people, a minority even among Taiwan's Indigenous peoples.</li>
+      <li class="in" style="--d:5">For decades they were officially counted as <strong>Tsou</strong>. Then, at a 2001 language test, Kanakanavu and Tsou speakers found they <strong>couldn't understand each other</strong>.</li>
+      <li class="in" style="--d:6">That sparked a campaign. On <strong>26 June 2014</strong>, Taiwan recognized the Kanakanavu as its <strong>16th Indigenous people</strong>, on the same day as their neighbours, the Hla'alua.</li>
+    </ul>
+  </div>
+  <div class="stage">
+    <div class="loc" data-lat="23.24" data-lon="120.7" data-zoom="28" style="--s:14vw; --d:0; left:6%; top:2%">
+      <div class="disc"><div class="lmap"></div><div class="tint"></div><div class="sea"></div><span class="pinpt"></span></div>
+      <span class="tag">Namasia, Kaohsiung, Taiwan</span>
+    </div>
+    <figure class="woven" style="--w:18vw; --r:3deg; --d:1; right:2%; bottom:0">
+      <img data-wiki="Namasia District" alt="Namasia District">
+      <figcaption>Namasia District</figcaption>
+    </figure>
+  </div>
+</section>
+
+<!-- 3. How endangered -->
+<section class="slide" data-tr="zoom" style="--accent: var(--rose)">
+  <div class="text">
+    <p class="kicker in">How endangered?</p>
+    <h2 class="in" style="--d:1">A handful of voices</h2>
+    <div class="bar in" style="--d:2"></div>
+    <div class="panel in" style="--d:3">
+      <div class="dotgrid" data-total="360" data-on="6" style="grid-template-columns: repeat(36, 1fr); gap: .22rem"></div>
+      <div class="legend"><span style="--c: var(--rose)">fluent speakers (about 6 in 2014)</span><span style="--c: rgba(255,255,255,.35)">Kanakanavu people (about 360 in 2020)</span></div>
+    </div>
+    <ul class="dots" style="margin-top:.8rem">
+      <li class="in" style="--d:4">UNESCO lists Kanakanavu as <strong>critically endangered</strong>. In 2014, its few fluent speakers were all over 60.</li>
+      <li class="in" style="--d:5">Like Hla'alua, it has <strong>three sets of numbers</strong>, for counting aloud, counting things and counting people.</li>
+    </ul>
+  </div>
+  <div class="stage">
+    <figure class="woven" style="--w:18vw; --r:-3deg; --d:2; right:6%; top:6%">
+      <img data-wiki="Cinnamomum camphora" alt="Camphor tree">
+      <figcaption>Camphor trees grow in Namasia's forests</figcaption>
+    </figure>
+  </div>
+</section>
+
+<!-- 4. Clap the syllables -->
+<section class="slide" style="--accent: var(--green)">
+  <div class="text wide center">
+    <p class="kicker in">Try it</p>
+    <h2 class="in" style="--d:1">Clap it out!</h2>
+    <div class="bar in" style="--d:2"></div>
+    <p class="in" style="--d:3; max-width:60vw; margin:0 auto">Kanakanavu words are built from simple syllables, but they're <strong>long</strong>: even simple words usually have three or four syllables or more. It also has one of the smallest sound systems in Taiwan: 14 consonants and 6 vowels. Say each word, <strong>clap once per syllable</strong>, then click to check.</p>
+    <div class="cards in" style="--d:4; max-width:70vw; margin:1.2rem auto 0">
+      <div class="card" style="--cardc: var(--gold)"><div class="word">Kanakanavu</div><div class="say">the people and language</div><div class="meaning"><span class="syl-split">ka · na · ka · na · vu</span><br>5 claps</div><div class="tap">clap, then click</div></div>
+      <div class="card" style="--cardc: var(--blue)"><div class="word">takiturua</div><div class="say">"teacher"</div><div class="meaning"><span class="syl-split">ta · ki · tu · ru · a</span><br>5 claps</div><div class="tap">clap, then click</div></div>
+      <div class="card" style="--cardc: var(--rose)"><div class="word">mikong</div><div class="say">"millet"</div><div class="meaning"><span class="syl-split">mi · kong</span><br>Only 2: a rare short one!</div><div class="tap">clap, then click</div></div>
+    </div>
+  </div>
+  <figure class="woven" style="--w:12vw; --r:5deg; --d:3; right:4vw; top:8vh">
+    <img data-wiki="Formosan wild boar" alt="Formosan wild boar">
+    <figcaption>A Formosan wild boar</figcaption>
+  </figure>
+</section>
+
+<!-- 5. Speak along -->
+<section class="slide" data-tr="zoom" style="--accent: var(--gold)">
+  <div class="text">
+    <p class="kicker in">Speak along</p>
+    <h2 class="in" style="--d:1">Words from the harvest</h2>
+    <div class="bar in" style="--d:2"></div>
+    <div class="cards in" style="--d:3; grid-template-columns: repeat(2, 1fr)">
+      <div class="card" style="--cardc: var(--gold)"><div class="word">sosomanpe</div><div class="say">so-so-mahn-peh</div><div class="meaning">"thank you"</div><div class="tap">click to reveal</div></div>
+      <div class="card" style="--cardc: var(--green)"><div class="word">mikong</div><div class="say">mee-kong</div><div class="meaning">"millet," also the name of the harvest ceremony</div><div class="tap">click to reveal</div></div>
+      <div class="card" style="--cardc: var(--blue)"><div class="word">cakuru</div><div class="say">tsah-koo-roo</div><div class="meaning">the men's gathering house</div><div class="tap">click to reveal</div></div>
+      <div class="card" style="--cardc: var(--rose)"><div class="word">pepe</div><div class="say">peh-peh</div><div class="meaning">white rice cake. It sounds like the Taiwanese Hokkien word for "pure white," so it may be a borrowing!</div><div class="tap">click to reveal</div></div>
+    </div>
+  </div>
+  <div class="stage">
+    <div class="speak panel in" data-tempo="650" style="--d:4; position:absolute; right:4%; top:14%; width:24vw; text-align:center">
+      <p class="kicker" style="margin-bottom:.3rem">The harvest song</p>
+      <div class="line" data-syl="ci·na cu·ma"></div>
+      <p class="gloss">"Mother, Father": the song sung in a circle at the Mikong ceremony</p>
+      <button class="btn play">▶ Sing the title</button>
+      <p class="muted" style="font-size:.75rem; margin-top:.6rem">c sounds like "ts": tsee-nah tsoo-mah</p>
+    </div>
+  </div>
+</section>
+
+<!-- 6. Mikong: the millet ceremony -->
+<section class="slide" style="--accent: var(--gold)">
+  <div class="text">
+    <p class="kicker in">Mikong</p>
+    <h2 class="in" style="--d:1">The millet ceremony</h2>
+    <div class="bar in" style="--d:2"></div>
+    <ul class="dots">
+      <li class="in" style="--d:3">Every <strong>autumn</strong>, after the millet harvest, the Kanakanavu thank the gods and their ancestors.</li>
+      <li class="in" style="--d:4">Elders ask: <em>"Who had a good dream last night?"</em> The best dreamer lights the fire at the <span class="hl">cakuru</span> to begin.</li>
+      <li class="in" style="--d:5">Four offerings go on the altar: <strong>rice cake, meat, wine and fish</strong>.</li>
+      <li class="in" style="--d:6">People press small pieces of sticky rice cake onto the house's posts, praying the community will <strong>stick together</strong> and its buildings stand strong.</li>
+    </ul>
+    <div class="quiz panel in" style="--d:7; margin-top:1rem" data-right="Yes! Dreams of a big harvest, or of a successful hunt, count as good dreams." data-wrong="Not quite. Think about what the ceremony celebrates.">
+      <div class="q">Which of these would count as a good dream?</div>
+      <div class="options" style="flex-direction:row; flex-wrap:wrap">
+        <button class="opt">an empty field</button><button class="opt" data-correct>a huge millet harvest</button><button class="opt">a broken basket</button>
+      </div>
+      <div class="feedback"></div>
+    </div>
+  </div>
+  <div class="stage">
+    <figure class="woven" style="--w:19vw; --r:3deg; --d:1; right:4%; top:4%">
+      <img data-wiki="Proso millet" alt="Millet">
+      <figcaption>Millet grains</figcaption>
+    </figure>
+  </div>
+</section>
+
+<!-- 7. The river ceremony (described, not performed) -->
+<section class="slide" data-tr="left" style="--accent: var(--blue)">
+  <div class="text">
+    <p class="kicker in">Kaisisi Cakʉran</p>
+    <h2 class="in" style="--d:1">The river ceremony</h2>
+    <div class="bar in" style="--d:2"></div>
+    <p class="in" style="--d:3"><strong>The legend:</strong> long ago, a young man named <strong>Namasia</strong> found the river muddy. Going upstream, he discovered a <strong>giant eel</strong> blocking the water. A <strong>wild boar</strong> came forward to help kill it, and the river flowed again. The river was named Namasia after him, and the district still carries his name.</p>
+    <p class="in" style="--d:4"><strong>The ceremony:</strong> before dawn, the men go to the river, and the officiant reports to the river god <strong>in the Kanakanavu language</strong>. Pork, peppers and sour foods are forbidden, because they could pollute the river.</p>
+    <div class="panel in" style="--d:5; margin-top:.8rem; border-left:5px solid var(--blue)">
+      <strong>Why we only describe it:</strong> the river ceremony is attended <strong>only by Kanakanavu men</strong>. In 2021 the community applied to have it recognized as official Indigenous intangible cultural heritage.
+    </div>
+  </div>
+  <div class="stage">
+    <figure class="woven" style="--w:17vw; --r:-3deg; --d:1; left:12%; top:2%">
+      <img data-wiki="Japanese eel" alt="Japanese eel">
+      <figcaption>An eel, like the one in the legend</figcaption>
+    </figure>
+  </div>
+</section>
+
+<!-- 8. River game: the fishing rule -->
+<section class="slide" data-tr="zoom" style="--accent: var(--green)">
+  <div class="text wide center">
+    <p class="kicker in">Try it</p>
+    <h2 class="in" style="--d:1">Fish the Kanakanavu way</h2>
+    <div class="bar in" style="--d:2"></div>
+    <p class="in" style="--d:3; max-width:62vw; margin:0 auto">Kanakanavu tradition says: <strong>catch only the larger fish, and release the smaller ones</strong> so the river stays full of life. Click a fish to catch it. Can you follow the rule?</p>
+    <div class="in" style="--d:4; max-width:70vw; margin:1rem auto 0">
+      <div class="pond" id="pond"></div>
+      <div class="score"><span>Big fish kept: <b id="kept">0</b></span><span>Small fish released: <b id="released">0</b></span></div>
+      <div class="gamemsg" id="gamemsg">Big fish are kept; little ones swim free.</div>
+    </div>
+  </div>
+</section>
+
+<!-- 9. Hard times and hope -->
+<section class="slide" style="--accent: var(--green)">
+  <div class="text">
+    <p class="kicker in">Hope</p>
+    <h2 class="in" style="--d:1">Rebuilding a language</h2>
+    <div class="bar in" style="--d:2"></div>
+    <ul class="dots">
+      <li class="in" style="--d:3">In <strong>2009, Typhoon Morakot</strong> devastated Namasia. Families rebuilt their villages, and their culture, from the ground up.</li>
+      <li class="in" style="--d:4">The community runs <strong>classes in songs, dances and the language</strong>, plus apprenticeships in traditional planting.</li>
+      <li class="in" style="--d:5">A documentation project has been recording the language since <strong>2012</strong>, and an <strong>online Kanakanavu dictionary</strong> is free for anyone to use.</li>
+      <li class="in" style="--d:6">A <strong>Young Kanakanavu Association</strong> brings young people together to learn from elders and share their culture.</li>
+    </ul>
+  </div>
+  <div class="stage">
+    <figure class="woven" style="--w:19vw; --r:-3deg; --d:1; right:6%; top:6%">
+      <img data-wiki="Typhoon Morakot" alt="Typhoon Morakot">
+      <figcaption>Typhoon Morakot over Taiwan, 2009</figcaption>
+    </figure>
+  </div>
+</section>
+
+<!-- 10. Closing -->
+<section class="slide end" style="--accent: var(--gold)">
+  <div class="text">
+    <h1 class="in">Sosomanpe!</h1>
+    <p class="lead in" style="--d:1; color: var(--gold); font-family: var(--serif)">Thank you! Questions?</p>
+    <p class="muted in" style="--d:2">Like the small fish released back into the river, every word passed on today can grow into a living language tomorrow.</p>
+  </div>
+  <details class="fine in" style="--d:3">
+    <summary>Sources &amp; image credits</summary>
+    <div class="box">
+      <h4>Sources</h4>
+      <ul>
+        <li><a href="https://en.wikipedia.org/wiki/Kanakanavu_language">Kanakanavu language (Wikipedia)</a></li>
+        <li><a href="https://endangeredlanguages.com/lang/3236">Endangered Languages Project: Kanakanavu</a></li>
+        <li><a href="https://www.omniglot.com/language/numbers/kanakanavu.htm">Omniglot: Kanakanavu numbers</a></li>
+        <li><a href="https://mail.omniglot.com/writing/kanakanavu.htm">Omniglot: Kanakanavu language</a></li>
+        <li><a href="https://thelanguagecloset.com/2021/03/13/languages-of-taiwan-kanakanabu-kanakanavu/">The Language Closet: Kanakanabu</a></li>
+        <li><a href="https://takao.kcg.gov.tw/article/3346">Kaohsiung City Government: the Kaisisi Cakʉran ceremony (2021)</a></li>
+        <li><a href="https://takao.kcg.gov.tw/article/3347">Kaohsiung City Government: Hla'alua and Kanakanavu recognition</a></li>
+        <li><a href="https://www.matataiwan.com/?p=1072">Mata Taiwan: Kanakanavu and the Ceremony of Millet</a></li>
+        <li><a href="https://brand.matataiwan.com/?p=1072">Mata Taiwan (Chinese edition): Mikong and Typhoon Morakot</a></li>
+        <li><a href="https://paper.udn.com/udnpaper/POD0006/370893/web/">UDN: a young Kanakanavu guide to Namasia</a></li>
+        <li><a href="https://vovo2000.com/paintbbs/art/Hoelex34/612">Kanakanavu name rectification (2001 test, 2014 recognition)</a></li>
+      </ul>
+      <h4>Images (Wikimedia Commons)</h4>
+      <ul id="credits"></ul>
+    </div>
+  </details>
+</section>
+
+</main>
+
+<nav class="controls">
+  <button id="prev" aria-label="Previous slide">‹</button>
+  <span id="counter">1 / 10</span>
+  <button id="next" aria-label="Next slide">›</button>
+  <button id="fs" aria-label="Fullscreen">⤢</button>
+</nav>
+<p class="hint">Use ← → to move. Press F for fullscreen.</p>
+
+<!-- Kanakanavu-only effects: ripening millet and the river game -->
+<script>
+(function () {
+  var stalks = document.querySelectorAll("#harvest i");
+  document.addEventListener("slidechange", function (e) {
+    stalks.forEach(function (s, k) { s.classList.toggle("ripe", k <= e.detail.index); });
+  });
+
+  var pond = document.getElementById("pond");
+  var keptEl = document.getElementById("kept");
+  var relEl = document.getElementById("released");
+  var msg = document.getElementById("gamemsg");
+  var kept = 0, released = 0;
+  var COLORS = ["#f2c14e", "#e08a5c", "#9cc46a", "#c9b8e0"];
+
+  function makeFish() {
+    var big = Math.random() < .45;
+    var w = big ? 120 : 56;
+    var color = COLORS[Math.floor(Math.random() * COLORS.length)];
+    var fish = document.createElement("div");
+    fish.className = "fish";
+    fish.dataset.big = big ? "1" : "0";
+    fish.style.top = (8 + Math.random() * 70) + "%";
+    fish.style.animationDuration = (big ? 9 : 6) + Math.random() * 5 + "s";
+    fish.style.animationDelay = (-Math.random() * 10) + "s";
+    fish.innerHTML =
+      '<svg width="' + w + '" height="' + (w * .45) + '" viewBox="0 0 60 27">' +
+      '<path d="M44 13 L59 2 L56 13 L59 25 Z" fill="' + color + '"/>' +
+      '<ellipse cx="25" cy="13.5" rx="22" ry="10" fill="' + color + '"/>' +
+      '<circle cx="11" cy="11" r="2.2" fill="#14262a"/></svg>';
+    fish.addEventListener("click", function () {
+      if (fish.dataset.big === "1") {
+        kept++; keptEl.textContent = kept;
+        fish.classList.add("kept");
+        msg.textContent = "A big fish: you can keep this one.";
+      } else {
+        released++; relEl.textContent = released;
+        fish.classList.add("released");
+        msg.textContent = "Too small! Let it go, so it can grow and keep the river full of life.";
+      }
+      setTimeout(function () { fish.remove(); pond.appendChild(makeFish()); }, 950);
+    });
+    return fish;
+  }
+  if (pond) for (var k = 0; k < 7; k++) pond.appendChild(makeFish());
+})();
+</script>
+<script src="../assets/deck.js"></script>
+</body>
+</html>
