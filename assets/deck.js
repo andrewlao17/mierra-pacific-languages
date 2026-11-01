@@ -61,45 +61,39 @@
     });
   }
 
-  /* ---------- Animated arcs (closing slide) ---------- */
+    /* ---------- Location markers (closing slide) ---------- */
   function drawArcs(slide) {
     const svg = slide.querySelector("svg.arcs");
     if (!svg) return;
     svg.innerHTML = "";
     svg.setAttribute("viewBox", "0 0 " + window.innerWidth + " " + window.innerHeight);
-    const home = parseList(body.dataset.home)[0];
-    const targets = parseList(slide.dataset.arcs);
-    if (!home || !targets.length) return;
     const ns = "http://www.w3.org/2000/svg";
-    const from = project(Number(home[1]), Number(home[2]));
-
-    function addPin(pt, name, cls) {
+    parseList(slide.dataset.markers).forEach((item, k) => {
+      const pt = project(Number(item[1]), Number(item[2]));
       const g = document.createElementNS(ns, "g");
-      g.setAttribute("class", "arc-pin" + (cls ? " " + cls : ""));
-      const c = document.createElementNS(ns, "circle");
-      c.setAttribute("cx", pt.x); c.setAttribute("cy", pt.y); c.setAttribute("r", 7);
-      const t = document.createElementNS(ns, "text");
-      t.setAttribute("x", pt.x + 13); t.setAttribute("y", pt.y + 5);
-      t.textContent = name;
-      g.appendChild(c); g.appendChild(t); svg.appendChild(g);
-    }
-
-    targets.forEach((item, k) => {
-      const to = project(Number(item[1]), Number(item[2]));
-      const mx = (from.x + to.x) / 2;
-      const my = (from.y + to.y) / 2 - Math.hypot(to.x - from.x, to.y - from.y) * 0.25;
-      const path = document.createElementNS(ns, "path");
-      path.setAttribute("d", "M" + from.x + "," + from.y + " Q" + mx + "," + my + " " + to.x + "," + to.y);
-      svg.appendChild(path);
-      const len = path.getTotalLength();
-      path.style.strokeDasharray = len;
-      path.style.strokeDashoffset = len;
-      path.getBoundingClientRect();
-      path.style.transition = "stroke-dashoffset 2.2s ease " + (1.4 + k * 0.3) + "s";
-      path.style.strokeDashoffset = 0;
-      addPin(to, item[0]);
+      g.setAttribute("class", "arc-pin");
+      g.style.animationDelay = (1.4 + k * 0.3) + "s";
+      [0, 1].forEach((r) => {
+        const ring = document.createElementNS(ns, "circle");
+        ring.setAttribute("class", "ripple");
+        ring.setAttribute("cx", pt.x);
+        ring.setAttribute("cy", pt.y);
+        ring.setAttribute("r", 8);
+        ring.style.animationDelay = (1.8 + r * 1.2) + "s";
+        g.appendChild(ring);
+      });
+      const dot = document.createElementNS(ns, "circle");
+      dot.setAttribute("cx", pt.x);
+      dot.setAttribute("cy", pt.y);
+      dot.setAttribute("r", 8);
+      const label = document.createElementNS(ns, "text");
+      label.setAttribute("x", pt.x + 16);
+      label.setAttribute("y", pt.y + 6);
+      label.textContent = item[0];
+      g.appendChild(dot);
+      g.appendChild(label);
+      svg.appendChild(g);
     });
-    addPin(from, home[0], "home");
   }
 
   /* ---------- Circular locator maps ---------- */
