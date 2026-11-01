@@ -279,3 +279,17 @@ ul.dots li::before {
   .fine .box { columns: 1; }
   .hint { display: none; }
 }
+
+/* Closing-slide location marker with ripples */
+.arc-pin { opacity: 0; animation: markerIn .8s ease both; }
+.arc-pin text { font-size: 1.2rem; }
+.arc-pin .ripple {
+  fill: none; stroke: #fbd5cf; stroke-width: 2; vector-effect: non-scaling-stroke;
+  transform-box: fill-box; transform-origin: center; opacity: 0;
+  animation: ripple 2.4s ease-out infinite;
+}
+@keyframes markerIn { from { opacity: 0; } to { opacity: 1; } }
+@keyframes ripple {
+  0% { transform: scale(1); opacity: .8; }
+  100% { transform: scale(6); opacity: 0; }
+}
