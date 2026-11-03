@@ -44,4 +44,617 @@ a.btn { display: inline-block; text-decoration: none; }
 .loc .disc { border-color: var(--gold); box-shadow: 0 0 0 .6rem rgba(255,216,102,.12), 0 22px 40px rgba(0,0,0,.55); }
 .loc .tint { background: #cfe0a8; }
 .loc .sea { background: #10291f; }
-.loc .tag { background: #0a1d16; border-color:
+.loc .tag { background: #0a1d16; border-color: var(--gold); }
+
+/* Forest backdrop */
+#forest {
+  position: fixed; inset: 0; z-index: 0; overflow: hidden; pointer-events: none;
+  background: linear-gradient(180deg, #0a1d2b 0%, #0c2b26 52%, #07130f 100%);
+}
+#forest .moon {
+  position: absolute; width: 13vh; height: 13vh; margin: -6.5vh; border-radius: 50%;
+  left: calc(58% + var(--t) * 34%); top: calc(16% + var(--t) * 12%);
+  background: radial-gradient(circle at 38% 36%, #fbf7e3, #dfe6c5 62%, #b9c7a2);
+  box-shadow: 0 0 80px 30px rgba(223,230,197,.2);
+  transition: left 1.6s ease, top 1.6s ease;
+}
+#forest .trees { position: absolute; left: -6vw; bottom: 0; width: 130vw; height: var(--h); transition: transform 1.6s cubic-bezier(.45,0,.25,1); }
+#forest .far { --h: 92vh; opacity: .55; transform: translateX(calc(var(--t) * -8vw)); }
+#forest .near { --h: 100vh; transform: translateX(calc(var(--t) * -24vw)); }
+#forest .shade { position: absolute; inset: 0; background: linear-gradient(90deg, rgba(4,12,9,.92) 0%, rgba(4,12,9,.68) 52%, rgba(4,12,9,.2) 100%); }
+#flies { position: absolute; inset: 0; }
+.fly {
+  position: absolute; width: .42rem; height: .42rem; border-radius: 50%; background: var(--gold);
+  box-shadow: 0 0 10px 4px rgba(255,216,102,.65);
+  animation: drift var(--dur) ease-in-out var(--del) infinite alternate, blink var(--bl) ease-in-out var(--del) infinite;
+}
+@keyframes drift { to { transform: translate(var(--x), var(--y)); } }
+@keyframes blink { 0%, 100% { opacity: .1; } 50% { opacity: 1; } }
+
+/* Firefly jar: one more firefly on every slide */
+#jar { position: fixed; left: 1.6vw; top: 50%; transform: translateY(-50%); width: 5.4vw; min-width: 3.6rem; z-index: 15; text-align: center; }
+#jar svg { width: 100%; height: auto; display: block; overflow: visible; }
+#jar .glass { fill: rgba(243,239,220,.07); stroke: rgba(243,239,220,.55); stroke-width: 3; }
+#jar .lid { fill: #6a5330; stroke: #c9a76a; stroke-width: 2; }
+#jar circle { fill: var(--gold); opacity: 0; transition: opacity .6s; filter: drop-shadow(0 0 5px var(--gold)); }
+#jar circle.on { opacity: 1; }
+#jar .mk { font-weight: 700; color: var(--gold); font-size: 1.15rem; margin-top: .35rem; }
+#jar .ml { color: var(--muted); font-size: .68rem; }
+
+/* Photos on glowing leaf-shaped plates */
+.plate {
+  position: relative; margin: 0; width: var(--w, 19vw); padding: .55rem .55rem .35rem;
+  background: #efe6cf; border-radius: 1.3rem 1.3rem 1.3rem .35rem;
+  box-shadow: 0 0 0 .28rem #2f5a46, 0 0 34px rgba(255,216,102,.22), 0 18px 34px rgba(0,0,0,.5);
+  transform: rotate(var(--r, 0deg)); transition: transform .9s cubic-bezier(.2,.8,.2,1), opacity .7s ease, filter .9s ease;
+}
+.slide:not(.active) .plate { opacity: 0; filter: brightness(.3); transform: scale(.86) rotate(var(--r, 0deg)); }
+.slide.active .plate { transition-delay: calc(.45s + var(--d, 0) * .16s); }
+.plate img { display: block; width: 100%; aspect-ratio: var(--ar, 4 / 3); object-fit: cover; border-radius: 1rem 1rem 1rem .2rem; background: #d9d0b7; }
+.plate figcaption { color: #1d3127; font-size: .72rem; font-weight: 600; line-height: 1.25; margin: .4rem .15rem .25rem; }
+
+/* Lists of steps */
+.steps { list-style: none; padding: 0; margin: .5rem 0 0; counter-reset: s; }
+.steps li { counter-increment: s; display: flex; gap: .7rem; margin: .5rem 0; font-size: 1.05rem; line-height: 1.3; opacity: .24; transition: opacity .4s; }
+.steps li::before { content: counter(s); flex: none; width: 1.7rem; height: 1.7rem; border-radius: 50%; display: grid; place-items: center; background: #14382c; border: 1px solid var(--line); font-weight: 700; font-size: .85rem; }
+.steps li.on { opacity: 1; }
+.steps li.on::before { background: var(--gold); color: #10241c; }
+.speak.compact { padding: 1rem 1.3rem; }
+.speak.compact .line { font-size: 2rem; }
+.speak.compact .gloss { font-size: .92rem; margin-bottom: .35rem; }
+
+/* Family chips on the detective slide */
+.detect { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1.5fr); gap: 2.4vw; align-items: start; margin-top: .3rem; }
+.lone { text-align: center; padding: 1.2rem 1rem; }
+.fam { display: inline-block; margin: .2rem; padding: .25em .8em; border-radius: 999px; background: rgba(243,239,220,.1); border: 1px solid var(--line); font-size: .9rem; }
+.kusunda-dot { display: inline-block; margin-top: 1rem; padding: .3em 1.2em; border-radius: 999px; background: var(--gold); color: #10241c; font-weight: 700; box-shadow: 0 0 26px rgba(255,216,102,.6); }
+
+/* Count along */
+.modes { display: flex; gap: .5rem; flex-wrap: wrap; justify-content: center; margin: .8rem 0; }
+.mode { background: transparent; color: var(--ink); border: 2px solid var(--line); border-radius: 999px; padding: .35em 1.1em; font: inherit; font-weight: 700; cursor: pointer; }
+.mode.on { background: var(--gold); color: #10241c; border-color: var(--gold); }
+.cnt { display: grid; grid-template-columns: repeat(5, 1fr); gap: .8rem; max-width: 76vw; margin: 0 auto; }
+.cnt .c { background: var(--panel); border: 1px solid var(--line); border-radius: 1rem; padding: .8rem .4rem; text-align: center; transition: background .25s, transform .25s, box-shadow .25s; }
+.cnt .c b { display: block; font-family: var(--serif); font-weight: 400; font-size: 1.9rem; line-height: 1; color: var(--gold); }
+.cnt .c span { display: block; font-size: 1.32rem; font-weight: 700; margin-top: .35rem; transition: opacity .25s; }
+.cnt .c small { display: block; color: var(--muted); font-size: .84rem; min-height: 1.3em; }
+.cnt.swap .c span, .cnt.swap .c small { opacity: 0; }
+.cnt .c.on { background: var(--gold); transform: translateY(-6px); box-shadow: 0 0 34px rgba(255,216,102,.55); }
+.cnt .c.on b, .cnt .c.on span, .cnt .c.on small { color: #10241c; }
+.modehint { color: var(--muted); font-size: .92rem; min-height: 1.4em; margin: .2rem 0 .7rem; }
+
+/* Matching game */
+.match { display: grid; grid-template-columns: 1fr 1fr; gap: 1.3rem; max-width: 62vw; margin: .8rem auto 0; }
+.match .col { display: flex; flex-direction: column; gap: .5rem; }
+.mbtn { font: inherit; font-size: 1.12rem; font-weight: 600; text-align: center; cursor: pointer; padding: .42em .8em; border-radius: .7rem; border: 2px solid var(--line); background: var(--panel); color: var(--ink); transition: background .2s, border-color .2s, transform .2s; }
+.mbtn:hover { transform: translateY(-2px); border-color: var(--gold); }
+.mbtn.sel { border-color: var(--gold); background: rgba(255,216,102,.18); }
+.mbtn.done { background: var(--green); color: #10241c; border-color: var(--green); cursor: default; }
+.mbtn.bad { animation: shake .4s; }
+.matchmsg { min-height: 2.6em; margin-top: .8rem; }
+.matchmsg b { color: var(--gold); }
+
+/* No word for no */
+.nogrid { display: grid; grid-template-columns: 1fr 1fr; gap: 2vw; margin-top: .6rem; align-items: stretch; }
+.bigsay { font-size: 1.85rem; font-weight: 700; line-height: 1.2; color: var(--gold); }
+.ctx { font: inherit; font-size: .98rem; text-align: left; width: 100%; margin-top: .5rem; color: var(--ink); background: rgba(243,239,220,.06); border: 1px solid var(--line); border-radius: .7rem; padding: .45em .8em; cursor: pointer; }
+.ctx.on { border-color: var(--gold); background: rgba(255,216,102,.18); }
+#ctxout { font-size: 1.15rem; font-weight: 700; color: var(--blue); min-height: 1.8em; margin-top: .6rem; }
+
+/* Keeping it alive */
+.minis { display: flex; gap: .7rem; margin-top: .8rem; }
+.mini { flex: 1; text-align: center; padding: .55rem .4rem; }
+.mini b { display: block; font-family: var(--serif); font-weight: 400; font-size: 2rem; color: var(--gold); line-height: 1; }
+.mini span { font-size: .84rem; color: var(--muted); }
+.quote { font-family: var(--serif); font-size: 2rem; line-height: 1.18; color: var(--gold); margin: .5rem 0; }
+.who { color: var(--muted); margin-top: 0; }
+.headrow { display: grid; grid-template-columns: minmax(0, 1fr) 13vw; gap: 2vw; align-items: center; }
+
+@media (max-width: 820px) {
+  #jar { display: none; }
+  .slide { padding: 6vh 6vw 12vh; }
+  h1 { font-size: 3.6rem; }
+  .text, .text.wide { max-width: none; width: auto; }
+  .stage { position: relative; inset: auto; width: 100%; margin-top: 1.5rem; }
+  .plate { width: 76vw; }
+  .detect, .nogrid, .headrow { grid-template-columns: 1fr; }
+  .cnt { grid-template-columns: repeat(2, 1fr); }
+  .match { max-width: none; }
+}
+</style>
+</head>
+<body data-map="BlankMap-Equirectangular.svg">
+
+<div id="forest" aria-hidden="true">
+  <div class="moon"></div>
+  <svg class="trees far" viewBox="0 0 1600 900" preserveAspectRatio="none"><g fill="#0e2d25"><rect x="40" y="0" width="34" height="900"/><rect x="190" y="0" width="22" height="900"/><rect x="330" y="0" width="40" height="900"/><rect x="510" y="0" width="26" height="900"/><rect x="660" y="0" width="36" height="900"/><rect x="820" y="0" width="24" height="900"/><rect x="980" y="0" width="42" height="900"/><rect x="1150" y="0" width="28" height="900"/><rect x="1300" y="0" width="38" height="900"/><rect x="1470" y="0" width="24" height="900"/><path d="M0 0 H1600 V110 Q1420 170 1240 95 T880 120 T520 90 T180 125 T0 95 Z"/></g></svg>
+  <div id="flies"></div>
+  <svg class="trees near" viewBox="0 0 1600 900" preserveAspectRatio="none"><g fill="#07170f"><path d="M110 900 L128 0 H196 L222 900 Z"/><path d="M560 900 L584 0 H636 L668 900 Z"/><path d="M1010 900 L1030 0 H1100 L1128 900 Z"/><path d="M1400 900 L1420 0 H1468 L1494 900 Z"/><path d="M0 0 H1600 V70 Q1400 130 1190 58 T760 80 T340 52 T0 78 Z"/><path d="M0 900 V780 Q220 730 460 790 T930 770 T1600 800 V900 Z"/></g></svg>
+  <div class="shade"></div>
+</div>
+
+<aside id="jar" aria-hidden="true">
+  <svg viewBox="0 0 100 150">
+    <rect class="lid" x="26" y="2" width="48" height="14" rx="4"/>
+    <path class="glass" d="M30 16 H70 V30 Q92 40 92 66 V128 Q92 146 74 146 H26 Q8 146 8 128 V66 Q8 40 30 30 Z"/>
+    <g id="jarflies">
+      <circle cx="32" cy="128" r="5"/><circle cx="56" cy="134" r="5"/><circle cx="76" cy="122" r="5"/><circle cx="24" cy="106" r="5"/>
+      <circle cx="48" cy="112" r="5"/><circle cx="70" cy="100" r="5"/><circle cx="30" cy="84" r="5"/><circle cx="54" cy="90" r="5"/>
+      <circle cx="74" cy="76" r="5"/><circle cx="40" cy="66" r="5"/><circle cx="60" cy="58" r="5"/><circle cx="46" cy="42" r="5"/>
+    </g>
+  </svg>
+  <div class="mk">waŋ</div>
+  <div class="ml">firefly</div>
+</aside>
+<div class="progress"></div>
+
+<main>
+
+<!-- 1. Title -->
+<section class="slide" style="--accent: var(--gold)">
+  <div class="text">
+    <p class="kicker in">Rare Languages of the Asia-Pacific · Module 11</p>
+    <h1 class="in" style="--d:1">Kusunda</h1>
+    <div class="bar in" style="--d:2"></div>
+    <p class="lead in" style="--d:3">A language from Nepal with no known relatives anywhere on Earth</p>
+    <p class="in" style="--d:4; font-family:var(--serif); font-size:2rem; color:var(--gold)" lang="ne">गेम्येहाक़</p>
+    <p class="muted in" style="--d:5">Its speakers call themselves the kings of the forest.</p>
+  </div>
+  <div class="stage">
+    <figure class="plate" style="--w:32vw; --ar:1947/981; --r:-1deg; --d:0">
+      <img data-file="Himalaya composite.jpg" alt="Composite satellite view of the Himalaya">
+      <figcaption>The Himalaya from space (NASA). Kusunda comes from the forests and foothills of Nepal.</figcaption>
+    </figure>
+    <figure class="plate" style="--w:17vw; --ar:4/3; --r:2deg; --d:1">
+      <img data-file="Firefly (Lampyridae, Pleotomus sp.) (29964887062).jpg" alt="Close view of a firefly">
+      <figcaption>A firefly. In Kusunda, the word is <em>waŋ</em>.</figcaption>
+    </figure>
+  </div>
+</section>
+
+<!-- 2. Who and where -->
+<section class="slide" data-tr="left" style="--accent: var(--blue)">
+  <div class="text">
+    <p class="kicker in">Who and where</p>
+    <h2 class="in" style="--d:1">Kings of the forest</h2>
+    <div class="bar in" style="--d:2"></div>
+    <ul class="dots">
+      <li class="in" style="--d:3">The Kusunda live in western and central <strong>Nepal</strong>, many of them in <strong>Dang</strong> district. They have long been called <span class="hl">Ban Raja</span>, "kings of the forest."</li>
+      <li class="in" style="--d:4">Their own name is <span class="hl">Mihaq</span> or <span class="hl">Gemehaq</span>. Hima Kusunda, a young learner, explains it as "forest" plus "tiger." Their language is <span class="hl">Gemehaq gipan</span>.</li>
+      <li class="in" style="--d:5">In rural Nepal, the word <em>Kusunda</em> has also been used as an insult meaning "uncivilised." The community has lived with that label for generations.</li>
+    </ul>
+    <div class="panel in" style="--d:6; margin-top:.7rem">
+      <div class="dotgrid" data-total="253" data-on="1" style="grid-template-columns: repeat(46, 1fr); gap: .14rem"></div>
+      <div class="legend"><span style="--c: var(--gold)">1 fluent native speaker (2025)</span><span style="--c: rgba(255,255,255,.3)">253 Kusunda people (2021 census)</span></div>
+    </div>
+  </div>
+  <div class="stage">
+    <div class="loc" data-lat="28" data-lon="82.3" data-zoom="9" style="--s:13vw; --d:0">
+      <div class="disc"><div class="lmap"></div><div class="tint"></div><div class="sea"></div><span class="pinpt"></span></div>
+      <span class="tag">Dang, western Nepal</span>
+    </div>
+    <figure class="plate" style="--w:27vw; --ar:1056/816; --r:1deg; --d:1">
+      <img data-file="Rapti districts.png" alt="Map of Dang, Pyuthan, Rolpa, Salyan and Rukum districts in Nepal" style="object-fit:contain; background:#fff">
+      <figcaption>Districts of Nepal's old Rapti Zone, including Dang, Pyuthan and Rolpa</figcaption>
+    </figure>
+  </div>
+</section>
+
+<!-- 3. Forest life -->
+<section class="slide" data-tr="zoom" style="--accent: var(--green)">
+  <div class="text">
+    <p class="kicker in">Life in the forest</p>
+    <h2 class="in" style="--d:1">Hunters of the night forest</h2>
+    <div class="bar in" style="--d:2"></div>
+    <ul class="dots">
+      <li class="in" style="--d:3">Until the mid-1900s, the Kusunda moved through the forests, hunting birds and <strong>monitor lizards</strong> and gathering yams.</li>
+      <li class="in" style="--d:4">They shot birds resting in trees at night with very long, unfeathered arrows, about <strong>160 cm</strong> long.</li>
+      <li class="in" style="--d:5">Reports describe a <strong>silent trade</strong>: they left a deer at a farm, expecting farm goods in return.</li>
+      <li class="in" style="--d:6">In the 1950s, Nepal took control of large forests. Farming also broke up the jungle. The Kusunda had to settle, and with so few of them left, most married outside the group.</li>
+    </ul>
+  </div>
+  <div class="stage row">
+    <figure class="plate" style="--w:20vw; --ar:3/2; --r:-1.5deg; --d:0">
+      <img data-file="Panthera tigris tigris.jpg" alt="Bengal tiger">
+      <figcaption>A Bengal tiger, the forest's other "king" (US Fish and Wildlife Service)</figcaption>
+    </figure>
+    <figure class="plate" style="--w:15vw; --ar:3/4; --r:1.5deg; --d:1">
+      <img data-file="Varanus bengalensis 401278639.jpg" alt="Bengal monitor lizard">
+      <figcaption>A Bengal monitor lizard in India</figcaption>
+    </figure>
+    <figure class="plate" style="--w:15vw; --ar:2/3; --r:1deg; --d:2">
+      <img data-file="DinopiumShoriiGould.jpg" alt="Painting of a Himalayan flameback woodpecker by Elizabeth Gould">
+      <figcaption>A Himalayan bird painted by Elizabeth Gould, 1832</figcaption>
+    </figure>
+  </div>
+</section>
+
+<!-- 4. Lost and found -->
+<section class="slide" style="--accent: var(--rose)">
+  <div class="text wide">
+    <div class="headrow">
+      <div>
+        <p class="kicker in">A linguistic surprise</p>
+        <h2 class="in" style="--d:1">The language that came back</h2>
+        <div class="bar in" style="--d:2"></div>
+        <p class="lead in" style="--d:3">Reference books once listed Kusunda as extinct. Then a trip to get citizenship papers changed everything.</p>
+      </div>
+      <figure class="plate" style="--w:13vw; --ar:4/5; --r:1.5deg; --d:0">
+        <img data-file="Brian Houghton Hodgson by Louisa Starr-Canziani.jpg" alt="Portrait of Brian Houghton Hodgson">
+        <figcaption>Brian Hodgson, British official in Nepal</figcaption>
+      </figure>
+    </div>
+    <div class="timeline">
+      <div class="event c3 in" style="--d:4"><div class="yr">1848</div><p>Hodgson describes the Kusunda in print. He later publishes 223 of their words.</p></div>
+      <div class="event c4 in" style="--d:5"><div class="yr">1985</div><p>The last speaker is reported dead. Kusunda gets listed as extinct.</p></div>
+      <div class="event c2 in" style="--d:6"><div class="yr">2004</div><p>Three Kusundas visit Kathmandu for citizenship papers. Linguists discover that Gyani Maiya Sen can speak it.</p></div>
+      <div class="event c1 in" style="--d:7"><div class="yr">2019</div><p>Nepal's Language Commission begins Kusunda classes in Dang.</p></div>
+      <div class="event c5 in" style="--d:8"><div class="yr">2025</div><p><span lang="ne">पिन्डा</span> (<em>Pinda</em>, "The First"), a book of Kusunda writing, is published.</p></div>
+    </div>
+  </div>
+</section>
+
+<!-- 5. Isolate detective -->
+<section class="slide" data-tr="zoom" style="--accent: var(--lilac)">
+  <div class="text wide">
+    <p class="kicker in">Language detective</p>
+    <h2 class="in" style="--d:1">Who are Kusunda's relatives?</h2>
+    <div class="bar in" style="--d:2"></div>
+    <div class="detect">
+      <div class="panel lone in" style="--d:3">
+        <p style="margin-top:0"><strong>Nepal's language families</strong></p>
+        <span class="fam">Indo-European</span><span class="fam">Sino-Tibetan</span><span class="fam">Austroasiatic</span><span class="fam">Dravidian</span>
+        <div><span class="kusunda-dot">Kusunda: on its own</span></div>
+        <p class="muted" style="font-size:.9rem; margin-bottom:0">Researchers think Kusunda may be the last survivor of languages spoken in the region before these families arrived.</p>
+      </div>
+      <div>
+        <p class="in" style="--d:4; margin-top:0">A language with no proven relatives is called an <strong>isolate</strong>. Click each suspect to see the evidence.</p>
+        <div class="cards compact in" style="--d:5; grid-template-columns:repeat(2, 1fr)">
+          <div class="card" style="--cardc: var(--green)"><div class="word">Tibeto-Burman?</div><div class="meaning">Long assumed because the neighbouring Chepang lived in a similar way. Most Kusunda words do not match.</div><div class="tap">check the evidence</div></div>
+          <div class="card" style="--cardc: var(--blue)"><div class="word">Andamanese?</div><div class="meaning">Some pronouns look alike. Remember Module 10? The proposed link is not widely accepted.</div><div class="tap">check the evidence</div></div>
+          <div class="card" style="--cardc: var(--gold)"><div class="word">Burushaski?</div><div class="meaning">This isolate from Pakistan was suggested in 1970. No firm link has been proven.</div><div class="tap">check the evidence</div></div>
+          <div class="card" style="--cardc: var(--rose)"><div class="word">Siberia?</div><div class="meaning">Scholars have compared it with the distant Yeniseian languages. The idea remains unproven.</div><div class="tap">check the evidence</div></div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- 6. Sounds -->
+<section class="slide" data-tr="left" style="--accent: var(--gold)">
+  <div class="text">
+    <p class="kicker in">Speak along</p>
+    <h2 class="in" style="--d:1">A sound from deep in the throat</h2>
+    <div class="bar in" style="--d:2"></div>
+    <p class="in" style="--d:3">Kusunda has <strong>uvular</strong> sounds, made near the little dangling <em>uvula</em> at the back of your mouth. No neighbouring language in the region has them. Let's learn <strong>q</strong>:</p>
+    <ol class="steps in" id="coach" style="--d:4">
+      <li>Say <strong>"k"</strong> as in "kite." Feel your tongue touch the roof of your mouth.</li>
+      <li>Move that touch further back, toward your uvula.</li>
+      <li>Say k back there. It sounds deeper, almost like a soft cough. That's <strong>q</strong>.</li>
+      <li>Now try it in a word: <strong>qasti</strong> means "one."</li>
+    </ol>
+    <p class="in" style="--d:5; margin-top:.7rem"><button class="btn" id="coachbtn">Next step ▶</button></p>
+    <p class="muted in" style="--d:6; font-size:.86rem">Fun fact: Kusunda vowels usually travel in teams. Words tend to use <strong>i, ə, u</strong> or <strong>e, a, o</strong>, but rarely mix them.</p>
+  </div>
+  <div class="stage">
+    <div class="speak panel compact in" data-tempo="620" style="--d:3; width:37vw">
+      <div class="line" data-syl="so·dzaq"></div><p class="gloss">"greetings"</p>
+      <div class="line" data-syl="gi·pən"></div><p class="gloss">"language" · ə sounds like the "a" in "about"</p>
+      <div class="line" data-syl="gi·pan"></div><p class="gloss">"flower" · one vowel changes the word!</p>
+      <button class="btn play">▶ Speak along</button>
+    </div>
+    <figure class="plate" style="--w:17vw; --ar:4/5; --r:1.5deg; --d:1">
+      <img data-file="The rhododendrons of Sikkim-Himalaya (Tab. XVI) (8221586594).jpg" alt="Botanical plate of a Himalayan rhododendron from 1851">
+      <figcaption><em>gipan</em>, "flower": a Himalayan rhododendron drawn by J. D. Hooker, 1851</figcaption>
+    </figure>
+  </div>
+</section>
+
+<!-- 7. Count along -->
+<section class="slide" data-tr="zoom" style="--accent: var(--green)">
+  <div class="text wide center">
+    <p class="kicker in">Speak along</p>
+    <h2 class="in" style="--d:1">Two ways to count to five</h2>
+    <div class="bar in" style="--d:2"></div>
+    <p class="in" style="--d:3; max-width:64vw; margin:0 auto">Kusunda has traditional numbers from one to five. Pronouns such as <em>tok</em> ("we") use a different set. After five, speakers use Nepali numbers.</p>
+    <div class="modes in" style="--d:4">
+      <button class="mode on" data-mode="count">Just counting</button>
+      <button class="mode" data-mode="people">"We" counting</button>
+    </div>
+    <p class="modehint in" id="modehint" style="--d:4">Like saying "one, two, three…" out loud.</p>
+    <div class="cnt in" id="cnt" style="--d:5">
+      <div class="c" data-count="qasti" data-say="QAH-stee" data-people="tsi" data-psay="I"><b>1</b><span>qasti</span><small>QAH-stee</small></div>
+      <div class="c" data-count="dukhu" data-say="DOO-khoo" data-people="tok dziŋa" data-psay="we two"><b>2</b><span>dukhu</span><small>DOO-khoo</small></div>
+      <div class="c" data-count="dahat" data-say="dah-HAHT" data-people="tok da" data-psay="we three"><b>3</b><span>dahat</span><small>dah-HAHT</small></div>
+      <div class="c" data-count="pigu" data-say="PEE-goo" data-people="tok pyaŋdzaŋ" data-psay="we four"><b>4</b><span>pigu</span><small>PEE-goo</small></div>
+      <div class="c" data-count="pãgo" data-say="PAHN-go" data-people="tok paŋdzaŋ" data-psay="we five"><b>5</b><span>pãgo</span><small>PAHN-go</small></div>
+    </div>
+    <p class="in" style="--d:6; margin-top:1rem"><button class="btn" id="countbtn">▶ Count along</button></p>
+    <p class="muted in" style="--d:7; font-size:.84rem">Sources spell some numbers differently. The word for "one" also appears as <em>qaːsn</em>. Say ŋ like the "ng" in "sing," and dz like the end of "beds."</p>
+  </div>
+</section>
+
+<!-- 8. Word water -->
+<section class="slide" style="--accent: var(--blue)">
+  <div class="text wide center">
+    <p class="kicker in">Word detective</p>
+    <h2 class="in" style="--d:1">Bee water and eye water</h2>
+    <div class="bar in" style="--d:2"></div>
+    <p class="in" style="--d:3; max-width:68vw; margin:0 auto">Kusunda builds words like puzzles. <strong>gidaŋ</strong> means "fluid" and comes from <strong>taŋ</strong>, "water." Click a Kusunda phrase, then click what you think it means.</p>
+    <div class="match in" id="match" style="--d:4">
+      <div class="col">
+        <button class="mbtn word" data-pair="tears">iŋ gidaŋ</button>
+        <button class="mbtn word" data-pair="honey">twi-yi gidaŋ</button>
+        <button class="mbtn word" data-pair="saliva">ata gidaŋ</button>
+        <button class="mbtn word" data-pair="breath">ata qai</button>
+        <button class="mbtn word" data-pair="horn">ipi gidzaŋ</button>
+      </div>
+      <div class="col">
+        <button class="mbtn mean" data-pair="horn">horn</button>
+        <button class="mbtn mean" data-pair="saliva">saliva</button>
+        <button class="mbtn mean" data-pair="tears">tears</button>
+        <button class="mbtn mean" data-pair="breath">breath</button>
+        <button class="mbtn mean" data-pair="honey">honey</button>
+      </div>
+    </div>
+    <div class="matchmsg" id="matchmsg">Clues: <b>iŋ</b> = eye, <b>twi</b> = bee, <b>ata</b> = mouth, <b>qai</b> = wind, <b>ipi</b> = head, <b>gidzaŋ</b> = body</div>
+  </div>
+</section>
+
+<!-- 9. No word for no -->
+<section class="slide" data-tr="left" style="--accent: var(--rose)">
+  <div class="text wide">
+    <p class="kicker in">A very unusual grammar</p>
+    <h2 class="in" style="--d:1">A language without "yes" or "no"</h2>
+    <div class="bar in" style="--d:2"></div>
+    <p class="in" style="--d:3">Kusunda is reported to have no simple words for "yes" or "no," and no standard way to make an ordinary sentence negative. Context does much of the work.</p>
+    <div class="nogrid">
+      <div class="panel in" style="--d:4">
+        <div class="bigsay">goraq gina g-əm-u-a</div>
+        <p style="margin:.2rem 0 0">"Tomorrow she (or he) …eat." Does it mean <em>will</em> or <em>will not</em>? Choose a situation:</p>
+        <button class="ctx" data-out="She will eat tomorrow.">Her lunch is already packed.</button>
+        <button class="ctx" data-out="She will not eat tomorrow.">She is too ill to touch any food.</button>
+        <div id="ctxout">The words stay the same. Only the situation changes.</div>
+        <p class="muted" style="font-size:.78rem; margin-bottom:0">The two situations are our own examples.</p>
+      </div>
+      <div class="panel in" style="--d:5">
+        <strong>But Kusunda can still refuse!</strong>
+        <ul class="dots" style="margin-top:.2rem">
+          <li><strong>libuŋ ə-go</strong> "Play!" · <strong>libuŋ ə-nin</strong> "Don't play!"</li>
+          <li><strong>otoq</strong> means "(that) is not."</li>
+          <li>To refuse tea, you might use "drink" in a form showing it is very unlikely.</li>
+          <li>Kusunda is also reported to lack words for <strong>left</strong> and <strong>right</strong>, and for the colour <strong>green</strong>.</li>
+        </ul>
+        <p class="muted" style="font-size:.8rem; margin-bottom:0">Linguists disagree about parts of this. An earlier grammar described several negative endings.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- 10. Keeping it alive -->
+<section class="slide" data-tr="zoom" style="--accent: var(--green)">
+  <div class="text wide">
+    <p class="kicker in">Hope</p>
+    <h2 class="in" style="--d:1">Keeping the light on</h2>
+    <div class="bar in" style="--d:2"></div>
+    <div class="nogrid">
+      <div>
+        <ul class="dots" style="margin-top:0">
+          <li class="in" style="--d:3"><strong>Gyani Maiya Sen</strong> helped linguists and early classes until her death in January 2020.</li>
+          <li class="in" style="--d:4"><strong>Kamala Sen Kusunda</strong> was working in a brick kiln when the Language Commission found her. She is now the last fluent native speaker, and she teaches.</li>
+          <li class="in" style="--d:5"><strong>Hima Kusunda</strong> learned the language at school, teaches her elders at home, and wrote a song in Kusunda about life in the forest.</li>
+          <li class="in" style="--d:6"><strong>Uday Raj Aaley</strong> published a Kusunda dictionary in 2017 and leads the classes in Dang.</li>
+        </ul>
+      </div>
+      <div>
+        <p class="quote in" style="--d:4">"How could I forget the language of my ancestors?"</p>
+        <p class="who in" style="--d:5">Kamala Sen Kusunda</p>
+        <div class="minis in" style="--d:6">
+          <div class="mini panel"><b>20</b><span>students in the Dang classes</span></div>
+          <div class="mini panel"><b>2,000</b><span>Kusunda words collected</span></div>
+        </div>
+        <p class="in" style="--d:7; margin-top:.9rem"><a class="btn" href="https://www.archivenepal.org/kusundacourse" target="_blank" rel="noopener">▶ Try the free online lessons</a></p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- 11. Quiz -->
+<section class="slide" style="--accent: var(--gold)">
+  <div class="text wide center">
+    <p class="kicker in">Your turn</p>
+    <h2 class="in" style="--d:1">Quick quiz!</h2>
+    <div class="bar in" style="--d:2"></div>
+    <div class="quizgrid">
+      <div class="quiz panel in" style="--d:3" data-right="Right! No relative has been proven." data-wrong="Hint: think about our detective slide.">
+        <div class="q">What does it mean to call Kusunda an isolate?</div>
+        <div class="options"><button class="opt">It is spoken on an island</button><button class="opt" data-correct>It has no proven relatives</button><button class="opt">It has no grammar</button></div>
+        <div class="feedback"></div>
+      </div>
+      <div class="quiz panel in" style="--d:4" data-right="Yes! gipan is flower, gipən is language." data-wrong="Hint: listen for the a sound.">
+        <div class="q">Which word means "flower"?</div>
+        <div class="options"><button class="opt">gipən</button><button class="opt" data-correct>gipan</button><button class="opt">getse</button></div>
+        <div class="feedback"></div>
+      </div>
+      <div class="quiz panel in" style="--d:5" data-right="Sweet! Bee water means honey." data-wrong="Hint: what do bees make?">
+        <div class="q">What does <em>twi-yi gidaŋ</em>, "bee water," mean?</div>
+        <div class="options"><button class="opt">Rain</button><button class="opt">Tears</button><button class="opt" data-correct>Honey</button></div>
+        <div class="feedback"></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- 12. Closing -->
+<section class="slide end" style="--accent: var(--gold)">
+  <div class="text">
+    <h1 class="in say-word" style="font-size:5rem">Sodzaq!</h1>
+    <p class="lead in" style="--d:1">Greetings, and thank you. Questions?</p>
+    <p class="quote in" style="--d:2">"I think I can take this language forward."</p>
+    <p class="who in" style="--d:3">Hima Kusunda, student and future language teacher</p>
+  </div>
+  <details class="fine in" style="--d:4">
+    <summary>Sources &amp; image credits</summary>
+    <div class="box">
+      <h4>Sources</h4>
+      <ul>
+        <li><a href="https://escholarship.org/uc/item/83v8d1wv">Watters (2006): Notes on Kusunda Grammar</a></li>
+        <li><a href="https://en.wikipedia.org/wiki/Kusunda_language">Kusunda language (Wikipedia)</a></li>
+        <li><a href="https://en.wikipedia.org/wiki/Kusunda_people">Kusunda people (Wikipedia)</a></li>
+        <li><a href="https://www.yerepouni-news.com/the-language-that-doesnt-use-no/">McDougall (2022): The language that doesn't use "no"</a></li>
+        <li><a href="https://nepalitimes.com/the-last-of-the-kusunda">Nepali Times (2023): The last of the Kusunda</a></li>
+        <li><a href="https://nepalitimes.com/saving-the-kusunda-language-from-extinction">Nepali Times (2025): Saving the Kusunda language</a></li>
+        <li><a href="https://lingweb.eva.mpg.de/channumerals/Kusunda.htm">Numeral Systems of the World: Kusunda</a></li>
+        <li><a href="https://globalvoices.org/2020/01/31/hope-for-dying-nepali-language-wanes-as-one-of-the-last-fluent-speakers-passes-away-at-85/">Global Voices (2020): Gyani Maiya Sen</a></li>
+        <li><a href="https://cultural-protection-fund.britishcouncil.org/stories/kusunda-literature-compilation">British Council: Kusunda literature compilation</a></li>
+        <li><a href="https://en.wikipedia.org/wiki/Languages_of_Nepal">Languages of Nepal (Wikipedia)</a></li>
+      </ul>
+      <h4>Images (Wikimedia Commons)</h4>
+      <ul id="credits"></ul>
+    </div>
+  </details>
+</section>
+
+</main>
+
+<nav class="controls">
+  <button id="prev" aria-label="Previous slide">‹</button>
+  <span id="counter">1 / 12</span>
+  <button id="next" aria-label="Next slide">›</button>
+  <button id="fs" aria-label="Fullscreen">⤢</button>
+</nav>
+<p class="hint">Use ← → to move. Press F for fullscreen.</p>
+
+<!-- Kusunda effects: fireflies, jar, sound coach, count-along, word match, context choice -->
+<script>
+(function () {
+  /* ---------- Forest fireflies ---------- */
+  var flies = document.getElementById("flies");
+  for (var i = 0; i < 28; i++) {
+    var fly = document.createElement("span");
+    fly.className = "fly";
+    fly.style.left = (Math.random() * 100) + "%";
+    fly.style.top = (18 + Math.random() * 78) + "%";
+    fly.style.setProperty("--x", (Math.random() * 12 - 6) + "vw");
+    fly.style.setProperty("--y", (Math.random() * 12 - 6) + "vh");
+    fly.style.setProperty("--dur", (9 + Math.random() * 12) + "s");
+    fly.style.setProperty("--bl", (2 + Math.random() * 4) + "s");
+    fly.style.setProperty("--del", (-Math.random() * 8) + "s");
+    flies.appendChild(fly);
+  }
+
+  var timers = [];
+  function clearTimers() { timers.forEach(clearTimeout); timers = []; }
+  var jarFlies = document.querySelectorAll("#jarflies circle");
+
+  document.addEventListener("slidechange", function (e) {
+    document.body.style.setProperty("--t", e.detail.index / (e.detail.total - 1));
+    jarFlies.forEach(function (c, k) { c.classList.toggle("on", k <= e.detail.index); });
+    clearTimers();
+    document.querySelectorAll(".cnt .c.on").forEach(function (c) { c.classList.remove("on"); });
+  });
+
+  /* ---------- Sound coach ---------- */
+  var coachBtn = document.getElementById("coachbtn");
+  var steps = document.querySelectorAll("#coach li");
+  var stepIndex = 0;
+  coachBtn.addEventListener("click", function () {
+    if (stepIndex >= steps.length) {
+      steps.forEach(function (s) { s.classList.remove("on"); });
+      stepIndex = 0;
+      coachBtn.textContent = "Next step ▶";
+      return;
+    }
+    steps[stepIndex].classList.add("on");
+    stepIndex++;
+    coachBtn.textContent = stepIndex >= steps.length ? "Start again ↺" : "Next step ▶";
+  });
+
+  /* ---------- Two ways to count ---------- */
+  var HINTS = {
+    count: "Like saying \"one, two, three…\" out loud.",
+    people: "Used after pronouns. For one person, just say tsi, \"I.\" You can also use nok (you all) or gina (they)."
+  };
+  var cnt = document.getElementById("cnt");
+  var hint = document.getElementById("modehint");
+  document.querySelectorAll(".mode").forEach(function (btn) {
+    btn.addEventListener("click", function () {
+      document.querySelectorAll(".mode").forEach(function (b) { b.classList.remove("on"); });
+      btn.classList.add("on");
+      var people = btn.dataset.mode === "people";
+      cnt.classList.add("swap");
+      setTimeout(function () {
+        cnt.querySelectorAll(".c").forEach(function (c) {
+          c.querySelector("span").textContent = people ? c.dataset.people : c.dataset.count;
+          c.querySelector("small").textContent = people ? c.dataset.psay : c.dataset.say;
+        });
+        hint.textContent = people ? HINTS.people : HINTS.count;
+        cnt.classList.remove("swap");
+      }, 250);
+    });
+  });
+  document.getElementById("countbtn").addEventListener("click", function () {
+    clearTimers();
+    var cells = cnt.querySelectorAll(".c");
+    cells.forEach(function (c, k) {
+      timers.push(setTimeout(function () {
+        cells.forEach(function (x) { x.classList.remove("on"); });
+        c.classList.add("on");
+      }, k * 1500));
+    });
+    timers.push(setTimeout(function () { cells.forEach(function (x) { x.classList.remove("on"); }); }, cells.length * 1500));
+  });
+
+  /* ---------- Word match ---------- */
+  var NOTES = {
+    tears: "<b>iŋ gidaŋ</b>: eye fluid = tears.",
+    honey: "<b>twi-yi gidaŋ</b>: the bee's fluid = honey.",
+    saliva: "<b>ata gidaŋ</b>: mouth fluid = saliva.",
+    breath: "<b>ata qai</b>: mouth wind = breath.",
+    horn: "<b>ipi gidzaŋ</b>: head body = a horn."
+  };
+  var match = document.getElementById("match");
+  var msg = document.getElementById("matchmsg");
+  var selected = null;
+  match.querySelectorAll(".mbtn.word").forEach(function (w) {
+    w.addEventListener("click", function () {
+      if (w.classList.contains("done")) return;
+      match.querySelectorAll(".mbtn.word").forEach(function (x) { x.classList.remove("sel"); });
+      w.classList.add("sel");
+      selected = w;
+    });
+  });
+  match.querySelectorAll(".mbtn.mean").forEach(function (m) {
+    m.addEventListener("click", function () {
+      if (!selected || m.classList.contains("done")) return;
+      if (selected.dataset.pair === m.dataset.pair) {
+        selected.classList.remove("sel");
+        selected.classList.add("done");
+        m.classList.add("done");
+        msg.innerHTML = "✓ " + NOTES[m.dataset.pair];
+        selected = null;
+        if (match.querySelectorAll(".mbtn.done").length === 10) {
+          msg.innerHTML += "<br>All five solved! You can now see how Kusunda speakers built words.";
+        }
+      } else {
+        m.classList.add("bad");
+        setTimeout(function () { m.classList.remove("bad"); }, 400);
+        msg.textContent = "Not quite. Check the clues and try another meaning!";
+      }
+    });
+  });
+
+  /* ---------- Same words, different context ---------- */
+  var out = document.getElementById("ctxout");
+  document.querySelectorAll(".ctx").forEach(function (b) {
+    b.addEventListener("click", function () {
+      document.querySelectorAll(".ctx").forEach(function (x) { x.classList.remove("on"); });
+      b.classList.add("on");
+      out.textContent = b.dataset.out;
+    });
+  });
+})();
+</script>
+<script src="../assets/deck.js"></script>
+</body>
+</html>
