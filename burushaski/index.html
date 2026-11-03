@@ -1,0 +1,673 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Burushaski: The Language Without a Family</title>
+<link rel="stylesheet" href="../assets/deck.css">
+<style>
+@import url("https://fonts.googleapis.com/css2?family=Alegreya:wght@700;800&family=Source+Sans+3:wght@400;600;700&family=Noto+Naskh+Arabic:wght@500;700&display=swap");
+
+/* ---------- Burushaski theme: dawn over a mountain valley and watered terraces ---------- */
+:root {
+  --bg: #111b2b;
+  --ink: #f7f2e8;
+  --muted: #cfd4d8;
+  --line: rgba(247, 242, 232, .22);
+  --panel: rgba(13, 25, 42, .82);
+  --gold: #f4bd5b;
+  --apricot: #f49a58;
+  --green: #a6d77b;
+  --ice: #8fd7ea;
+  --rose: #f1a0a0;
+  --accent: var(--gold);
+  --serif: "Alegreya", Georgia, serif;
+  --sans: "Source Sans 3", "Noto Sans", system-ui, sans-serif;
+  --t: 0;
+  font-size: clamp(12px, 1.3vw, 28px);
+}
+h1 { font-size: 6rem; font-weight: 800; line-height: .98; }
+h2 { font-size: 3.1rem; font-weight: 800; line-height: 1.04; }
+.slide { padding: 7vh 3vw 8vh 10vw; }
+.text { max-width: 44vw; }
+.text.wide { max-width: 83vw; width: 83vw; }
+.stage {
+  right: 2.5vw; top: 6vh; bottom: 8vh; width: 40vw;
+  display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 1.4rem;
+}
+.stage .loc { position: relative; }
+ul.dots li { font-size: 1.12rem; }
+.speak .line, .card .word { font-family: var(--sans); font-weight: 700; }
+.card.revealed .meaning { max-height: 12rem; }
+.loc .disc { border-color: var(--gold); box-shadow: 0 0 0 .6rem rgba(244,189,91,.14), 0 22px 40px rgba(0,0,0,.55); }
+.loc .tint { background: #d9d8ca; }
+.loc .sea { background: #243d56; }
+.loc .tag { background: #132136; border-color: var(--gold); }
+.event, .event p { color: #20140d; }
+.arabic { font-family: "Noto Naskh Arabic", serif; }
+
+/* Mountain backdrop */
+#valley { position: fixed; inset: 0; z-index: 0; overflow: hidden; pointer-events: none; background: linear-gradient(180deg, #07101f 0%, #182b47 62%, #365069 100%); }
+#valley .dawn { position: absolute; inset: 0; opacity: calc(var(--t) * .92); background: linear-gradient(180deg, #557fa8 0%, #e8a06d 52%, #ffd18d 74%); transition: opacity 1.6s ease; }
+#valley .stars { position: absolute; inset: 0 0 42% 0; opacity: calc(1 - var(--t) * 1.4); transition: opacity 1.6s ease; background-image: radial-gradient(#fff 1px, transparent 1.5px), radial-gradient(#fff 1px, transparent 1.5px); background-size: 113px 97px, 171px 139px; background-position: 13px 21px, 67px 49px; }
+#valley svg { position: absolute; left: -4vw; width: 108vw; bottom: 0; }
+#valley .peaks { height: 78vh; }
+#valley .ridge { height: 46vh; }
+#valley .shade { position: absolute; inset: 0; background: linear-gradient(90deg, rgba(8,14,24,.92) 0%, rgba(8,14,24,.7) 56%, rgba(8,14,24,.2) 100%); }
+.petal { position: absolute; top: -6vh; left: var(--x); width: .55rem; height: .55rem; border-radius: 70% 0 70% 0; background: #ffe2d4; opacity: .78; animation: fall var(--dur) linear infinite; animation-delay: var(--dly); }
+@keyframes fall { to { transform: translate(var(--drift), 112vh) rotate(540deg); } }
+
+/* Terrace progress */
+#terraces { position: fixed; left: 1.4vw; top: 12vh; z-index: 15; display: flex; flex-direction: column; gap: .18rem; width: 6vw; min-width: 4.3rem; }
+#terraces i { display: block; height: 1.55rem; width: calc(38% + var(--k) * 5.7%); border-radius: 0 .25rem .25rem 0; background: #4a4e50; box-shadow: inset 0 -.28rem 0 #2e3132; position: relative; transition: background .7s; }
+#terraces i.full { background: var(--green); box-shadow: inset 0 -.28rem 0 #5c8e43; }
+#terraces i.now::after { content: ""; position: absolute; right: -.45rem; top: .3rem; width: .55rem; height: .55rem; border-radius: 0 50% 50% 50%; transform: rotate(45deg); background: var(--ice); box-shadow: 0 0 12px var(--ice); }
+
+/* Photo frames */
+.pin {
+  position: relative; margin: 0; width: var(--w, 19vw); padding: .45rem .45rem .35rem; background: #f8f1df; box-shadow: 0 16px 34px rgba(0,0,0,.55);
+  transform: rotate(var(--r, 0deg)); transition: transform .9s cubic-bezier(.2,.8,.2,1), opacity .7s ease;
+}
+.pin::before { content: ""; position: absolute; left: 50%; top: -.55rem; width: 1rem; height: 1rem; border-radius: 50%; background: radial-gradient(circle at 35% 35%, #ffd7a1, #c95f22); transform: translateX(-50%); box-shadow: 0 2px 4px rgba(0,0,0,.45); }
+.slide:not(.active) .pin { opacity: 0; transform: translateY(-50px) rotate(var(--r, 0deg)); }
+.slide.active .pin { transition-delay: calc(.45s + var(--d, 0) * .16s); }
+.pin img { display: block; width: 100%; aspect-ratio: var(--ar, 4 / 3); object-fit: cover; background: #d7d1be; }
+.pin figcaption { color: #20140d; font-size: .75rem; font-weight: 700; line-height: 1.25; margin: .35rem .15rem .1rem; }
+
+/* Noun sorter */
+.sort { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1.4fr); gap: 2vw; margin-top: .4rem; }
+#sw { font-family: var(--serif); font-weight: 800; color: var(--gold); font-size: 3.4rem; line-height: 1; }
+#sm { font-size: 1.25rem; font-weight: 700; }
+#sf { min-height: 3.6rem; font-size: 1rem; margin-top: .55rem; color: var(--ice); }
+.classes { display: grid; grid-template-columns: 1fr 1fr; gap: .55rem; }
+.cls { font: inherit; text-align: left; cursor: pointer; color: var(--ink); background: var(--panel); border: 2px solid var(--line); border-radius: .7rem; padding: .6rem .8rem; }
+.cls b { display: block; font-family: var(--serif); font-size: 1.25rem; color: var(--c); }
+.cls span { font-size: .88rem; }
+.cls.good { background: #315a2d; border-color: var(--green); }
+.cls.bad { background: #6a3030; border-color: var(--rose); }
+.score { font-weight: 700; margin-top: .4rem; }
+
+/* Tone */
+.tone { display: flex; gap: .55rem; margin: .45rem 0; }
+.tbtn, .pbtn { font: inherit; font-weight: 700; color: var(--ink); background: var(--panel); border: 2px solid var(--line); border-radius: 999px; padding: .2em .95em; cursor: pointer; }
+.tbtn.on, .pbtn.on { background: var(--gold); border-color: var(--gold); color: #20140d; }
+#tonesvg { display: block; width: 100%; height: 6.2rem; }
+#tword { font-size: 2rem; font-weight: 700; color: var(--gold); line-height: 1; }
+#tmean { font-weight: 700; color: var(--ice); }
+.speak.compact { padding: .95rem 1.3rem; }
+.speak.compact .line { font-size: 1.95rem; }
+.speak.compact .gloss { font-size: .9rem; margin-bottom: .3rem; }
+
+/* Whose hand */
+.pair { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 1.8vw; margin-top: .6rem; }
+.big { font-family: var(--serif); font-weight: 800; color: var(--gold); font-size: 4rem; line-height: 1; }
+.pick { display: flex; flex-wrap: wrap; gap: .4rem; margin: .4rem 0 .8rem; }
+
+/* Numbers */
+.numwrap { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 2vw; align-items: stretch; margin-top: .5rem; }
+.cnt { display: grid; grid-template-columns: repeat(2, 1fr); gap: .4rem; }
+.cnt .c { display: flex; align-items: baseline; gap: .6rem; background: var(--panel); border: 1px solid var(--line); border-radius: .55rem; padding: .22rem .65rem; transition: background .3s, transform .2s; }
+.cnt .c b { font-family: var(--serif); color: var(--gold); font-size: 1.25rem; width: 1.5rem; }
+.cnt .c span { font-size: 1.1rem; font-weight: 700; }
+.cnt .c.on { background: var(--gold); transform: translateX(.3rem); }
+.cnt .c.on b, .cnt .c.on span { color: #20140d; }
+input[type="range"] { width: 100%; accent-color: var(--gold); }
+#nnum { font-family: var(--serif); font-weight: 800; color: var(--ice); font-size: 3.1rem; line-height: 1; }
+#nword { font-weight: 700; font-size: 1.55rem; color: var(--gold); line-height: 1.15; min-height: 3.6rem; overflow-wrap: anywhere; }
+#nmath { font-weight: 700; }
+
+/* Dive or sink */
+.pool { position: relative; height: 13rem; border-radius: 1rem; overflow: hidden; background: linear-gradient(180deg, #d7e6ee 0 22%, #2f8ba7 22%, #0e3e62 100%); }
+.pool .person { position: absolute; left: 12%; top: 11%; width: 1.5rem; height: 1.5rem; border-radius: 50%; background: var(--gold); box-shadow: 0 0 0 .22rem #20140d; }
+.pool.dive .person { animation: dive 1.6s cubic-bezier(.45,0,.3,1) forwards; }
+.pool.sink .person { animation: sink 3.6s ease-in forwards; }
+@keyframes dive { 35% { transform: translate(5rem, -1.5rem); } 100% { transform: translate(11rem, 8.8rem); } }
+@keyframes sink { 25% { transform: translate(.8rem, 1.2rem) rotate(20deg); } 100% { transform: translate(1.8rem, 9rem) rotate(80deg); } }
+#vword { font-size: 2.2rem; font-weight: 700; color: var(--gold); line-height: 1.1; }
+#vmean { font-weight: 700; color: var(--ice); font-size: 1.2rem; }
+.seg { color: var(--apricot); }
+
+/* Letters */
+.letters { display: grid; grid-template-columns: repeat(6, 1fr); gap: .35rem; margin-top: .35rem; }
+.lbtn { font: inherit; cursor: pointer; color: var(--gold); background: var(--panel); border: 2px solid var(--line); border-radius: .55rem; padding: .05rem; font-family: "Noto Naskh Arabic", serif; font-size: 1.55rem; }
+.lbtn.on { background: var(--gold); color: #20140d; border-color: var(--gold); }
+#ltext { font-weight: 700; margin-top: .25rem; min-height: 1.6em; }
+
+.note { font-size: .84rem; color: var(--muted); }
+.quote { font-family: var(--serif); font-size: 2.05rem; font-weight: 800; line-height: 1.12; color: var(--gold); }
+
+@media (prefers-reduced-motion: reduce) { .petal { display: none; } }
+@media (max-width: 820px) {
+  #terraces { display: none; }
+  .slide { padding: 6vh 6vw 12vh; }
+  h1 { font-size: 3.5rem; }
+  .text, .text.wide { max-width: none; width: auto; }
+  .stage { position: relative; inset: auto; width: 100%; margin-top: 1.5rem; }
+  .pin { width: 76vw; }
+  .sort, .pair, .numwrap { grid-template-columns: 1fr; }
+}
+</style>
+</head>
+<body data-map="BlankMap-Equirectangular.svg">
+
+<div id="valley" aria-hidden="true">
+  <div class="stars"></div>
+  <div class="dawn"></div>
+  <svg class="peaks" viewBox="0 0 1600 500" preserveAspectRatio="none">
+    <path d="M0 500 V300 L170 210 L300 280 L470 130 L630 260 L760 190 L900 30 L1050 215 L1190 145 L1360 270 L1490 190 L1600 250 V500 Z" fill="#334a5d"/>
+    <path d="M820 112 L900 30 L985 135 L935 118 L905 155 L875 120 Z M430 170 L470 130 L520 180 L480 170 L462 195 Z M1150 170 L1190 145 L1235 185 L1198 178 L1180 196 Z" fill="#f4f6f6"/>
+  </svg>
+  <svg class="ridge" viewBox="0 0 1600 340" preserveAspectRatio="none">
+    <path d="M0 340 V145 L150 95 L290 155 L450 85 L620 165 L790 110 L960 180 L1130 105 L1290 165 L1460 90 L1600 150 V340 Z" fill="#253a2f"/>
+    <path d="M0 340 V260 H180 V235 H360 V210 H540 V235 H760 V258 H980 V232 H1200 V210 H1400 V240 H1600 V340 Z" fill="#415e2f"/>
+  </svg>
+  <div class="shade"></div>
+</div>
+<aside id="terraces" aria-hidden="true"></aside>
+<div class="progress"></div>
+
+<main>
+
+<!-- 1. Title -->
+<section class="slide" style="--accent: var(--gold)">
+  <div class="text">
+    <p class="kicker in">Rare Languages of the Asia-Pacific · Module 14</p>
+    <h1 class="in" style="--d:1">Burushaski</h1>
+    <p class="arabic in" style="--d:2; font-size:2.2rem; color:var(--gold); margin:.3rem 0" dir="rtl" lang="bsk">بُرُݸشَسْکِݵ</p>
+    <div class="bar in" style="--d:3"></div>
+    <p class="lead in" style="--d:4">A mountain language with no proven relatives anywhere on Earth</p>
+    <p class="muted in" style="--d:5">Watch the sun rise and water reach each terrace as we go.</p>
+  </div>
+  <div class="stage">
+    <figure class="pin" style="--w:29vw; --ar:2021/1399; --r:-1.3deg; --d:0">
+      <img data-file="Baltit Fort ca. 1890.jpg" alt="Baltit Fort in Hunza around 1890">
+      <figcaption>Baltit Fort in Hunza, around 1890, from a travel book by E. F. Knight</figcaption>
+    </figure>
+  </div>
+</section>
+
+<!-- 2. Who and where -->
+<section class="slide" data-tr="left" style="--accent: var(--ice)">
+  <div class="text">
+    <p class="kicker in">Who and where</p>
+    <h2 class="in" style="--d:1">"Our language"</h2>
+    <div class="bar in" style="--d:2"></div>
+    <ul class="dots">
+      <li class="in" style="--d:3">Speakers, the <strong>Burusho</strong>, also call it <span class="hl">miśáaski</span>, "our language."</li>
+      <li class="in" style="--d:4">It is spoken in the <strong>Hunza, Nagar and Yasin</strong> valleys of Gilgit-Baltistan, in Pakistan-administered northern Kashmir.</li>
+      <li class="in" style="--d:5">A small community also lives in <strong>Srinagar</strong>, in Indian-administered Kashmir.</li>
+      <li class="in" style="--d:6">Estimates reach well over 100,000 speakers, which is many for this series. So why is it in danger? Keep watching.</li>
+    </ul>
+    <div class="panel in" style="--d:7; margin-top:.5rem">
+      <div class="dotgrid" data-total="40" data-on="10" style="grid-template-columns: repeat(20, 1fr); gap: .28rem"></div>
+      <div class="legend"><span style="--c: var(--rose)">Yasin: about 1 in 4 speakers</span><span style="--c: rgba(255,255,255,.3)">Hunza and Nagar: most others</span></div>
+      <p class="note" style="margin:.3rem 0 0">Srinagar has about 300 to 350 speakers, too few to appear in this chart.</p>
+    </div>
+  </div>
+  <div class="stage">
+    <div class="loc" data-lat="36.3" data-lon="74.65" data-zoom="6" style="--s:14vw; --d:0">
+      <div class="disc"><div class="lmap"></div><div class="tint"></div><div class="sea"></div><span class="pinpt"></span></div>
+      <span class="tag">Hunza Valley</span>
+    </div>
+    <figure class="pin" style="--w:24vw; --ar:3032/2064; --r:1deg; --d:1">
+      <img data-file="ISS014-E-6849 - View of Pakistan.jpg" alt="Astronaut photo of the Chogolungma Glacier in the Karakoram">
+      <figcaption>The Karakoram mountains from the International Space Station</figcaption>
+    </figure>
+  </div>
+</section>
+
+<!-- 3. No family -->
+<section class="slide" data-tr="zoom" style="--accent: var(--apricot)">
+  <div class="text wide">
+    <p class="kicker in">Language detective</p>
+    <h2 class="in" style="--d:1">Looking for relatives</h2>
+    <div class="bar in" style="--d:2"></div>
+    <p class="in" style="--d:3">Burushaski is a <strong>language isolate</strong>. Researchers have proposed many relatives, but most linguists accept none. Click each lead:</p>
+    <div class="cards compact in" style="--d:4; grid-template-columns: repeat(4, 1fr); margin-top:.65rem">
+      <div class="card" style="--cardc: var(--ice)"><div class="word">The Caucasus?</div><div class="meaning">Some researchers propose links with North Caucasian languages.</div><div class="tap">click</div></div>
+      <div class="card" style="--cardc: var(--green)"><div class="word">Siberia?</div><div class="meaning">One idea links it with the Yeniseian languages.</div><div class="tap">click</div></div>
+      <div class="card" style="--cardc: var(--gold)"><div class="word">English's family?</div><div class="meaning">Ilija Čašule argues for a connection to Indo-European.</div><div class="tap">click</div></div>
+      <div class="card" style="--cardc: var(--rose)"><div class="word">Across continents?</div><div class="meaning">"Dené–Caucasian" would connect it to Basque, Na-Dené and more.</div><div class="tap">click</div></div>
+    </div>
+    <div class="panel in" style="--d:5; margin-top:.75rem; display:grid; grid-template-columns:minmax(0,1fr) 12vw; gap:1.5vw; align-items:center">
+      <div>
+        <strong style="color:var(--gold)">A juicy clue:</strong> Modern Burushaski says <strong>báalt</strong> for "apple." Linguist Hermann Berger suggested that the ancient word behind English "apple" may have been borrowed from an ancestor of Burushaski. It's an intriguing theory, not settled fact.
+      </div>
+      <figure class="pin" style="--w:11vw; --ar:1; --r:2deg; --d:1"><img data-file="Pomological Watercolor POM00003407.jpg" alt="Watercolor of apples"></figure>
+    </div>
+  </div>
+</section>
+
+<!-- 4. Sorter -->
+<section class="slide" style="--accent: var(--green)">
+  <div class="text wide">
+    <p class="kicker in">Grammar game</p>
+    <h2 class="in" style="--d:1">Sort the world into four groups</h2>
+    <div class="bar in" style="--d:2"></div>
+    <p class="in" style="--d:3">Every noun belongs to a class, and other words change to match it. Where does each word go?</p>
+    <div class="sort in" style="--d:4">
+      <div class="panel">
+        <div id="sw"></div>
+        <div id="sm"></div>
+        <div id="sf" aria-live="polite"></div>
+        <div class="score" id="score"></div>
+      </div>
+      <div class="classes" id="classes">
+        <button class="cls" data-c="m" style="--c: var(--ice)"><b>Class m</b><span>Male humans, gods and spirits</span></button>
+        <button class="cls" data-c="f" style="--c: var(--rose)"><b>Class f</b><span>Female humans and spirits</span></button>
+        <button class="cls" data-c="x" style="--c: var(--gold)"><b>Class x</b><span>Animals and countable things</span></button>
+        <button class="cls" data-c="y" style="--c: var(--green)"><b>Class y</b><span>Uncountable things and ideas</span></button>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- 5. Speak -->
+<section class="slide" data-tr="left" style="--accent: var(--gold)">
+  <div class="text">
+    <p class="kicker in">Speak along</p>
+    <h2 class="in" style="--d:1">One small rise changes everything</h2>
+    <div class="bar in" style="--d:2"></div>
+    <p class="in" style="--d:3">In long vowels, the stress or pitch can fall early or rise late. Compare these two words:</p>
+    <div class="tone in" id="tone" style="--d:4">
+      <button class="tbtn on" data-t="0">Falling</button><button class="tbtn" data-t="1">Rising</button>
+    </div>
+    <div class="panel in" style="--d:5">
+      <svg id="tonesvg" viewBox="0 0 300 80" preserveAspectRatio="none" aria-hidden="true"><path id="toneline" d="M15 15 C80 15 90 65 285 65" fill="none" stroke="#f4bd5b" stroke-width="7" stroke-linecap="round"/></svg>
+      <div id="tword">óosanam</div>
+      <div id="tmean">"I told them."</div>
+    </div>
+    <p class="note in" style="--d:6; margin-top:.5rem">Try saying "Oh." as a statement, then "Oh?" as a question. Pronunciation guides are approximate.</p>
+  </div>
+  <div class="stage">
+    <div class="speak panel compact in" data-tempo="600" style="--d:3; width:37vw">
+      <div class="line" data-syl="mi·shaa·ski"></div><p class="gloss">our language</p>
+      <div class="line" data-syl="baalt"></div><p class="gloss">apple</p>
+      <div class="line" data-syl="huk"></div><p class="gloss">dog</p>
+      <div class="line" data-syl="ha"></div><p class="gloss">house</p>
+      <div class="line" data-syl="shu·a"></div><p class="gloss">good</p>
+      <button class="btn play">▶ Speak along</button>
+    </div>
+  </div>
+</section>
+
+<!-- 6. Whose hand -->
+<section class="slide" style="--accent: var(--rose)">
+  <div class="text wide">
+    <p class="kicker in">Language lab</p>
+    <h2 class="in" style="--d:1">You can't just say "hand"</h2>
+    <div class="bar in" style="--d:2"></div>
+    <p class="in" style="--d:3">Body parts and family words must show <strong>whose</strong> they are. In Burushaski, there's no ordinary everyday word for "a hand" or "a mother" alone.</p>
+    <div class="pair">
+      <div class="panel in" style="--d:4">
+        <strong>Pick a word:</strong>
+        <div class="pick" id="pnoun"><button class="pbtn on" data-v="0">hand</button><button class="pbtn" data-v="1">mother</button></div>
+        <strong>Whose?</strong>
+        <div class="pick" id="powner"><button class="pbtn on" data-v="0">my</button><button class="pbtn" data-v="1">your</button><button class="pbtn" data-v="2">his</button><button class="pbtn" data-v="3">her</button></div>
+      </div>
+      <div class="panel in" style="--d:5">
+        <div class="big" id="hword">a-rén</div>
+        <div id="hmean" style="color:var(--ice); font-weight:700; font-size:1.25rem">my hand</div>
+        <p style="margin:.7rem 0 0"><strong>Try it:</strong> If someone points to your hand and asks what it's called, a speaker might answer "my hand" or "your hand," depending on who is talking!</p>
+      </div>
+    </div>
+    <p class="note in" style="--d:6; margin-top:.5rem">Hand forms come from a Yasin description. Dialects differ.</p>
+  </div>
+</section>
+
+<!-- 7. Numbers -->
+<section class="slide" data-tr="zoom" style="--accent: var(--gold)">
+  <div class="text wide">
+    <p class="kicker in">Speak along and calculate</p>
+    <h2 class="in" style="--d:1">Count in twenties</h2>
+    <div class="bar in" style="--d:2"></div>
+    <p class="in" style="--d:3">English counts mainly in tens. Burushaski counts in <strong>twenties</strong>: 60 is <em>iskí-áltar</em>, "three twenties." French does something similar with 80, <em>quatre-vingts</em>, "four twenties."</p>
+    <div class="numwrap">
+      <div class="in" style="--d:4">
+        <div class="cnt" id="cnt">
+          <div class="c"><b>1</b><span>hik</span></div><div class="c"><b>6</b><span>mishíndi</span></div>
+          <div class="c"><b>2</b><span>altó</span></div><div class="c"><b>7</b><span>thalé</span></div>
+          <div class="c"><b>3</b><span>iskí</span></div><div class="c"><b>8</b><span>altámbi</span></div>
+          <div class="c"><b>4</b><span>wálti</span></div><div class="c"><b>9</b><span>huntí</span></div>
+          <div class="c"><b>5</b><span>číndi</span></div><div class="c"><b>10</b><span>tóorimi</span></div>
+        </div>
+        <p style="margin-top:.55rem"><button class="btn" id="countbtn">▶ Count along</button></p>
+      </div>
+      <div class="panel in" style="--d:5">
+        <strong>Say your age or any number:</strong>
+        <input type="range" id="nrange" min="1" max="99" value="13" aria-label="Choose a number">
+        <div id="nnum">13</div>
+        <div id="nword"></div>
+        <div id="nmath"></div>
+      </div>
+    </div>
+    <p class="note in" style="--d:6">These are counting forms. Numbers can change with noun class, and spelling varies across sources.</p>
+  </div>
+</section>
+
+<!-- 8. On purpose -->
+<section class="slide" style="--accent: var(--ice)">
+  <div class="text">
+    <p class="kicker in">Grammar puzzle</p>
+    <h2 class="in" style="--d:1">Did it happen on purpose?</h2>
+    <div class="bar in" style="--d:2"></div>
+    <p class="in" style="--d:3">With some verbs, one small prefix can show that something happened <strong>against a person's will</strong>. Press a button and watch the difference.</p>
+    <div class="pick in" id="vpick" style="--d:4">
+      <button class="pbtn on" data-v="0">On purpose</button><button class="pbtn" data-v="1">Not on purpose</button>
+    </div>
+    <div class="panel in" style="--d:5">
+      <div id="vword"></div>
+      <div id="vmean"></div>
+    </div>
+    <p class="in" style="--d:6; margin-top:.55rem"><strong>Think:</strong> English needs two different verbs here. Burushaski can use one verb with or without a prefix.</p>
+  </div>
+  <div class="stage">
+    <div class="pool in" id="pool" style="--d:3; width:32vw"><span class="person"></span></div>
+    <p class="note in" style="--d:4; text-align:center">This is a simple diagram of the two meanings.</p>
+  </div>
+</section>
+
+<!-- 9. Srinagar -->
+<section class="slide" data-tr="left" style="--accent: var(--apricot)">
+  <div class="text">
+    <p class="kicker in">A language in exile</p>
+    <h2 class="in" style="--d:1">From Nagar to Srinagar</h2>
+    <div class="bar in" style="--d:2"></div>
+    <div class="timeline">
+      <div class="event c3 in" style="--d:3"><div class="yr">1891</div><p>British-led forces fight Hunza and Nagar. Raja Azur Khan helps lead the defense.</p></div>
+      <div class="event c2 in" style="--d:4"><div class="yr">1890s</div><p>He is arrested and held at Hari Parbat fort in Srinagar. Supporters also move there.</p></div>
+      <div class="event c1 in" style="--d:5"><div class="yr">1922</div><p>He dies in Srinagar, but his community remains.</p></div>
+      <div class="event c4 in" style="--d:6"><div class="yr">Today</div><p>About 300 to 350 speakers keep a distinct variety alive, shaped by Kashmiri, Urdu and Hindi.</p></div>
+    </div>
+    <p class="in" style="--d:7">Community elder Raja Jehangir Ali said that even when only two Burusho people are in a gathering, they prefer to speak their own language.</p>
+    <p class="in" style="--d:8"><strong>Discuss:</strong> What would you keep from home if your family moved far away?</p>
+  </div>
+  <div class="stage">
+    <figure class="pin" style="--w:29vw; --ar:1773/1347; --r:1.2deg; --d:0">
+      <img data-file="Nilt forts.jpg" alt="Old illustration of the forts at Nilt">
+      <figcaption>The forts at Nilt, attacked during the 1891 campaign, from an old British book</figcaption>
+    </figure>
+  </div>
+</section>
+
+<!-- 10. Today -->
+<section class="slide" style="--accent: var(--green)">
+  <div class="text">
+    <p class="kicker in">Why it matters now</p>
+    <h2 class="in" style="--d:1">Thousands of speakers can still lose a language</h2>
+    <div class="bar in" style="--d:2"></div>
+    <ul class="dots">
+      <li class="in" style="--d:3"><strong>The risk:</strong> speakers often use several languages and increasingly shift to Urdu. Few people read and write their first language.</li>
+      <li class="in" style="--d:4"><strong>Writing:</strong> In the 1940s, poet Nasiruddin Hunzai adapted Urdu script and designed new letters for Burushaski sounds.</li>
+      <li class="in" style="--d:5"><strong>Books:</strong> A three-volume Burushaski-Urdu dictionary appeared between 2006 and 2013.</li>
+      <li class="in" style="--d:6"><strong>2023:</strong> The group Burusho Maraka launched a primer for reading and writing, and asked for local-language schooling.</li>
+      <li class="in" style="--d:7"><strong>Online:</strong> Researchers share recordings, and speakers can contribute to the Lost Burushaski dictionary.</li>
+    </ul>
+    <div class="panel in" style="--d:8; margin-top:.5rem">
+      <strong>Click Hunzai's letters:</strong>
+      <div class="letters" id="letters">
+        <button class="lbtn on" data-l="0">ݼ</button><button class="lbtn" data-l="1">څ</button><button class="lbtn" data-l="2">ڎ</button><button class="lbtn" data-l="3">ݽ</button><button class="lbtn" data-l="4">ڞ</button><button class="lbtn" data-l="5">ݣ</button>
+      </div>
+      <div id="ltext"></div>
+    </div>
+  </div>
+  <div class="stage">
+    <figure class="pin" style="--w:29vw; --ar:4/3; --r:-1deg; --d:0">
+      <img data-file="High Asia Mountain Ranges.jpg" alt="NASA image of the mountain ranges of High Asia">
+      <figcaption>High mountains kept these valleys apart for centuries. Roads and media now connect them.</figcaption>
+    </figure>
+  </div>
+</section>
+
+<!-- 11. Quiz -->
+<section class="slide" style="--accent: var(--gold)">
+  <div class="text wide center">
+    <p class="kicker in">Summit check</p>
+    <h2 class="in" style="--d:1">Quick quiz!</h2>
+    <div class="bar in" style="--d:2"></div>
+    <div class="quizgrid">
+      <div class="quiz panel in" style="--d:3" data-right="Yes! No proven relatives." data-wrong="Hint: think about slide 3.">
+        <div class="q">What does "language isolate" mean?</div>
+        <div class="options"><button class="opt">A language spoken on an island</button><button class="opt" data-correct>A language with no proven relatives</button><button class="opt">A language with one speaker</button></div>
+        <div class="feedback"></div>
+      </div>
+      <div class="quiz panel in" style="--d:4" data-right="Right! Three twenties make sixty." data-wrong="Hint: multiply three by twenty.">
+        <div class="q">What number is iskí-áltar?</div>
+        <div class="options"><button class="opt">23</button><button class="opt">32</button><button class="opt" data-correct>60</button></div>
+        <div class="feedback"></div>
+      </div>
+      <div class="quiz panel in" style="--d:5" data-right="Exactly. Countable apple, uncountable tree." data-wrong="Hint: think about the noun classes.">
+        <div class="q">What can change when báalt moves from class x to class y?</div>
+        <div class="options"><button class="opt" data-correct>Apple becomes apple tree</button><button class="opt">Apple becomes pear</button><button class="opt">It becomes a verb</button></div>
+        <div class="feedback"></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- 12. Closing -->
+<section class="slide end" style="--accent: var(--gold)">
+  <div class="text">
+    <h1 class="in" style="font-size:5.5rem">Thank you!</h1>
+    <p class="lead in" style="--d:1">Questions?</p>
+    <p class="quote in" style="--d:2">Next time you eat an apple, think of the mountain word báalt.</p>
+  </div>
+  <details class="fine in" style="--d:3">
+    <summary>Sources &amp; image credits</summary>
+    <div class="box">
+      <h4>Sources</h4>
+      <ul>
+        <li><a href="https://en.wikipedia.org/wiki/Burushaski">Burushaski (Wikipedia, citing Berger, Lorimer, Munshi and others)</a></li>
+        <li><a href="https://www.few.vu.nl/~dick/Summaries/Languages/Burushaski.pdf">Grune (1998): Burushaski summary</a></li>
+        <li><a href="https://www.languagesandnumbers.com/how-to-count-in-burushaski/en/bsk/">Of Languages and Numbers: Burushaski</a></li>
+        <li><a href="https://www.omniglot.com/language/numbers/burushaski.htm">Omniglot: Burushaski numbers</a></li>
+        <li><a href="https://burushaskilanguage.com/language-overview/">Burushaski Language Documentation Project</a></li>
+        <li><a href="https://digital.library.unt.edu/explore/collections/BURUS/">UNT Digital Library: Burushaski Language Resource</a></li>
+        <li><a href="https://thehighasia.com/burushaski-script-accepted-primer-launched/">The High Asia Herald (2023): primer launch</a></li>
+        <li><a href="https://kashmirlife.net/kashmirs-botrajas-vol-13-issue-20-274320/">Kashmir Life (2021): Kashmir's Botrajas</a></li>
+        <li><a href="https://lostburushaski.com/">Lost Burushaski community dictionary</a></li>
+      </ul>
+      <h4>Images (Wikimedia Commons)</h4>
+      <ul id="credits"></ul>
+    </div>
+  </details>
+</section>
+
+</main>
+
+<nav class="controls">
+  <button id="prev" aria-label="Previous slide">‹</button>
+  <span id="counter">1 / 12</span>
+  <button id="next" aria-label="Next slide">›</button>
+  <button id="fs" aria-label="Fullscreen">⤢</button>
+</nav>
+<p class="hint">Use ← → to move. Press F for fullscreen.</p>
+
+<!-- Burushaski effects: terraces, noun sorter, tone, possession, base-20 numbers, volition, letters -->
+<script>
+(function () {
+  /* ---------- Background ---------- */
+  var valley = document.getElementById("valley");
+  for (var p = 0; p < 18; p++) {
+    var petal = document.createElement("span");
+    petal.className = "petal";
+    petal.style.setProperty("--x", (Math.random() * 100).toFixed(1) + "vw");
+    petal.style.setProperty("--dur", (11 + Math.random() * 13).toFixed(1) + "s");
+    petal.style.setProperty("--dly", (-Math.random() * 20).toFixed(1) + "s");
+    petal.style.setProperty("--drift", (Math.random() * 18 - 9).toFixed(1) + "vw");
+    valley.appendChild(petal);
+  }
+
+  var rail = document.getElementById("terraces");
+  for (var i = 0; i < 12; i++) {
+    var step = document.createElement("i");
+    step.style.setProperty("--k", i);
+    rail.appendChild(step);
+  }
+  var terraces = rail.querySelectorAll("i");
+  function setTerrace(index) {
+    terraces.forEach(function (x, k) {
+      x.classList.toggle("full", k <= index);
+      x.classList.toggle("now", k === index);
+    });
+  }
+  setTerrace(0);
+
+  var timers = [];
+  function clearTimers() { timers.forEach(clearTimeout); timers = []; }
+  document.addEventListener("slidechange", function (e) {
+    document.body.style.setProperty("--t", e.detail.index / (e.detail.total - 1));
+    setTerrace(e.detail.index);
+    clearTimers();
+    document.querySelectorAll(".cnt .c.on").forEach(function (c) { c.classList.remove("on"); });
+  });
+
+  function single(selector, callback) {
+    var group = document.querySelectorAll(selector);
+    group.forEach(function (b) {
+      b.addEventListener("click", function () {
+        group.forEach(function (x) { x.classList.remove("on"); });
+        b.classList.add("on");
+        callback(Number(b.dataset.t || b.dataset.v || b.dataset.l));
+      });
+    });
+  }
+
+  /* ---------- Noun sorter ---------- */
+  var NOUNS = [
+    ["hir", "man", "m", "A male human goes in class m."],
+    ["gus", "woman", "f", "A female human goes in class f."],
+    ["huk", "dog", "x", "Animals go in class x."],
+    ["dan", "stone", "x", "Stones are countable, so they go in class x."],
+    ["chil", "water", "y", "Water can't be counted one by one."],
+    ["báalt", "an apple", "x", "An apple can be counted."],
+    ["báalt", "an apple tree", "y", "Same word! Fruit trees are treated collectively."],
+    ["ha", "house", "y", "Surprise! A house can be counted, but it is an exception."]
+  ];
+  var nounIndex = 0, score = 0, locked = false;
+  var sw = document.getElementById("sw"), sm = document.getElementById("sm");
+  var sf = document.getElementById("sf"), scoreEl = document.getElementById("score");
+  var classButtons = document.querySelectorAll(".cls");
+  function renderNoun() {
+    locked = false;
+    classButtons.forEach(function (b) { b.classList.remove("good", "bad"); });
+    if (nounIndex >= NOUNS.length) {
+      sw.textContent = score + " / " + NOUNS.length;
+      sm.textContent = "Sorted! Click any class to play again.";
+      sf.textContent = "Linguists call these groups noun classes.";
+      scoreEl.textContent = "";
+      return;
+    }
+    sw.textContent = NOUNS[nounIndex][0];
+    sm.textContent = NOUNS[nounIndex][1];
+    sf.textContent = "";
+    scoreEl.textContent = "Word " + (nounIndex + 1) + " of " + NOUNS.length;
+  }
+  classButtons.forEach(function (b) {
+    b.addEventListener("click", function () {
+      if (nounIndex >= NOUNS.length) { nounIndex = 0; score = 0; renderNoun(); return; }
+      if (locked) return;
+      locked = true;
+      var noun = NOUNS[nounIndex];
+      var right = b.dataset.c === noun[2];
+      if (right) score++;
+      b.classList.add(right ? "good" : "bad");
+      if (!right) document.querySelector('.cls[data-c="' + noun[2] + '"]').classList.add("good");
+      sf.textContent = noun[3];
+      nounIndex++;
+      setTimeout(renderNoun, 2100);
+    });
+  });
+  renderNoun();
+
+  /* ---------- Tone ---------- */
+  var TONES = [
+    ["óosanam", "\"I told them.\"", "M15 15 C80 15 90 65 285 65"],
+    ["oósanam", "\"I did not say.\"", "M15 65 C150 65 190 15 285 15"]
+  ];
+  single("#tone .tbtn", function (i) {
+    document.getElementById("tword").textContent = TONES[i][0];
+    document.getElementById("tmean").textContent = TONES[i][1];
+    document.getElementById("toneline").setAttribute("d", TONES[i][2]);
+  });
+
+  /* ---------- Whose hand ---------- */
+  var HAVE = [
+    [["a-rén", "my hand"], ["gu-rén", "your hand"], ["ren", "his hand"], ["mu-rén", "her hand"]],
+    [["a-mi", "my mother"], ["gu-mi", "your mother"], ["i-mi", "his mother"], ["mu-mi", "her mother"]]
+  ];
+  var nounChoice = 0, owner = 0;
+  function renderOwner() {
+    document.getElementById("hword").textContent = HAVE[nounChoice][owner][0];
+    document.getElementById("hmean").textContent = HAVE[nounChoice][owner][1];
+  }
+  single("#pnoun .pbtn", function (v) { nounChoice = v; renderOwner(); });
+  single("#powner .pbtn", function (v) { owner = v; renderOwner(); });
+
+  /* ---------- Numbers ---------- */
+  document.getElementById("countbtn").addEventListener("click", function () {
+    clearTimers();
+    var order = [0, 2, 4, 6, 8, 1, 3, 5, 7, 9];
+    var cells = document.querySelectorAll("#cnt .c");
+    order.forEach(function (cell, step) {
+      timers.push(setTimeout(function () {
+        cells.forEach(function (x) { x.classList.remove("on"); });
+        cells[cell].classList.add("on");
+      }, step * 1300));
+    });
+    timers.push(setTimeout(function () { cells.forEach(function (x) { x.classList.remove("on"); }); }, 13000));
+  });
+  var FIRST = ["", "hik", "altó", "iskí", "wálti", "číndi", "mishíndi", "thalé", "altámbi", "huntí", "tóorimi"];
+  var UNIT = ["", "hik", "alto", "iski", "walti", "čindi", "mishindi", "thale", "altambi", "hunti"];
+  var SCORE = ["", "áltar", "altó-áltar", "iskí-áltar", "wálti-áltar"];
+  function numberName(n) {
+    if (n <= 10) return FIRST[n];
+    if (n < 20) return "turma-" + UNIT[n - 10];
+    var q = Math.floor(n / 20), r = n % 20, stem = SCORE[q];
+    if (r === 0) return stem;
+    if (r < 10) return stem + "-" + UNIT[r];
+    if (r === 10) return stem + "-tóorimi";
+    return stem + "-turma-" + UNIT[r - 10];
+  }
+  function numberMath(n) {
+    if (n < 11) return "A basic number";
+    if (n < 20) return "10 + " + (n - 10);
+    var q = Math.floor(n / 20), r = n % 20;
+    return q + " × 20" + (r ? " + " + r : "");
+  }
+  var range = document.getElementById("nrange");
+  function renderNumber() {
+    var n = Number(range.value);
+    document.getElementById("nnum").textContent = n;
+    document.getElementById("nword").textContent = numberName(n);
+    document.getElementById("nmath").textContent = numberMath(n);
+  }
+  range.addEventListener("input", renderNumber);
+  renderNumber();
+
+  /* ---------- On purpose or not ---------- */
+  var ACT = [
+    ['ghurts-i-mi', 'He went underwater willingly: "He dove."', "dive"],
+    ['<span class="seg">i-</span>ghurts-i-mi', 'He went underwater unwillingly: "He sank."', "sink"]
+  ];
+  var pool = document.getElementById("pool");
+  function renderVerb(i) {
+    document.getElementById("vword").innerHTML = ACT[i][0];
+    document.getElementById("vmean").textContent = ACT[i][1];
+    pool.classList.remove("dive", "sink");
+    void pool.offsetWidth;
+    pool.classList.add(ACT[i][2]);
+  }
+  single("#vpick .pbtn", renderVerb);
+  renderVerb(0);
+
+  /* ---------- Letters ---------- */
+  var LETTERS = ["Sounds like ts with a puff of air", "Like ch with the tongue curled back", "Sounds like ts", "Like sh with the tongue curled back", "Like ch with a curled tongue and a puff of air", "Sounds like ng in sing"];
+  var ltext = document.getElementById("ltext");
+  ltext.textContent = LETTERS[0];
+  single("#letters .lbtn", function (i) { ltext.textContent = LETTERS[i]; });
+})();
+</script>
+<script src="../assets/deck.js"></script>
+</body>
+</html>
