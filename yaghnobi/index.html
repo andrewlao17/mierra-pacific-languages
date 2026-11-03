@@ -1,0 +1,588 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Yaghnobi: The Last Echo of the Silk Road</title>
+<link rel="stylesheet" href="../assets/deck.css">
+<style>
+@import url("https://fonts.googleapis.com/css2?family=Noto+Serif+Display:wght@700;800&family=Noto+Sans:wght@400;600;700;800&family=Noto+Sans+Sogdian&display=swap");
+
+/* ---------- Yaghnobi theme: ice valley, silk thread, snow that turns to cotton ---------- */
+:root {
+  --bg: #0d1c2d;
+  --ink: #f4f7f8;
+  --muted: #cad7df;
+  --line: rgba(244, 247, 248, .22);
+  --panel: rgba(9, 26, 42, .82);
+  --gold: #efbd60;
+  --ice: #9de1f0;
+  --rose: #e88a95;
+  --green: #a9cf8a;
+  --violet: #c7afe8;
+  --accent: var(--ice);
+  --serif: "Noto Serif Display", Georgia, serif;
+  --sans: "Noto Sans", system-ui, sans-serif;
+  --t: 0;
+  font-size: clamp(12px, 1.3vw, 28px);
+}
+h1 { font-size: 6.2rem; font-weight: 800; line-height: .98; }
+h2 { font-size: 2.9rem; font-weight: 800; line-height: 1.06; }
+.slide { padding: 7vh 3vw 8vh 10vw; }
+.text { max-width: 44vw; }
+.text.wide { max-width: 83vw; width: 83vw; }
+.stage {
+  right: 2.5vw; top: 6vh; bottom: 8vh; width: 40vw;
+  display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 1.4rem;
+}
+.stage .loc { position: relative; }
+ul.dots li { font-size: 1.05rem; }
+.speak .line, .card .word { font-family: var(--sans); font-weight: 700; }
+.card.revealed .meaning { max-height: 12rem; }
+.loc .disc { border-color: var(--ice); box-shadow: 0 0 0 .6rem rgba(157,225,240,.14), 0 22px 40px rgba(0,0,0,.55); }
+.loc .tint { background: #d4cdb5; }
+.loc .sea { background: #2d4c66; }
+.loc .tag { background: #102033; border-color: var(--ice); }
+.event, .event p { color: #17212d; }
+.note { font-size: .84rem; color: var(--muted); }
+.sog { font-family: "Noto Sans Sogdian", serif; font-size: 2rem; color: var(--gold); }
+
+/* Valley backdrop */
+#land { position: fixed; inset: 0; z-index: 0; overflow: hidden; pointer-events: none; background: linear-gradient(180deg, #0b2740 0%, #3c7897 58%, #bddde3 100%); transition: background 1.2s ease; }
+#land .heat { position: absolute; inset: 0; opacity: 0; background: linear-gradient(180deg, #a84c25 0%, #e0954b 52%, #f1cf88 100%); transition: opacity 1.3s ease; }
+#land svg { position: absolute; left: -4vw; width: 108vw; bottom: 0; transition: opacity 1.3s ease; }
+#land .mtn { height: 80vh; }
+#land .plain { height: 25vh; opacity: 0; }
+#land .shade { position: absolute; inset: 0; background: linear-gradient(90deg, rgba(5,12,20,.92) 0%, rgba(5,12,20,.72) 55%, rgba(5,12,20,.25) 100%); }
+body.hot #land .heat { opacity: 1; }
+body.hot #land .mtn { opacity: 0; }
+body.hot #land .plain { opacity: 1; }
+.flake { position: absolute; top: -5vh; left: var(--x); width: .42rem; height: .42rem; border-radius: 50%; background: #fff; opacity: .85; animation: drift var(--dur) linear infinite; animation-delay: var(--dly); }
+body.hot .flake { width: .9rem; height: .75rem; border-radius: 55% 45% 55% 45%; box-shadow: .25rem .08rem 0 #fff, -.22rem .12rem 0 #f7f2e6; animation-duration: calc(var(--dur) * 1.5); }
+@keyframes drift { to { transform: translate(var(--wind), 112vh); } }
+
+/* Silk thread progress */
+#thread { position: fixed; left: 2.1vw; top: 10vh; bottom: 10vh; width: 4.4vw; min-width: 3rem; z-index: 15; }
+#thread svg { width: 100%; height: 100%; overflow: visible; }
+#thread .base { fill: none; stroke: rgba(255,255,255,.2); stroke-width: 5; }
+#thread .silk { fill: none; stroke: url(#silkgrad); stroke-width: 6; stroke-linecap: round; stroke-dasharray: 1000; stroke-dashoffset: calc((1 - var(--t)) * 1000); transition: stroke-dashoffset 1.2s ease; }
+
+/* Frames */
+.scroll {
+  position: relative; margin: 0; width: var(--w, 19vw); padding: .48rem; background: #f2e8d2; border-top: .42rem solid #b94f4f; border-bottom: .42rem solid #b94f4f; box-shadow: 0 16px 34px rgba(0,0,0,.55);
+  transform: rotate(var(--r, 0deg)); transition: transform .9s cubic-bezier(.2,.8,.2,1), opacity .7s ease;
+}
+.slide:not(.active) .scroll { opacity: 0; transform: scaleY(.65) rotate(var(--r, 0deg)); }
+.slide.active .scroll { transition-delay: calc(.4s + var(--d, 0) * .16s); }
+.scroll img { display: block; width: 100%; aspect-ratio: var(--ar, 4 / 3); object-fit: cover; background: #d7ccb4; }
+.scroll figcaption { color: #20140d; font-size: .75rem; font-weight: 700; line-height: 1.25; margin: .35rem .1rem 0; }
+
+/* Dialect switch */
+.switch { display: flex; gap: .45rem; margin: .45rem 0 .65rem; flex-wrap: wrap; }
+.sbtn { font: inherit; font-weight: 700; color: var(--ink); background: var(--panel); border: 2px solid var(--line); border-radius: 999px; padding: .2em .95em; cursor: pointer; }
+.sbtn.on { background: var(--gold); border-color: var(--gold); color: #20140d; }
+.tbl { width: 100%; border-collapse: collapse; font-size: 1rem; }
+.tbl th { text-align: left; color: var(--ice); font-weight: 700; padding: .25rem .5rem; }
+.tbl td { border-top: 1px solid var(--line); padding: .36rem .5rem; }
+.tbl .dynamic { color: var(--gold); font-weight: 800; font-size: 1.2rem; }
+.sound { min-height: 2.8rem; color: var(--ice); margin-top: .6rem; font-weight: 600; }
+
+/* Steps */
+.steps { list-style: none; padding: 0; margin: .5rem 0 0; counter-reset: s; }
+.steps li { counter-increment: s; display: flex; gap: .7rem; margin: .45rem 0; font-size: 1rem; line-height: 1.32; opacity: .25; transition: opacity .4s; }
+.steps li::before { content: counter(s); flex: none; width: 1.7rem; height: 1.7rem; border-radius: 50%; display: grid; place-items: center; background: #223b50; font-weight: 800; font-size: .82rem; }
+.steps li.on { opacity: 1; }
+.steps li.on::before { background: var(--gold); color: #20140d; }
+.speak.compact { padding: .95rem 1.3rem; }
+.speak.compact .line { font-size: 1.85rem; }
+.speak.compact .gloss { font-size: .88rem; margin-bottom: .25rem; }
+
+/* Numbers */
+.cnt { display: grid; grid-template-columns: repeat(5, 1fr); gap: .55rem; max-width: 76vw; margin: .65rem auto 0; }
+.cnt .c { background: var(--panel); border: 1px solid var(--line); border-radius: .7rem; padding: .5rem .3rem; text-align: center; transition: background .3s, transform .25s; }
+.cnt .c b { display: block; font-family: var(--serif); color: var(--gold); font-size: 1.45rem; line-height: 1; }
+.cnt .c span { display: block; font-size: 1.15rem; font-weight: 800; }
+.cnt .c small { display: block; font-size: .76rem; color: var(--muted); }
+.cnt .c.on { background: var(--gold); transform: translateY(-5px); }
+.cnt .c.on b, .cnt .c.on span, .cnt .c.on small { color: #20140d; }
+
+/* Time prefix */
+.pair { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 1.8vw; margin-top: .6rem; }
+.big { font-family: var(--serif); font-weight: 800; color: var(--gold); font-size: 3.2rem; line-height: 1.05; overflow-wrap: anywhere; }
+.big .pre { color: var(--rose); }
+.mean { color: var(--ice); font-weight: 700; font-size: 1.15rem; }
+
+/* Story */
+.story { display: grid; grid-template-columns: minmax(0, 1.2fr) minmax(0, .8fr); gap: 2vw; margin-top: .5rem; align-items: center; }
+#panel { min-height: 12rem; }
+#panel .scene { font-size: 1.15rem; line-height: 1.38; }
+#panel .yagh { color: var(--gold); font-weight: 700; margin-top: .55rem; font-size: 1.05rem; }
+.cap { width: 12rem; height: 9rem; margin: 0 auto; position: relative; }
+.cap .round { position: absolute; left: 1.2rem; right: 1.2rem; bottom: 1.3rem; height: 5.2rem; border-radius: 50% 50% 18% 18%; background: linear-gradient(135deg, #2a4b68, #17293c); }
+.cap .round::before { content: ""; position: absolute; inset: .7rem; border-radius: 50% 50% 18% 18%; background-image: radial-gradient(#efbd60 2px, transparent 2.5px), radial-gradient(#e88a95 2px, transparent 2.5px); background-size: 1rem 1rem; background-position: 0 0, .5rem .5rem; }
+.cap .band { position: absolute; left: .9rem; right: .9rem; bottom: .8rem; height: 1.15rem; border-radius: .25rem; background: repeating-linear-gradient(90deg, #efbd60 0 .55rem, #c64a59 .55rem 1.1rem); }
+.tanga { position: absolute; top: -.2rem; right: 0; font-weight: 800; color: #20140d; background: var(--gold); padding: .15rem .55rem; border-radius: 999px; opacity: 0; transition: opacity .3s; }
+.tanga.on { opacity: 1; }
+
+/* Road dilemma */
+.quote { font-family: var(--serif); font-size: 1.85rem; font-weight: 800; line-height: 1.12; color: var(--gold); }
+
+@media (prefers-reduced-motion: reduce) { .flake { display: none; } }
+@media (max-width: 820px) {
+  #thread { display: none; }
+  .slide { padding: 6vh 6vw 12vh; }
+  h1 { font-size: 3.7rem; }
+  .text, .text.wide { max-width: none; width: auto; }
+  .stage { position: relative; inset: auto; width: 100%; margin-top: 1.5rem; }
+  .scroll { width: 76vw; }
+  .pair, .story { grid-template-columns: 1fr; }
+  .cnt { grid-template-columns: repeat(2, 1fr); }
+}
+</style>
+</head>
+<body data-map="BlankMap-Equirectangular.svg">
+
+<div id="land" aria-hidden="true">
+  <div class="heat"></div>
+  <svg class="mtn" viewBox="0 0 1600 500" preserveAspectRatio="none">
+    <path d="M0 500 V250 L180 150 L320 240 L500 85 L650 230 L830 120 L1000 260 L1160 95 L1340 235 L1480 160 L1600 230 V500 Z" fill="#274f65"/>
+    <path d="M455 125 L500 85 L555 137 L515 125 L492 155 L472 122 Z M1115 135 L1160 95 L1215 143 L1175 130 L1150 160 L1132 132 Z M790 155 L830 120 L878 158 L840 150 L822 172 Z" fill="#fff"/>
+    <path d="M0 500 V390 C250 340 480 415 760 370 C1040 325 1280 415 1600 365 V500 Z" fill="#163647"/>
+  </svg>
+  <svg class="plain" viewBox="0 0 1600 200" preserveAspectRatio="none"><path d="M0 200 V70 C260 40 520 90 800 60 C1100 30 1340 80 1600 50 V200 Z" fill="#7d5c35"/></svg>
+  <div class="shade"></div>
+</div>
+<aside id="thread" aria-hidden="true">
+  <svg viewBox="0 0 60 600" preserveAspectRatio="none">
+    <defs><linearGradient id="silkgrad" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#9de1f0"/><stop offset=".5" stop-color="#efbd60"/><stop offset="1" stop-color="#e88a95"/></linearGradient></defs>
+    <path class="base" pathLength="1000" d="M30 5 C5 55 55 90 30 145 S5 240 30 295 S55 390 30 445 S5 545 30 595"/>
+    <path class="silk" pathLength="1000" d="M30 5 C5 55 55 90 30 145 S5 240 30 295 S55 390 30 445 S5 545 30 595"/>
+  </svg>
+</aside>
+<div class="progress"></div>
+
+<main>
+
+<!-- 1. Title -->
+<section class="slide" style="--accent: var(--ice)">
+  <div class="text">
+    <p class="kicker in">Rare Languages of the Asia-Pacific · Module 15</p>
+    <h1 class="in" style="--d:1">Yaghnobi</h1>
+    <p class="in" style="--d:2; font-size:1.55rem; color:var(--gold); font-weight:700">Яғнобӣ зивок · yaɣnobī́ zivók</p>
+    <div class="bar in" style="--d:3"></div>
+    <p class="lead in" style="--d:4">A mountain language connected to the traders of the Silk Road</p>
+    <p class="muted in" style="--d:5">Follow the silk thread on the left through 1,300 years.</p>
+  </div>
+  <div class="stage">
+    <figure class="scroll" style="--w:29vw; --ar:800/600; --r:-1.2deg; --d:0">
+      <img data-file="Tajikistan satellite photo.jpg" alt="NASA satellite image of Tajikistan">
+      <figcaption>Tajikistan from space. Mountains cover most of the country.</figcaption>
+    </figure>
+  </div>
+</section>
+
+<!-- 2. Who and where -->
+<section class="slide" data-tr="left" style="--accent: var(--green)">
+  <div class="text">
+    <p class="kicker in">Who and where</p>
+    <h2 class="in" style="--d:1">From the "ice valley"</h2>
+    <div class="bar in" style="--d:2"></div>
+    <ul class="dots">
+      <li class="in" style="--d:3">Yaghnobi comes from the <strong>Yaghnob Valley</strong> in northwestern Tajikistan. Scholars link the name to "ice valley" or "ice river."</li>
+      <li class="in" style="--d:4">Most speakers now live in places such as <strong>Zafarobod</strong>, Varzob and Dushanbe, far from the valley.</li>
+      <li class="in" style="--d:5">Yaghnobi is the home language in many families. <strong>Tajik</strong> is often used in school, business and official life.</li>
+      <li class="in" style="--d:6">UNESCO lists it as <strong>definitely endangered</strong>.</li>
+    </ul>
+    <div class="panel in" style="--d:7; margin-top:.5rem">
+      <div class="dotgrid" data-total="25" data-on="1" style="grid-template-columns: repeat(25, 1fr); gap: .25rem"></div>
+      <div class="legend"><span style="--c: var(--rose)">about 500 people in the valley</span><span style="--c: rgba(255,255,255,.3)">about 12,500 estimated speakers</span></div>
+    </div>
+  </div>
+  <div class="stage">
+    <div class="loc" data-lat="39.2" data-lon="69" data-zoom="6" style="--s:15vw; --d:0">
+      <div class="disc"><div class="lmap"></div><div class="tint"></div><div class="sea"></div><span class="pinpt"></span></div>
+      <span class="tag">Yaghnob Valley</span>
+    </div>
+    <figure class="scroll" style="--w:25vw; --ar:1290/1024; --r:1deg; --d:1">
+      <img data-file="Postal Route in the Turkestan Krai WDL10847.png" alt="Old photograph of a mountain postal route in Central Asia">
+      <figcaption>A route in the Russian-ruled Turkestan region, from an album by Alexander Kuhn. Kuhn made the first recordings of Yaghnobi in 1870.</figcaption>
+    </figure>
+  </div>
+</section>
+
+<!-- 3. Sogdian -->
+<section class="slide" style="--accent: var(--gold)">
+  <div class="text wide">
+    <p class="kicker in">Silk Road story</p>
+    <h2 class="in" style="--d:1">A shepherd finds a basket</h2>
+    <div class="bar in" style="--d:2"></div>
+    <div class="timeline">
+      <div class="event c3 in" style="--d:3"><div class="yr">300s</div><p>Sogdian merchants send letters along trade routes between Central Asia and China.</p></div>
+      <div class="event c2 in" style="--d:4"><div class="yr">722</div><p>Dewashtich, ruler of Panjakent, is defeated at Mount Mugh during the Arab conquest.</p></div>
+      <div class="event c1 in" style="--d:5"><div class="yr">1932</div><p>A shepherd finds a basket holding a manuscript on Mount Mugh. Sogdian documents soon follow.</p></div>
+    </div>
+    <div class="panel in" style="--d:6; margin-top:.75rem">
+      <p style="margin:0"><strong>The link:</strong> Sogdian, once a major language of the Silk Road, died out. Yaghnobi survived. It likely comes from a <strong>spoken Sogdian dialect</strong>, not from the written Sogdian in those documents.</p>
+      <p style="margin:.5rem 0 0"><span class="sog" dir="rtl">𐼼𐼴𐼶𐼹𐼷𐼸</span> <span class="note">The word for "Sogdian" in one Sogdian script</span></p>
+    </div>
+    <p class="in" style="--d:7; margin-top:.55rem"><strong>Legend or history?</strong> Some Yaghnobis trace their history to people fleeing the Arab conquest. One scholar says clear evidence is limited, but the story remains important to the community.</p>
+  </div>
+</section>
+
+<!-- 4. Dialects -->
+<section class="slide" data-tr="zoom" style="--accent: var(--ice)">
+  <div class="text">
+    <p class="kicker in">Language lab</p>
+    <h2 class="in" style="--d:1">One valley, two ways to say it</h2>
+    <div class="bar in" style="--d:2"></div>
+    <p class="in" style="--d:3">Western and eastern Yaghnobi changed old Sogdian sounds in different ways. Switch sides of the valley:</p>
+    <div class="switch in" id="side" style="--d:4">
+      <button class="sbtn on" data-v="0">West</button><button class="sbtn" data-v="1">East</button>
+    </div>
+    <div class="panel in" style="--d:5">
+      <table class="tbl">
+        <tr><th>Meaning</th><th>Old Sogdian</th><th>Yaghnobi</th></tr>
+        <tr><td>day</td><td>mēθ</td><td class="dynamic" data-w="met" data-e="mes"></td></tr>
+        <tr><td>grass</td><td>wayš</td><td class="dynamic" data-w="wayš" data-e="weš"></td></tr>
+        <tr><td>three</td><td>θray</td><td class="dynamic" data-w="tiráy" data-e="saráy"></td></tr>
+      </table>
+      <div class="sound" id="sound"></div>
+    </div>
+    <p class="note in" style="--d:6">The old θ sounds like th in "think." Transitional dialects lie between west and east.</p>
+  </div>
+  <div class="stage">
+    <figure class="scroll" style="--w:28vw; --ar:4/3; --r:1.3deg; --d:0">
+      <img data-file="Antiquities of Samarkand. Bridge of Shadman Malik. View from the North WDL3872.png" alt="Old photograph of the Zeravshan River aqueduct near Samarkand">
+      <figcaption>An old structure on the Zeravshan River near Samarkand. Sogdian cities grew in this river region.</figcaption>
+    </figure>
+    <p class="in" style="--d:5; max-width:32vw; text-align:center"><strong>Compare:</strong> Do people in your region pronounce any word differently from people elsewhere?</p>
+  </div>
+</section>
+
+<!-- 5. Speak -->
+<section class="slide" data-tr="left" style="--accent: var(--green)">
+  <div class="text">
+    <p class="kicker in">Speak along</p>
+    <h2 class="in" style="--d:1">Sounds from the mountains</h2>
+    <div class="bar in" style="--d:2"></div>
+    <p class="in" style="--d:3">Two sounds matter here. <strong>ɣ</strong> is voiced and made far back in the mouth. <strong>x</strong> is like the end of Scottish "loch."</p>
+    <ol class="steps in" id="coach" style="--d:4">
+      <li>Pretend to clear your throat very gently. That's close to <strong>x</strong>.</li>
+      <li>Turn on your voice while doing it. That moves you toward <strong>ɣ</strong>.</li>
+      <li>Say <strong>ɣar</strong>, "mountain," softly and slowly.</li>
+      <li>Finish with <strong>ēx</strong>, "ice," then <strong>yaɣnobī́</strong>.</li>
+    </ol>
+    <p class="in" style="--d:5; margin-top:.65rem"><button class="btn" id="coachbtn">Next step ▶</button></p>
+    <p class="note in" style="--d:6">Pronunciation guides are approximate. Speakers vary.</p>
+  </div>
+  <div class="stage">
+    <div class="speak panel compact in" data-tempo="600" style="--d:3; width:37vw">
+      <div class="line" data-syl="ɣar"></div><p class="gloss">mountain</p>
+      <div class="line" data-syl="ēx"></div><p class="gloss">ice</p>
+      <div class="line" data-syl="urk"></div><p class="gloss">wolf</p>
+      <div class="line" data-syl="vuz"></div><p class="gloss">goat</p>
+      <div class="line" data-syl="zi·vók"></div><p class="gloss">language, tongue</p>
+      <div class="line" data-syl="su·tūr"></div><p class="gloss">sheep</p>
+      <button class="btn play">▶ Speak along</button>
+    </div>
+  </div>
+</section>
+
+<!-- 6. Count -->
+<section class="slide" data-tr="zoom" style="--accent: var(--gold)">
+  <div class="text wide center">
+    <p class="kicker in">Speak along</p>
+    <h2 class="in" style="--d:1">Count to ten</h2>
+    <div class="bar in" style="--d:2"></div>
+    <p class="in" style="--d:3; max-width:70vw; margin:0 auto">Yaghnobi kept its own numbers to ten. For larger numbers, people often use Tajik numbers.</p>
+    <div class="switch in" id="numside" style="--d:4; justify-content:center">
+      <button class="sbtn on" data-v="0">Western forms</button><button class="sbtn" data-v="1">Eastern forms</button>
+    </div>
+    <div class="cnt in" id="cnt" style="--d:5"></div>
+    <p class="in" style="--d:6; margin-top:.7rem"><button class="btn" id="countbtn">▶ Count along</button></p>
+    <p class="note in" style="--d:7">Sources also record older forms, such as dū bīst, "two twenties," for 40.</p>
+  </div>
+</section>
+
+<!-- 7. Time prefix -->
+<section class="slide" style="--accent: var(--rose)">
+  <div class="text wide">
+    <p class="kicker in">Grammar puzzle</p>
+    <h2 class="in" style="--d:1">A tiny letter that means "the past"</h2>
+    <div class="bar in" style="--d:2"></div>
+    <p class="in" style="--d:3">Yaghnobi is the only modern Iranian language that keeps an old past-tense <strong>a-</strong> at the start of verbs. Use it to change the verb:</p>
+    <div class="pair">
+      <div class="panel in" style="--d:4">
+        <strong>Move through time:</strong>
+        <div class="switch" id="tense"><button class="sbtn on" data-v="0">Now</button><button class="sbtn" data-v="1">Past</button></div>
+        <div class="big" id="tword"></div>
+        <div class="mean" id="tmean"></div>
+      </div>
+      <div class="panel in" style="--d:5">
+        <strong>Make someone else do it:</strong>
+        <div class="switch" id="cause"><button class="sbtn on" data-v="0">Simple verb</button><button class="sbtn" data-v="1">Add -ón-</button></div>
+        <div class="big" id="cword"></div>
+        <div class="mean" id="cmean"></div>
+      </div>
+    </div>
+    <p class="in" style="--d:6; margin-top:.65rem"><strong>Try it:</strong> English says "ride" and "make ride." What other languages do you know that change one word to show a new meaning?</p>
+  </div>
+</section>
+
+<!-- 8. Story -->
+<section class="slide" data-tr="left" style="--accent: var(--gold)">
+  <div class="text wide">
+    <p class="kicker in">Folktale</p>
+    <h2 class="in" style="--d:1">Nasreddin and the very expensive question</h2>
+    <div class="bar in" style="--d:2"></div>
+    <div class="story">
+      <div class="panel in" id="panel" style="--d:3" aria-live="polite">
+        <div class="scene" id="scene"></div>
+        <div class="yagh" id="yagh"></div>
+      </div>
+      <div class="in" style="--d:4; text-align:center">
+        <div class="cap" aria-hidden="true"><div class="round"></div><div class="band"></div><span class="tanga" id="tanga">6 tangas</span></div>
+        <p style="margin-top:.5rem"><button class="btn" id="storybtn">Next ▶</button></p>
+      </div>
+    </div>
+    <p class="in" style="--d:5; margin-top:.7rem"><strong>Why it matters:</strong> Stories like this carry humor, history and everyday life. A language loses more than words when its stories stop being told.</p>
+    <p class="note in" style="--d:6">Yaghnobi text is from a recorded version of the tale.</p>
+  </div>
+</section>
+
+<!-- 9. 1970 -->
+<section class="slide" data-tr="left" style="--accent: var(--rose)">
+  <div class="text">
+    <p class="kicker in">Forced move</p>
+    <h2 class="in" style="--d:1">From snow to cotton</h2>
+    <div class="bar in" style="--d:2"></div>
+    <div class="timeline">
+      <div class="event c3 in" style="--d:3"><div class="yr">1970</div><p>Soviet authorities force roughly 3,000 to 4,000 people from the valley, many by helicopter, to cotton lands in Zafarobod.</p></div>
+      <div class="event c2 in" style="--d:4"><div class="yr">1970s</div><p>Heat, hard labor and shock take many lives. Some families secretly return.</p></div>
+      <div class="event c1 in" style="--d:5"><div class="yr">1978</div><p>Some returnees are forced out again.</p></div>
+      <div class="event c4 in" style="--d:6"><div class="yr">1980s–90s</div><p>Families gain the right to return. Only some do.</p></div>
+    </div>
+    <p class="in" style="--d:7">A dark pun: people sometimes turned <em>Zafarobod</em> into <strong>Zahfarōbṓd</strong>, using <em>zah</em>, a word for "mud" or "filth."</p>
+    <p class="in" style="--d:8"><strong>Discuss:</strong> Why might a government say it moved people for their safety? What questions should historians ask?</p>
+  </div>
+  <div class="stage">
+    <div class="panel in" style="--d:3; width:32vw; text-align:center">
+      <p class="quote" style="margin:0">Notice the sky.</p>
+      <p style="margin:.5rem 0 0">The snow in this slide has become <strong>cotton</strong>. For many families, the move changed climate, work and daily language.</p>
+    </div>
+  </div>
+</section>
+
+<!-- 10. Today -->
+<section class="slide" style="--accent: var(--green)">
+  <div class="text wide">
+    <p class="kicker in">Today</p>
+    <h2 class="in" style="--d:1">How do you keep a language alive after moving?</h2>
+    <div class="bar in" style="--d:2"></div>
+    <p class="in" style="--d:3">Yaghnob is beautiful but remote. Snow can block roads for six months or more, and children may leave for boarding school where they study in Tajik. Villager Safarali Boqiev told reporters that he stayed because the language could disappear if everyone left.</p>
+    <p class="in" style="--d:4">Click the options. What would you do first?</p>
+    <div class="cards compact in" style="--d:5; grid-template-columns: repeat(4, 1fr); margin-top:.55rem">
+      <div class="card" style="--cardc: var(--gold)"><div class="word">Teach it in school</div><div class="meaning">Textbooks and lessons existed, but support later declined. Speakers and researchers want them back.</div><div class="tap">click</div></div>
+      <div class="card" style="--cardc: var(--green)"><div class="word">Record the culture</div><div class="meaning">The group Anahita has worked to digitally preserve songs, stories and customs.</div><div class="tap">click</div></div>
+      <div class="card" style="--cardc: var(--ice)"><div class="word">Protect the valley</div><div class="meaning">In 2019, Tajikistan decided to create a national park that includes culture and language goals.</div><div class="tap">click</div></div>
+      <div class="card" style="--cardc: var(--rose)"><div class="word">Bring back work</div><div class="meaning">Tourism may create jobs, and villagers have built small water-power stations themselves.</div><div class="tap">click</div></div>
+    </div>
+    <p class="in" style="--d:6; margin-top:.65rem"><strong>Reason for hope:</strong> A 2009 Tajik law says the state creates conditions to protect and develop Yaghnobi, and scholars report that the language has prestige among its speakers.</p>
+  </div>
+</section>
+
+<!-- 11. Quiz -->
+<section class="slide" style="--accent: var(--gold)">
+  <div class="text wide center">
+    <p class="kicker in">Silk thread check</p>
+    <h2 class="in" style="--d:1">Quick quiz!</h2>
+    <div class="bar in" style="--d:2"></div>
+    <div class="quizgrid">
+      <div class="quiz panel in" style="--d:3" data-right="Yes! Likely a spoken Sogdian dialect." data-wrong="Hint: think about the Silk Road slide.">
+        <div class="q">Which ancient language is Yaghnobi connected to?</div>
+        <div class="options"><button class="opt" data-correct>Sogdian</button><button class="opt">Latin</button><button class="opt">Ancient Greek</button></div>
+        <div class="feedback"></div>
+      </div>
+      <div class="quiz panel in" style="--d:4" data-right="Right! Soviet authorities forced families out." data-wrong="Hint: look for the cotton year.">
+        <div class="q">What happened in 1970?</div>
+        <div class="options"><button class="opt">A new alphabet reached China</button><button class="opt" data-correct>People were forced to move to cotton lands</button><button class="opt">The Silk Road reopened</button></div>
+        <div class="feedback"></div>
+      </div>
+      <div class="quiz panel in" style="--d:5" data-right="Exactly. It marks the past on verbs." data-wrong="Hint: compare šáwomišt and ašáwim.">
+        <div class="q">What does the a- in ašáwim show?</div>
+        <div class="options"><button class="opt">A question</button><button class="opt" data-correct>The past</button><button class="opt">A plural noun</button></div>
+        <div class="feedback"></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- 12. Closing -->
+<section class="slide end" style="--accent: var(--gold)">
+  <div class="text">
+    <h1 class="in" style="font-size:5.4rem">Thank you!</h1>
+    <p class="lead in" style="--d:1">Questions?</p>
+    <p class="quote in" style="--d:2">The empire is gone. The Silk Road caravans are gone. A related language still speaks in family kitchens.</p>
+  </div>
+  <details class="fine in" style="--d:3">
+    <summary>Sources &amp; image credits</summary>
+    <div class="box">
+      <h4>Sources</h4>
+      <ul>
+        <li><a href="https://www.iranicaonline.org/articles/yaghnobi/">Encyclopaedia Iranica: Yaghnobi</a></li>
+        <li><a href="https://chatressar.ff.cuni.cz/wp-content/uploads/sites/89/2019/01/Lubomir_Novak_26-50.pdf">Novák (2018): Yaghnobi, an Example of a Language in Contact</a></li>
+        <li><a href="https://en.wikipedia.org/wiki/Yaghnobi_language">Yaghnobi language (Wikipedia)</a></li>
+        <li><a href="https://www.rferl.org/a/tajikistan-yaghnob-valley-ancient-language/33170758.html">RFE/RL (2024): Ancient Central Asian Language Dying Off</a></li>
+        <li><a href="https://en.fergana.agency/articles/120786/">Fergana: The Two Deportations of Yaghnob</a></li>
+        <li><a href="https://cabar.asia/en/how-do-yaghnobi-people-live-a-report-from-the-remote-area-of-tajikistan">CABAR.asia: How Do Yaghnobi People Live?</a></li>
+        <li><a href="https://invisibleeast.web.ox.ac.uk/node/4790071">Invisible East: Mount Mugh documents</a></li>
+        <li><a href="https://sogdians.si.edu/ancient-letters/">Smithsonian: Sogdian Ancient Letters</a></li>
+      </ul>
+      <h4>Images (Wikimedia Commons)</h4>
+      <ul id="credits"></ul>
+    </div>
+  </details>
+</section>
+
+</main>
+
+<nav class="controls">
+  <button id="prev" aria-label="Previous slide">‹</button>
+  <span id="counter">1 / 12</span>
+  <button id="next" aria-label="Next slide">›</button>
+  <button id="fs" aria-label="Fullscreen">⤢</button>
+</nav>
+<p class="hint">Use ← → to move. Press F for fullscreen.</p>
+
+<!-- Yaghnobi effects: snow and cotton, dialect switches, sound coach, verbs, folktale -->
+<script>
+(function () {
+  /* ---------- Weather ---------- */
+  var land = document.getElementById("land");
+  for (var f = 0; f < 26; f++) {
+    var flake = document.createElement("span");
+    flake.className = "flake";
+    flake.style.setProperty("--x", (Math.random() * 100).toFixed(1) + "vw");
+    flake.style.setProperty("--dur", (9 + Math.random() * 11).toFixed(1) + "s");
+    flake.style.setProperty("--dly", (-Math.random() * 18).toFixed(1) + "s");
+    flake.style.setProperty("--wind", (Math.random() * 16 - 8).toFixed(1) + "vw");
+    land.appendChild(flake);
+  }
+
+  var timers = [];
+  function clearTimers() { timers.forEach(clearTimeout); timers = []; }
+  document.addEventListener("slidechange", function (e) {
+    document.body.style.setProperty("--t", e.detail.index / (e.detail.total - 1));
+    document.body.classList.toggle("hot", e.detail.index === 8);
+    clearTimers();
+    document.querySelectorAll(".cnt .c.on").forEach(function (c) { c.classList.remove("on"); });
+  });
+
+  function single(selector, callback) {
+    var group = document.querySelectorAll(selector);
+    group.forEach(function (b) {
+      b.addEventListener("click", function () {
+        group.forEach(function (x) { x.classList.remove("on"); });
+        b.classList.add("on");
+        callback(Number(b.dataset.v));
+      });
+    });
+  }
+
+  /* ---------- Dialects ---------- */
+  var SOUND = [
+    "West: old θ became t, and ay stayed ay.",
+    "East: old θ became s, and ay became e."
+  ];
+  function setSide(v) {
+    document.querySelectorAll(".dynamic").forEach(function (cell) {
+      cell.textContent = v ? cell.dataset.e : cell.dataset.w;
+    });
+    document.getElementById("sound").textContent = SOUND[v];
+  }
+  single("#side .sbtn", setSide);
+  setSide(0);
+
+  /* ---------- Sound coach ---------- */
+  var coachBtn = document.getElementById("coachbtn");
+  var steps = document.querySelectorAll("#coach li");
+  var stepIndex = 0;
+  coachBtn.addEventListener("click", function () {
+    if (stepIndex >= steps.length) {
+      steps.forEach(function (s) { s.classList.remove("on"); });
+      stepIndex = 0;
+      coachBtn.textContent = "Next step ▶";
+      return;
+    }
+    steps[stepIndex].classList.add("on");
+    stepIndex++;
+    coachBtn.textContent = stepIndex >= steps.length ? "Start again ↺" : "Next step ▶";
+  });
+
+  /* ---------- Numbers ---------- */
+  var NUM = [
+    [["ī", "ee"], ["dʏ", "dü"], ["tiráy", "tih-RYE"], ["tufór", "too-FOR"], ["panč", "panch"], ["uxš", "ookhsh"], ["aft", "ahft"], ["ašt", "ahsht"], ["nau̯", "now"], ["das", "dahs"]],
+    [["ī", "ee"], ["dū", "doo"], ["saráy", "sah-RYE"], ["tafór", "tah-FOR"], ["panč", "panch"], ["uxš", "ookhsh"], ["avd", "ahvd"], ["ašt", "ahsht"], ["nau̯", "now"], ["das", "dahs"]]
+  ];
+  var cnt = document.getElementById("cnt");
+  function renderNumbers(side) {
+    cnt.innerHTML = NUM[side].map(function (n, i) {
+      return '<div class="c"><b>' + (i + 1) + "</b><span>" + n[0] + "</span><small>" + n[1] + "</small></div>";
+    }).join("");
+  }
+  renderNumbers(0);
+  single("#numside .sbtn", renderNumbers);
+  document.getElementById("countbtn").addEventListener("click", function () {
+    clearTimers();
+    var cells = cnt.querySelectorAll(".c");
+    cells.forEach(function (cell, k) {
+      timers.push(setTimeout(function () {
+        cells.forEach(function (x) { x.classList.remove("on"); });
+        cell.classList.add("on");
+      }, k * 1300));
+    });
+    timers.push(setTimeout(function () { cells.forEach(function (x) { x.classList.remove("on"); }); }, cells.length * 1300));
+  });
+
+  /* ---------- Verbs ---------- */
+  var TENSE = [["šáwomišt", "I go"], ['<span class="pre">a</span>šáwim', "I went"]];
+  var CAUSE = [["roy-", "to cry"], ['roy<span class="pre">ón</span>-', "to make someone cry"]];
+  function renderTense(v) {
+    document.getElementById("tword").innerHTML = TENSE[v][0];
+    document.getElementById("tmean").textContent = TENSE[v][1];
+  }
+  function renderCause(v) {
+    document.getElementById("cword").innerHTML = CAUSE[v][0];
+    document.getElementById("cmean").textContent = CAUSE[v][1];
+  }
+  single("#tense .sbtn", renderTense);
+  single("#cause .sbtn", renderCause);
+  renderTense(0);
+  renderCause(0);
+
+  /* ---------- Folktale ---------- */
+  var STORY = [
+    ["Nasreddin buys a small cap at the bazaar for six tangas.", "Nasriddī́n ī xūd či bozór uxš tangái axirī́n."],
+    ["Everyone he meets asks the same thing: how much did it cost?", "\"Xūd čof pūl axirī́nī?\""],
+    ["He answers one person, a second and a third. Then he says that if he answers everyone, he will go crazy!", ""],
+    ["He runs to the bazaar and shouts for all the people to gather in the square. They think there's big news.", "\"E odámt!\""],
+    ["When the whole town arrives, Nasreddin climbs up high and announces: \"I bought this cap for six tangas!\"", ""]
+  ];
+  var storyIndex = 0;
+  var button = document.getElementById("storybtn");
+  function renderStory() {
+    document.getElementById("scene").textContent = STORY[storyIndex][0];
+    document.getElementById("yagh").textContent = STORY[storyIndex][1];
+    document.getElementById("tanga").classList.toggle("on", storyIndex === 0 || storyIndex === STORY.length - 1);
+    button.textContent = storyIndex === STORY.length - 1 ? "Start again ↺" : "Next ▶";
+  }
+  button.addEventListener("click", function () {
+    storyIndex = (storyIndex + 1) % STORY.length;
+    renderStory();
+  });
+  renderStory();
+})();
+</script>
+<script src="../assets/deck.js"></script>
+</body>
+</html>
