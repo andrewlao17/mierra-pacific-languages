@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Kusunda: The Language With No Known Relatives</title>
+<link rel="stylesheet" href="../assets/deck.css">
+<style>
+@import url("https://fonts.googleapis.com/css2?family=Yatra+One&family=Hind:wght@400;500;600;700&display=swap");
+
+/* ---------- Kusunda theme: a night forest full of fireflies ---------- */
+:root {
+  --bg: #07130f;
+  --ink: #f3efdc;
+  --muted: #b7c7b2;
+  --line: rgba(243, 239, 220, .2);
+  --panel: rgba(7, 22, 17, .78);
+  --blue: #7fd0c4;
+  --green: #9fd27c;
+  --gold: #ffd866;
+  --rose: #ef8a68;
+  --lilac: #c8b7ea;
+  --accent: var(--gold);
+  --serif: "Yatra One", Georgia, serif;
+  --sans: "Hind", "Noto Sans", system-ui, sans-serif;
+  --t: 0;
+}
+h1 { font-size: 6.2rem; line-height: 1; }
+h2 { font-size: 3.05rem; line-height: 1.08; }
+.slide { padding: 7vh 3vw 8vh 9.5vw; }
+.text { max-width: 44vw; }
+.text.wide { max-width: 84vw; width: 84vw; }
+.stage {
+  right: 2.5vw; top: 6vh; bottom: 8vh; width: 41vw;
+  display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 1.4rem;
+}
+.stage.row { flex-direction: row; flex-wrap: wrap; align-content: center; }
+.stage .loc { position: relative; }
+a.btn { display: inline-block; text-decoration: none; }
+.speak .line, .card .word, .mbtn.word, .say-word { font-family: var(--sans); font-weight: 700; }
+.card.revealed .meaning { max-height: 11rem; }
+.slide.active .dotgrid i { transition-delay: calc(.3s + var(--k) * 3ms); }
+.event, .event p { color: #10241c; }
+.loc .disc { border-color: var(--gold); box-shadow: 0 0 0 .6rem rgba(255,216,102,.12), 0 22px 40px rgba(0,0,0,.55); }
+.loc .tint { background: #cfe0a8; }
+.loc .sea { background: #10291f; }
+.loc .tag { background: #0a1d16; border-color:
