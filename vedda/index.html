@@ -1,0 +1,561 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Vedda: The Language of Riddles</title>
+<link rel="stylesheet" href="../assets/deck.css">
+<style>
+@import url("https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,600;9..144,800&family=Nunito:wght@500;700;800&display=swap");
+
+/* ---------- Vedda theme: forest cliffs, wild bees and a filling honeycomb ---------- */
+:root {
+  --bg: #0f1711;
+  --ink: #fff3d8;
+  --muted: #d7d0b6;
+  --line: rgba(255, 243, 216, .2);
+  --panel: rgba(15, 25, 18, .82);
+  --gold: #f6b632;
+  --amber: #d9831f;
+  --green: #9fcb70;
+  --rose: #ee8667;
+  --blue: #76c3d1;
+  --accent: var(--gold);
+  --serif: "Fraunces", Georgia, serif;
+  --sans: "Nunito", "Noto Sans", system-ui, sans-serif;
+  --t: 0;
+  font-size: clamp(12px, 1.3vw, 28px);
+}
+h1 { font-size: 6.4rem; font-weight: 800; line-height: .98; }
+h2 { font-size: 3.05rem; font-weight: 800; line-height: 1.04; }
+.slide { padding: 7vh 3vw 8vh 10vw; }
+.text { max-width: 44vw; }
+.text.wide { max-width: 83vw; width: 83vw; }
+.stage {
+  right: 2.5vw; top: 6vh; bottom: 8vh; width: 40vw;
+  display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 1.4rem;
+}
+.stage .loc { position: relative; }
+ul.dots li { font-size: 1.1rem; }
+.speak .line, .card .word { font-family: var(--sans); font-weight: 800; }
+.card .word { font-size: 1.05rem; line-height: 1.2; }
+.card.revealed .meaning { max-height: 11rem; }
+.loc .disc { border-color: var(--gold); box-shadow: 0 0 0 .6rem rgba(246,182,50,.14), 0 22px 40px rgba(0,0,0,.55); }
+.loc .tint { background: #b8c97a; }
+.loc .sea { background: #123845; }
+.loc .tag { background: #16251a; border-color: var(--gold); }
+.event, .event p { color: #20140d; }
+
+/* Forest backdrop */
+#forest { position: fixed; inset: 0; z-index: 0; overflow: hidden; pointer-events: none; background: linear-gradient(180deg, #17352c 0%, #274a2e 52%, #0f1711 100%); }
+#forest .glow { position: absolute; right: 12vw; top: 10vh; width: 34vh; height: 34vh; border-radius: 50%; background: radial-gradient(circle, rgba(255,214,120,.7), rgba(255,180,70,.12) 60%, transparent 72%); }
+#forest svg.layer { position: absolute; left: -6vw; width: 112vw; bottom: 0; }
+#forest .far { height: 74vh; transform: translateX(calc(var(--t) * -2.5vw)); transition: transform 1.3s ease; }
+#forest .near { height: 52vh; transform: translateX(calc(var(--t) * -5vw)); transition: transform 1.3s ease; }
+#forest .shade { position: absolute; inset: 0; background: linear-gradient(90deg, rgba(8,14,10,.9) 0%, rgba(8,14,10,.68) 54%, rgba(8,14,10,.22) 100%); }
+#honey { position: absolute; left: 0; top: 0; width: 100%; height: 34vh; transform-origin: top; transform: scaleY(calc(.2 + var(--t) * .8)); transition: transform 1.4s ease; filter: drop-shadow(0 4px 8px rgba(0,0,0,.35)); }
+.bee { position: absolute; left: 0; top: 0; width: 1.05rem; height: .7rem; border-radius: 50%; background: repeating-linear-gradient(90deg, #f6b632 0 .22rem, #1a120b .22rem .36rem); animation: flight var(--dur, 24s) linear infinite; animation-delay: var(--dly, 0s); offset-path: var(--path); }
+.bee::before, .bee::after { content: ""; position: absolute; top: -.32rem; width: .55rem; height: .42rem; border-radius: 50%; background: rgba(255,255,255,.55); animation: wing .09s linear infinite alternate; }
+.bee::before { left: .1rem; } .bee::after { left: .42rem; }
+@keyframes flight { to { offset-distance: 100%; } }
+@keyframes wing { to { transform: scaleY(.45); } }
+
+/* Honeycomb progress */
+#comb { position: fixed; left: 1.7vw; top: 14vh; z-index: 15; display: grid; grid-template-columns: repeat(2, 2.1rem); gap: .22rem .22rem; width: 4.8rem; }
+#comb i { display: block; width: 2.1rem; height: 2.3rem; clip-path: polygon(50% 0, 100% 25%, 100% 75%, 50% 100%, 0 75%, 0 25%); background: rgba(255,243,216,.17); transition: background .6s; }
+#comb i:nth-child(even) { transform: translateY(1.15rem); }
+#comb i.full { background: linear-gradient(180deg, #ffd467, #d9831f); }
+
+/* Honey-framed pictures */
+.comb {
+  position: relative; margin: 0; width: var(--w, 19vw); padding: .5rem;
+  background: linear-gradient(145deg, #f6b632, #a95f15); border-radius: 1rem; box-shadow: 0 16px 34px rgba(0,0,0,.55);
+  transform: rotate(var(--r, 0deg)); transition: transform .9s cubic-bezier(.2,.8,.2,1), opacity .7s ease;
+}
+.slide:not(.active) .comb { opacity: 0; transform: scale(.9) rotate(var(--r, 0deg)); }
+.slide.active .comb { transition-delay: calc(.45s + var(--d, 0) * .16s); }
+.comb img { display: block; width: 100%; aspect-ratio: var(--ar, 4 / 3); object-fit: cover; border-radius: .6rem; background: #1d2a1f; }
+.comb img.contain { object-fit: contain; background: #fff7e3; }
+.comb figcaption { color: #1d120a; font-size: .74rem; font-weight: 800; line-height: 1.25; margin: .35rem .2rem .05rem; }
+
+/* Voices */
+.voices { display: flex; gap: .45rem; flex-wrap: wrap; margin: .4rem 0 .6rem; }
+.vbtn { font: inherit; font-weight: 800; color: var(--ink); background: var(--panel); border: 2px solid var(--line); border-radius: 999px; padding: .2em .95em; cursor: pointer; }
+.vbtn.on { background: var(--gold); border-color: var(--gold); color: #1d120a; }
+#vtext { min-height: 3.8rem; font-size: 1.05rem; }
+.theories { display: grid; grid-template-columns: repeat(3, 1fr); gap: .7rem; margin-top: .75rem; }
+.theory { background: var(--panel); border-top: .32rem solid var(--c); border-radius: .6rem; padding: .55rem .75rem; font-size: .9rem; line-height: 1.3; }
+.theory b { display: block; font-family: var(--serif); font-size: 1.1rem; color: var(--c); }
+
+/* Invent a riddle */
+.objs { display: flex; flex-wrap: wrap; gap: .5rem; margin: .5rem 0 .8rem; }
+.obj { font: inherit; font-weight: 800; color: var(--ink); background: var(--panel); border: 2px solid var(--line); border-radius: .7rem; padding: .35em .95em; cursor: pointer; }
+.obj.on { background: var(--gold); border-color: var(--gold); color: #1d120a; }
+#rid { font-family: var(--serif); font-weight: 800; color: var(--gold); font-size: 2.3rem; line-height: 1.12; min-height: 5.2rem; }
+
+/* Sound coach */
+.steps { list-style: none; padding: 0; margin: .5rem 0 0; counter-reset: s; }
+.steps li { counter-increment: s; display: flex; gap: .7rem; margin: .45rem 0; font-size: 1rem; line-height: 1.32; opacity: .25; transition: opacity .4s; }
+.steps li::before { content: counter(s); flex: none; width: 1.7rem; height: 1.7rem; border-radius: 50%; display: grid; place-items: center; background: #263c2a; font-weight: 800; font-size: .82rem; }
+.steps li.on { opacity: 1; }
+.steps li.on::before { background: var(--gold); color: #1d120a; }
+.speak.compact { padding: 1rem 1.3rem; }
+.speak.compact .line { font-size: 1.95rem; }
+.speak.compact .gloss { font-size: .9rem; margin-bottom: .3rem; }
+
+/* One word, many jobs */
+.tabs { display: flex; gap: .5rem; justify-content: center; margin-top: .4rem; }
+.collapse { position: relative; height: 15rem; margin-top: .8rem; }
+.collapse .chip {
+  position: absolute; left: 50%; top: 50%; padding: .3em .9em; border-radius: 999px; background: var(--panel); border: 2px solid var(--line); font-weight: 800; font-size: 1.05rem; white-space: nowrap;
+  transform: translate(calc(-50% + var(--x)), calc(-50% + var(--y))); transition: transform .9s cubic-bezier(.65,0,.2,1), opacity .7s;
+}
+.collapse .chip small { display: block; font-size: .7rem; color: var(--muted); font-weight: 700; text-align: center; }
+.collapse.done .chip { transform: translate(-50%, -50%) scale(.45); opacity: 0; }
+.collapse .big { position: absolute; left: 50%; top: 50%; transform: translate(-50%, -50%) scale(.3); opacity: 0; text-align: center; transition: transform .7s .45s cubic-bezier(.2,1.5,.4,1), opacity .4s .45s; }
+.collapse.done .big { transform: translate(-50%, -50%) scale(1); opacity: 1; }
+.collapse .big b { display: block; font-family: var(--serif); font-size: 4rem; line-height: 1; color: var(--gold); }
+
+/* Sentence decoder */
+.sent { margin-top: .65rem; }
+.sent .label { font-weight: 800; color: var(--green); margin-bottom: .3rem; }
+.wordchips { display: flex; flex-wrap: wrap; gap: .45rem; justify-content: center; }
+.wc { font: inherit; cursor: pointer; min-width: 6.4rem; padding: .3rem .6rem; border-radius: .6rem; background: var(--panel); border: 2px solid var(--line); color: var(--ink); }
+.wc b { display: block; font-size: 1.05rem; }
+.wc i { display: block; font-style: normal; font-size: .8rem; color: var(--gold); min-height: 1.25em; visibility: hidden; }
+.wc.on { border-color: var(--gold); }
+.wc.on i { visibility: visible; }
+.trans { min-height: 1.45em; text-align: center; font-weight: 800; color: var(--blue); margin: .4rem 0 0; font-size: 1.02rem; }
+
+.quote { font-family: var(--serif); font-size: 2.05rem; font-weight: 800; line-height: 1.12; color: var(--gold); }
+.note { font-size: .84rem; color: var(--muted); }
+
+@media (prefers-reduced-motion: reduce) { .bee { display: none; } }
+@media (max-width: 820px) {
+  #comb { display: none; }
+  .slide { padding: 6vh 6vw 12vh; }
+  h1 { font-size: 3.8rem; }
+  .text, .text.wide { max-width: none; width: auto; }
+  .stage { position: relative; inset: auto; width: 100%; margin-top: 1.5rem; }
+  .comb { width: 76vw; }
+  .theories { grid-template-columns: 1fr; }
+}
+</style>
+</head>
+<body data-map="BlankMap-Equirectangular.svg">
+
+<div id="forest" aria-hidden="true">
+  <div class="glow"></div>
+  <svg class="layer far" viewBox="0 0 1600 500" preserveAspectRatio="none"><path d="M0 500 V250 C160 210 240 300 380 240 C460 120 620 130 720 230 C860 280 980 170 1100 210 C1250 80 1420 150 1600 240 V500 Z" fill="#20402e"/></svg>
+  <svg class="layer near" viewBox="0 0 1600 400" preserveAspectRatio="none"><path d="M0 400 V190 C90 150 130 210 200 170 C270 110 330 180 410 140 C490 100 560 190 650 150 C760 90 840 200 930 150 C1030 90 1100 180 1190 130 C1290 80 1370 170 1460 130 C1520 110 1570 130 1600 150 V400 Z" fill="#0f2318"/></svg>
+  <svg id="honey" viewBox="0 0 1600 300" preserveAspectRatio="none"><path d="M0 0 H1600 V52 C1540 60 1530 118 1490 120 C1450 122 1450 62 1390 58 C1320 54 1320 180 1275 182 C1230 184 1240 62 1160 58 C1090 54 1080 104 1040 106 C1000 108 1000 56 930 56 C860 56 850 145 805 146 C760 147 760 58 690 54 C620 50 610 92 570 94 C530 96 530 54 450 54 C380 54 370 205 325 206 C280 207 290 60 220 56 C150 52 145 112 100 114 C60 116 60 52 0 50 Z" fill="#d9831f"/></svg>
+  <div class="shade"></div>
+  <span class="bee" style="--path: path('M 1200 120 C 900 250 700 60 420 220 S 120 180 -100 320'); --dur: 22s"></span>
+  <span class="bee" style="--path: path('M -80 260 C 240 90 460 320 760 170 S 1200 240 1500 90'); --dur: 28s; --dly: -9s"></span>
+  <span class="bee" style="--path: path('M 1500 340 C 1160 170 980 370 700 280 S 300 90 -80 170'); --dur: 34s; --dly: -18s"></span>
+</div>
+<aside id="comb" aria-hidden="true"></aside>
+<div class="progress"></div>
+
+<main>
+
+<!-- 1. Title -->
+<section class="slide" style="--accent: var(--gold)">
+  <div class="text">
+    <p class="kicker in">Rare Languages of the Asia-Pacific · Module 13</p>
+    <h1 class="in" style="--d:1">Vedda</h1>
+    <div class="bar in" style="--d:2"></div>
+    <p class="lead in" style="--d:3">The language of Sri Lanka's forest people, where a ship can be "the vehicle of the ocean"</p>
+    <p class="muted in" style="--d:4">Today, you'll speak in riddles.</p>
+  </div>
+  <div class="stage">
+    <figure class="comb" style="--w:23vw; --ar:3/4; --r:-1.5deg; --d:0">
+      <img data-file="Topography Sri Lanka.jpg" alt="NASA relief image of Sri Lanka">
+      <figcaption>Sri Lanka from NASA data. Vedda ancestors were probably the island's earliest people.</figcaption>
+    </figure>
+  </div>
+</section>
+
+<!-- 2. Who and where -->
+<section class="slide" data-tr="left" style="--accent: var(--green)">
+  <div class="text">
+    <p class="kicker in">Who and where</p>
+    <h2 class="in" style="--d:1">The people of the forest</h2>
+    <div class="bar in" style="--d:2"></div>
+    <ul class="dots">
+      <li class="in" style="--d:3"><strong>Vedda</strong> comes from a Tamil word linked to hunting. Many Vedda people call themselves <span class="hl">Wanniyalaeto</span>, "people of the forest."</li>
+      <li class="in" style="--d:4">The language is mainly linked with <strong>Dambana</strong>, in Sri Lanka's Uva Province, near Maduru Oya National Park.</li>
+      <li class="in" style="--d:5">Traditional life included hunting, gathering yams and collecting wild honey from trees and rocks.</li>
+      <li class="in" style="--d:6">Younger generations increasingly use <strong>Sinhala</strong> or <strong>Tamil</strong> first. Experts rate the language's danger differently, but all agree it is endangered.</li>
+    </ul>
+    <div class="panel in" style="--d:7; margin-top:.5rem">
+      <div class="dotgrid" data-total="25" data-on="3" style="grid-template-columns: repeat(25, 1fr); gap: .25rem"></div>
+      <div class="legend"><span style="--c: var(--rose)">about 300 speakers (older, undated figure)</span><span style="--c: rgba(255,255,255,.3)">about 2,500 Vedda people (2002)</span></div>
+      <p class="note" style="margin:.3rem 0 0">One recent study says about 1,000 speakers. Exact counts are uncertain.</p>
+    </div>
+  </div>
+  <div class="stage">
+    <div class="loc" data-lat="7.36" data-lon="81.09" data-zoom="7" style="--s:14vw; --d:0">
+      <div class="disc"><div class="lmap"></div><div class="tint"></div><div class="sea"></div><span class="pinpt"></span></div>
+      <span class="tag">Dambana, Sri Lanka</span>
+    </div>
+    <figure class="comb" style="--w:17vw; --ar:352/540; --r:1deg; --d:1">
+      <img data-file="Karte von Ceylon.jpg" alt="Late 1800s German map of Ceylon">
+      <figcaption>A map of Ceylon, the island's old English name, from the 1880s</figcaption>
+    </figure>
+  </div>
+</section>
+
+<!-- 3. Mystery -->
+<section class="slide" style="--accent: var(--rose)">
+  <div class="text wide">
+    <p class="kicker in">Mystery</p>
+    <h2 class="in" style="--d:1">Why did outsiders disagree?</h2>
+    <div class="bar in" style="--d:2"></div>
+    <p class="in" style="--d:3">Visitors gave opposite reports for nearly 200 years. Click each one in order:</p>
+    <div class="voices in" id="voices" style="--d:4">
+      <button class="vbtn on" data-v="0">1681 Knox</button>
+      <button class="vbtn" data-v="1">1686 Queiroz</button>
+      <button class="vbtn" data-v="2">1803 Percival</button>
+      <button class="vbtn" data-v="3">1831 Davies</button>
+      <button class="vbtn" data-v="4">1848 Pridham</button>
+    </div>
+    <div class="panel in" id="vtext" style="--d:5" aria-live="polite"></div>
+    <div class="theories in" style="--d:6">
+      <div class="theory" style="--c: var(--gold)"><b>A creole?</b>A new language formed when older Vedda speech mixed with early Sinhala and Tamil.</div>
+      <div class="theory" style="--c: var(--green)"><b>A language isolate?</b>Some linguists see no relationship to Dravidian or Indo-European.</div>
+      <div class="theory" style="--c: var(--blue)"><b>Indo-Aryan or a dialect?</b>Ethnologue groups it with Indo-Aryan, and others link it closely to Sinhala.</div>
+    </div>
+    <p class="note in" style="--d:7; margin-top:.5rem">Linguists still debate this. The original Vedda language or languages have no known origin.</p>
+  </div>
+</section>
+
+<!-- 4. Riddles -->
+<section class="slide" data-tr="zoom" style="--accent: var(--gold)">
+  <div class="text wide center">
+    <p class="kicker in">Word game</p>
+    <h2 class="in" style="--d:1">Can you solve the Vedda riddles?</h2>
+    <div class="bar in" style="--d:2"></div>
+    <p class="in" style="--d:3">Vedda often builds new words from words it already has, instead of borrowing. Guess first, then click.</p>
+    <div class="cards compact in" style="--d:4; grid-template-columns: repeat(3, 1fr); max-width:78vw; margin:.7rem auto 0">
+      <div class="card" style="--cardc: var(--blue)"><div class="word">"Vehicle of the ocean"</div><div class="meaning"><strong>Ship</strong><br>maadiyanganalle dandDukacca</div><div class="tap">click</div></div>
+      <div class="card" style="--cardc: var(--green)"><div class="word">"Water falling from above"</div><div class="meaning"><strong>Rain</strong><br>uDatanin mandovena diyaracca</div><div class="tap">click</div></div>
+      <div class="card" style="--cardc: var(--gold)"><div class="word">"Sleeping thing"</div><div class="meaning"><strong>Bed</strong><br>vaterena yamake</div><div class="tap">click</div></div>
+      <div class="card" style="--cardc: var(--rose)"><div class="word">"Shooting thing"</div><div class="meaning"><strong>Gun</strong><br>puccakazDana yamake</div><div class="tap">click</div></div>
+      <div class="card" style="--cardc: var(--gold)"><div class="word">"Spike that goes kuru-kuru"</div><div class="meaning"><strong>Pencil</strong><br>kurukurugaccana ulpojja</div><div class="tap">click</div></div>
+      <div class="card" style="--cardc: var(--green)"><div class="word">"Up-place holding thing"</div><div class="meaning"><strong>Table</strong><br>uda-thaene randana yamaka</div><div class="tap">click</div></div>
+    </div>
+  </div>
+</section>
+
+<!-- 5. Invent -->
+<section class="slide" style="--accent: var(--blue)">
+  <div class="text">
+    <p class="kicker in">Your turn</p>
+    <h2 class="in" style="--d:1">Talk like a riddle maker</h2>
+    <div class="bar in" style="--d:2"></div>
+    <p class="in" style="--d:3">Describe an object by what it <strong>does</strong>, where it <strong>goes</strong>, or how it <strong>sounds</strong>. No using the object's name!</p>
+    <div class="objs in" id="objs" style="--d:4">
+      <button class="obj on" data-o="0">Phone</button>
+      <button class="obj" data-o="1">Bicycle</button>
+      <button class="obj" data-o="2">Backpack</button>
+      <button class="obj" data-o="3">Pizza</button>
+      <button class="obj" data-o="4">Rocket</button>
+    </div>
+    <div class="panel in" style="--d:5"><div id="rid" aria-live="polite"></div></div>
+    <p class="note in" style="--d:6">This is an English game inspired by Vedda. These are not real Vedda words.</p>
+    <p class="in" style="--d:7"><strong>Challenge:</strong> Write a riddle for something in your classroom. Can your partner guess it?</p>
+  </div>
+  <div class="stage">
+    <figure class="comb" style="--w:24vw; --ar:2881/3056; --r:1.4deg; --d:0">
+      <img data-file="AvicedaJerdoniLegge.jpg" alt="Painted plate of Sri Lankan birds of prey">
+      <figcaption>Birds of Ceylon plate, 1880. How would you name a bird if you only described it?</figcaption>
+    </figure>
+  </div>
+</section>
+
+<!-- 6. Speak along -->
+<section class="slide" data-tr="left" style="--accent: var(--green)">
+  <div class="text">
+    <p class="kicker in">Speak along</p>
+    <h2 class="in" style="--d:1">Hear the cc and jj</h2>
+    <div class="bar in" style="--d:2"></div>
+    <p class="in" style="--d:3">Vedda is known for many <strong>cc</strong> and <strong>jj</strong> sounds, made with the middle of your tongue against the roof of your mouth.</p>
+    <ol class="steps in" id="coach" style="--d:4">
+      <li>Say "chee." Now make the start shorter and crisper.</li>
+      <li>Say "jee" the same way, without a buzz.</li>
+      <li>Hold <strong>cc</strong> for a moment, then release: dee-ya-ra<strong>c-c</strong>a.</li>
+      <li>Hold <strong>jj</strong>, then release: ee-ra-po<strong>j-j</strong>a.</li>
+    </ol>
+    <p class="in" style="--d:5; margin-top:.7rem"><button class="btn" id="coachbtn">Next step ▶</button></p>
+    <p class="note in" style="--d:6">Pronunciation guides are approximate. Spelling also varies between sources.</p>
+  </div>
+  <div class="stage">
+    <div class="speak panel compact in" data-tempo="560" style="--d:3; width:37vw">
+      <div class="line" data-syl="di·ya·rac·ca"></div><p class="gloss">water</p>
+      <div class="line" data-syl="i·ra·poj·ja"></div><p class="gloss">sun</p>
+      <div class="line" data-syl="gi·ni·rac·ca"></div><p class="gloss">fire</p>
+      <div class="line" data-syl="bo·ta·kan·da"></div><p class="gloss">elephant</p>
+      <div class="line" data-syl="to·pan"></div><p class="gloss">you</p>
+      <button class="btn play">▶ Speak along</button>
+    </div>
+  </div>
+</section>
+
+<!-- 7. One word -->
+<section class="slide" data-tr="zoom" style="--accent: var(--gold)">
+  <div class="text wide center">
+    <p class="kicker in">Language lab</p>
+    <h2 class="in" style="--d:1">One word, many jobs</h2>
+    <div class="bar in" style="--d:2"></div>
+    <p class="in" style="--d:3; max-width:70vw; margin:0 auto">Sinhala uses different words for these meanings. Pick a set, then press <strong>Combine</strong> to see what Vedda does.</p>
+    <div class="tabs in" id="tabs" style="--d:4">
+      <button class="vbtn on" data-t="0">"No"</button><button class="vbtn" data-t="1">"You"</button><button class="vbtn" data-t="2">"Two"</button>
+    </div>
+    <div class="collapse in" id="collapse" style="--d:5"></div>
+    <p class="in" style="--d:6"><button class="btn" id="combine">Combine ▶</button></p>
+  </div>
+</section>
+
+<!-- 8. Respect and sentences -->
+<section class="slide" style="--accent: var(--rose)">
+  <div class="text wide center">
+    <p class="kicker in">Decode it</p>
+    <h2 class="in" style="--d:1">An elephant gets respect too</h2>
+    <div class="bar in" style="--d:2"></div>
+    <p class="in" style="--d:3; max-width:72vw; margin:0 auto">The word <strong>aeththo</strong> marks respect. A 2020 study found it with people and animals. Click each word:</p>
+    <div class="sent in" style="--d:4">
+      <div class="label">Sentence 1</div>
+      <div class="wordchips">
+        <button class="wc"><b>Poramola</b><i>name</i></button><button class="wc"><b>aeththo</b><i>respect word</i></button><button class="wc"><b>botakandala</b><i>elephant</i></button><button class="wc"><b>aeththe-k</b><i>respect word + a</i></button><button class="wc"><b>aehirukula-ta</b><i>eye-to</i></button><button class="wc"><b>mando-kara</b><i>did</i></button>
+      </div>
+      <p class="trans" data-t="Word for word: Poramola took an elephant into the eyes. Meaning: Poramola saw an elephant."></p>
+    </div>
+    <div class="sent in" style="--d:5">
+      <div class="label">Sentence 2</div>
+      <div class="wordchips">
+        <button class="wc"><b>Oya aeththa</b><i>you + respect word</i></button><button class="wc"><b>rukang-pojja-val-vala</b><i>trees-on</i></button><button class="wc"><b>uda-thaena-ta</b><i>up-place-to</i></button><button class="wc"><b>mangachchanna</b><i>to go</i></button><button class="wc"><b>kodoi</b><i>no / don't</i></button>
+      </div>
+      <p class="trans" data-t="Word for word: You, trees' up-place, go, don't. Meaning: Don't climb trees."></p>
+    </div>
+    <p class="in" style="--d:6; margin-top:.55rem"><button class="btn" id="decodebtn">Check meanings</button></p>
+  </div>
+</section>
+
+<!-- 9. Land -->
+<section class="slide" data-tr="left" style="--accent: var(--rose)">
+  <div class="text">
+    <p class="kicker in">Forest under pressure</p>
+    <h2 class="in" style="--d:1">When the forest changed</h2>
+    <div class="bar in" style="--d:2"></div>
+    <div class="timeline">
+      <div class="event c3 in" style="--d:3"><div class="yr">1881</div><p>The census counts 2,200 Veddas.</p></div>
+      <div class="event c2 in" style="--d:4"><div class="yr">1959</div><p>A linguist finds that the language is mostly limited to Dambana's older generation.</p></div>
+      <div class="event c1 in" style="--d:5"><div class="yr">1977</div><p>The Mahaweli development scheme takes in large areas of traditional hunting land.</p></div>
+      <div class="event c4 in" style="--d:6"><div class="yr">1983</div><p>Maduru Oya becomes a national park. Hunting there is banned, and people are moved out.</p></div>
+    </div>
+    <p class="in" style="--d:7">A leader who was moved to a rice-farming village said the government took their hunting tools and <strong>"gave us mammoties to dig our own graves."</strong></p>
+    <p class="note in" style="--d:8">A mammoty is a heavy digging hoe.</p>
+  </div>
+  <div class="stage">
+    <figure class="comb" style="--w:23vw; --ar:1; --r:-1deg; --d:0">
+      <img class="contain" data-file="Vedar bow and harpoon.gif" alt="Drawing of a Coast Vedda bow and harpoon from 1911">
+      <figcaption>A bow converted to fish with a harpoon, 1911. Vedda communities adapted to very different lands.</figcaption>
+    </figure>
+    <figure class="comb" style="--w:20vw; --ar:3030/2000; --r:1.4deg; --d:1">
+      <img data-file="SouthernSriLanka2002-NASA.jpg" alt="NASA photo of southern Sri Lanka from space">
+      <figcaption>Southern Sri Lanka from the International Space Station</figcaption>
+    </figure>
+  </div>
+</section>
+
+<!-- 10. Today -->
+<section class="slide" style="--accent: var(--green)">
+  <div class="text">
+    <p class="kicker in">Today</p>
+    <h2 class="in" style="--d:1">Still speaking, still leading</h2>
+    <div class="bar in" style="--d:2"></div>
+    <ul class="dots">
+      <li class="in" style="--d:3"><strong>May 2026:</strong> Dambana leader Uru Warige Wannila Aththo handed a bow and axe to Nishantha Kumara, the new Rathugala leader.</li>
+      <li class="in" style="--d:4"><strong>June 2026:</strong> He met Sri Lanka's prime minister about access to ancestral lands and needs at Dambana School.</li>
+      <li class="in" style="--d:5"><strong>2020:</strong> A linguist recorded Vedda grammar with five native speakers in Dambana, including two young bilingual speakers.</li>
+      <li class="in" style="--d:6">Vedda words still appear in hunting talk and ceremonies in some communities.</li>
+      <li class="in" style="--d:7">Linguists also think pre-Sinhala languages left traces in Sinhala itself, possibly in words such as <strong>gala</strong>, "stone." This idea is debated.</li>
+    </ul>
+    <p class="quote in" style="--d:8; font-size:1.55rem; margin-top:.5rem">Discuss: Can a language survive if its people lose the land where it was used?</p>
+  </div>
+  <div class="stage">
+    <figure class="comb" style="--w:24vw; --ar:2408/2872; --r:1deg; --d:0">
+      <img data-file="PycnonotusPenicillatusLegge.jpg" alt="Painted plate of two Sri Lankan birds">
+      <figcaption>Sri Lankan forest birds, from Legge's 1880 book. Forest knowledge often lives in local words.</figcaption>
+    </figure>
+  </div>
+</section>
+
+<!-- 11. Quiz -->
+<section class="slide" style="--accent: var(--gold)">
+  <div class="text wide center">
+    <p class="kicker in">Riddle check</p>
+    <h2 class="in" style="--d:1">Quick quiz!</h2>
+    <div class="bar in" style="--d:2"></div>
+    <div class="quizgrid">
+      <div class="quiz panel in" style="--d:3" data-right="Yes! That's Vedda's way of making new words." data-wrong="Hint: think about the riddle cards.">
+        <div class="q">How does Vedda often make new words?</div>
+        <div class="options"><button class="opt">By borrowing English words</button><button class="opt" data-correct>By describing things with existing words</button><button class="opt">By using only numbers</button></div>
+        <div class="feedback"></div>
+      </div>
+      <div class="quiz panel in" style="--d:4" data-right="Right! koduy does many jobs." data-wrong="Hint: look back at one word, many jobs.">
+        <div class="q">Which Vedda word can mean "no," "don't" and "can't"?</div>
+        <div class="options"><button class="opt">topan</button><button class="opt" data-correct>koduy</button><button class="opt">botakanda</button></div>
+        <div class="feedback"></div>
+      </div>
+      <div class="quiz panel in" style="--d:5" data-right="Exactly. Pridham's report explained the mixed accounts." data-wrong="Hint: think about the 1848 report.">
+        <div class="q">What did Pridham report in 1848?</div>
+        <div class="options"><button class="opt" data-correct>Veddas used one form with outsiders and another among themselves</button><button class="opt">Vedda had no speakers</button><button class="opt">Vedda came from English</button></div>
+        <div class="feedback"></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- 12. Closing -->
+<section class="slide end" style="--accent: var(--gold)">
+  <div class="text">
+    <h1 class="in" style="font-size:5.6rem">Thank you!</h1>
+    <p class="lead in" style="--d:1">Questions?</p>
+    <p class="quote in" style="--d:2">What would you call today's lesson in five words or fewer, as a riddle?</p>
+  </div>
+  <details class="fine in" style="--d:3">
+    <summary>Sources &amp; image credits</summary>
+    <div class="box">
+      <h4>Sources</h4>
+      <ul>
+        <li><a href="https://en.wikipedia.org/wiki/Vedda_language">Vedda language (Wikipedia, citing Dharmadasa, Samarasinghe and van Driem)</a></li>
+        <li><a href="https://en.wikipedia.org/wiki/Vedda">Vedda people (Wikipedia)</a></li>
+        <li><a href="https://journals.sjp.ac.lk/index.php/ijms/article/view/4797/3671">Ananda (2020): The Syntax of the Vedda Language</a></li>
+        <li><a href="https://link.springer.com/chapter/10.1007/978-981-97-1987-7_3">Preservation of Vedda's Language in Sri Lanka</a></li>
+        <li><a href="https://vedda.org/6-mahaweli.htm">Living Heritage Trust: Mahaweli Development Scheme</a></li>
+        <li><a href="https://island.lk/the-leader-of-the-indigenous-vedda-community-uru-warige-wannila-aththo-meets-prime-minister-dr-harini-amarasuriya/">The Island (2026): leader meets prime minister</a></li>
+        <li><a href="https://srilankamirror.com/news/new-rathugala-indigenous-leader-appointed/">Sri Lanka Mirror (2026): Rathugala leader appointed</a></li>
+      </ul>
+      <h4>Images (Wikimedia Commons)</h4>
+      <ul id="credits"></ul>
+    </div>
+  </details>
+</section>
+
+</main>
+
+<nav class="controls">
+  <button id="prev" aria-label="Previous slide">‹</button>
+  <span id="counter">1 / 12</span>
+  <button id="next" aria-label="Next slide">›</button>
+  <button id="fs" aria-label="Fullscreen">⤢</button>
+</nav>
+<p class="hint">Use ← → to move. Press F for fullscreen.</p>
+
+<!-- Vedda effects: honeycomb, observer reports, riddles, sound coach, word collapse, sentence decoder -->
+<script>
+(function () {
+  /* ---------- Honeycomb progress ---------- */
+  var comb = document.getElementById("comb");
+  for (var n = 0; n < 12; n++) comb.appendChild(document.createElement("i"));
+  var cells = comb.querySelectorAll("i");
+  document.addEventListener("slidechange", function (e) {
+    document.body.style.setProperty("--t", e.detail.index / (e.detail.total - 1));
+    cells.forEach(function (c, k) { c.classList.toggle("full", k <= e.detail.index); });
+  });
+  cells[0].classList.add("full");
+
+  function single(selector, callback) {
+    var group = document.querySelectorAll(selector);
+    group.forEach(function (b) {
+      b.addEventListener("click", function () {
+        group.forEach(function (x) { x.classList.remove("on"); });
+        b.classList.add("on");
+        callback(b);
+      });
+    });
+  }
+
+  /* ---------- Observer reports ---------- */
+  var REPORTS = [
+    "Robert Knox, held captive in the Kandyan kingdom, wrote that Veddas spoke the language of the Sinhala people.",
+    "Friar Fernão de Queiroz reported that Vedda could not be understood through other native languages.",
+    "Robert Percival said Veddas seemed to speak broken Sinhala, but used a language known only to them among themselves.",
+    "John Davies wrote that Sinhala speakers could understand Vedda, except for a few words.",
+    "Solved? Charles Pridham reported that Veddas used a form of Sinhala with outsiders, and their own language among themselves. Each visitor may have heard only one side."
+  ];
+  var vtext = document.getElementById("vtext");
+  vtext.textContent = REPORTS[0];
+  single("#voices .vbtn", function (b) { vtext.textContent = REPORTS[Number(b.dataset.v)]; });
+
+  /* ---------- Riddle generator ---------- */
+  var RIDDLES = ["far-talking pocket thing", "two-wheel moving thing", "on-back carrying thing", "round hot sharing food", "fire-climbing sky vehicle"];
+  var rid = document.getElementById("rid");
+  rid.textContent = '"' + RIDDLES[0] + '"';
+  single("#objs .obj", function (b) { rid.textContent = '"' + RIDDLES[Number(b.dataset.o)] + '"'; });
+
+  /* ---------- Sound coach ---------- */
+  var btn = document.getElementById("coachbtn");
+  var steps = document.querySelectorAll("#coach li");
+  var stepIndex = 0;
+  btn.addEventListener("click", function () {
+    if (stepIndex >= steps.length) {
+      steps.forEach(function (s) { s.classList.remove("on"); });
+      stepIndex = 0;
+      btn.textContent = "Next step ▶";
+      return;
+    }
+    steps[stepIndex].classList.add("on");
+    stepIndex++;
+    btn.textContent = stepIndex >= steps.length ? "Start again ↺" : "Next step ▶";
+  });
+
+  /* ---------- One word, many jobs ---------- */
+  var SETS = [
+    { w: "koduy", m: "no, don't, can't, not, if not, unable", c: [["naa", "no"], ["epaa", "don't"], ["baa", "can't"], ["nemee", "not"], ["nattaN", "if not"], ["bari", "unable"]] },
+    { w: "topan", m: "you, for anyone, whatever their status", c: [["obavahanse", "very formal"], ["ohe", "you"], ["tamuse", "you"], ["oya", "you"], ["umba", "familiar"], ["tho", "very familiar"]] },
+    { w: "dekamak", m: "two people, two things, twice", c: [["dennek", "two persons"], ["dekak", "two things"], ["deparak", "twice"]] }
+  ];
+  var collapse = document.getElementById("collapse");
+  var combineBtn = document.getElementById("combine");
+  function render(i) {
+    collapse.classList.remove("done");
+    collapse.innerHTML = "";
+    var set = SETS[i];
+    set.c.forEach(function (c, k) {
+      var angle = (k / set.c.length) * Math.PI * 2 - Math.PI / 2;
+      var chip = document.createElement("div");
+      chip.className = "chip";
+      chip.style.setProperty("--x", (Math.cos(angle) * 15).toFixed(1) + "rem");
+      chip.style.setProperty("--y", (Math.sin(angle) * 5.6).toFixed(1) + "rem");
+      chip.innerHTML = c[0] + "<small>" + c[1] + "</small>";
+      collapse.appendChild(chip);
+    });
+    var big = document.createElement("div");
+    big.className = "big";
+    big.innerHTML = "<b>" + set.w + "</b>" + set.m;
+    collapse.appendChild(big);
+    combineBtn.textContent = "Combine ▶";
+  }
+  single("#tabs .vbtn", function (b) { render(Number(b.dataset.t)); });
+  combineBtn.addEventListener("click", function () {
+    var done = collapse.classList.toggle("done");
+    combineBtn.textContent = done ? "Show Sinhala ↺" : "Combine ▶";
+  });
+  render(0);
+
+  /* ---------- Sentence decoder ---------- */
+  document.querySelectorAll(".wc").forEach(function (w) {
+    w.addEventListener("click", function () { w.classList.toggle("on"); });
+  });
+  document.getElementById("decodebtn").addEventListener("click", function () {
+    document.querySelectorAll(".wc").forEach(function (w) { w.classList.add("on"); });
+    document.querySelectorAll(".trans").forEach(function (t) { t.textContent = t.dataset.t; });
+  });
+})();
+</script>
+<script src="../assets/deck.js"></script>
+</body>
+</html>
