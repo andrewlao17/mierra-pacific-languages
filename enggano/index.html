@@ -1,0 +1,721 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Enggano: The Island That Hid Its Family</title>
+<link rel="stylesheet" href="../assets/deck.css">
+<style>
+@import url("https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700;900&family=Karla:wght@400;500;700;800&display=swap");
+
+/* ---------- Enggano theme: a low island in sea mist, rattan and jungle ---------- */
+:root {
+  --bg: #06201e;
+  --ink: #f2f5ee;
+  --muted: #c2d6d0;
+  --line: rgba(242, 245, 238, .22);
+  --panel: rgba(7, 36, 34, .84);
+  --sea: #1f8a82;
+  --sand: #e8dcc0;
+  --jungle: #4f9a5a;
+  --rattan: #c58b4a;
+  --coral: #e0624a;
+  --mist: #cfe3e0;
+  --rose: #e0624a;
+  --accent: var(--sand);
+  --serif: "Playfair Display", Georgia, serif;
+  --sans: "Karla", system-ui, sans-serif;
+  --t: 0;
+  font-size: clamp(12px, 1.3vw, 28px);
+}
+h1 { font-family: var(--serif); font-size: 5.8rem; font-weight: 900; line-height: 1; }
+h2 { font-family: var(--serif); font-size: 2.8rem; font-weight: 900; line-height: 1.1; }
+.slide { padding: 7vh 4vw 8vh 6vw; }
+.text { max-width: 44vw; }
+.text.wide { max-width: 86vw; width: 86vw; }
+.stage {
+  right: 5vw; top: 6vh; bottom: 10vh; width: 39vw;
+  display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 1.1rem;
+}
+ul.dots li { font-size: 1.04rem; }
+.speak .line, .card .word { font-family: var(--sans); font-weight: 800; }
+.card.revealed .meaning { max-height: 14rem; }
+.btn { background: var(--sand); color: #23301f; }
+.syl.on { background: var(--sand); color: #23301f; }
+.loc .disc { border-color: var(--sand); box-shadow: 0 0 0 .55rem rgba(232,220,192,.16), 0 22px 40px rgba(0,0,0,.55); }
+.loc .tint { background: #cfe0bb; }
+.loc .sea { background: #0f4f4c; }
+.loc .tag { background: #072725; border-color: var(--sand); }
+.note { font-size: .82rem; color: var(--muted); }
+.quote { font-family: var(--serif); font-size: 1.7rem; font-weight: 700; line-height: 1.3; color: var(--sand); }
+
+/* ---------- Background: the island resolving out of mist ---------- */
+#island { position: fixed; inset: 0; z-index: 0; overflow: hidden; pointer-events: none;
+  background: linear-gradient(180deg, #05161c 0%, #0a3233 44%, #0f4a47 70%, #072f2f 100%); }
+#island .sun { position: absolute; right: 16vw; top: 12vh; width: 8vw; height: 8vw; border-radius: 50%;
+  background: radial-gradient(circle at 44% 42%, #fff6dd, rgba(232,220,192,.25) 62%, rgba(232,220,192,0) 72%);
+  opacity: calc(.3 + var(--t) * .7); transition: opacity 1.6s ease; }
+#island .shape { position: absolute; left: 0; right: 0; bottom: 20vh; height: 26vh;
+  filter: blur(calc(16px - var(--t) * 15px)); transition: filter 1.7s ease, opacity 1.7s ease;
+  opacity: calc(.5 + var(--t) * .5); }
+#island .shape svg { width: 100%; height: 100%; }
+#island .huts { position: absolute; left: 8vw; bottom: 22vh; width: 30vw; height: 12vh;
+  opacity: calc((var(--t) - .18) * 1.5); transition: opacity 1.6s ease; }
+#island .huts svg { width: 100%; height: 100%; }
+#island .water { position: absolute; left: 0; right: 0; bottom: 0; height: 22vh;
+  background: linear-gradient(180deg, #11615c 0%, #052825 100%); }
+#island .water::before { content: ""; position: absolute; inset: 0;
+  background: repeating-linear-gradient(180deg, rgba(255,255,255,.08) 0 2px, transparent 2px 15px);
+  animation: swell 8s ease-in-out infinite alternate; }
+@keyframes swell { to { transform: translateY(8px); } }
+#island .mistband { position: absolute; left: -10%; right: -10%; height: 14vh;
+  background: linear-gradient(180deg, rgba(207,227,224,0), rgba(207,227,224,.45), rgba(207,227,224,0));
+  filter: blur(8px); animation: drift 30s linear infinite alternate; }
+#island .mistband.m1 { bottom: 26vh; }
+#island .mistband.m2 { bottom: 36vh; animation-duration: 44s; animation-direction: alternate-reverse; }
+@keyframes drift { to { transform: translateX(12%); } }
+#island .mistwrap { position: absolute; inset: 0; opacity: calc(1 - var(--t) * .92); transition: opacity 1.7s ease; }
+#island .shade { position: absolute; inset: 0;
+  background: linear-gradient(90deg, rgba(3,16,16,.94) 0%, rgba(3,16,16,.76) 50%, rgba(3,16,16,.24) 100%); }
+
+/* ---------- Photos ---------- */
+.board { position: relative; margin: 0; width: var(--w, 19vw); padding: .6rem .6rem .5rem;
+  background: var(--sand); border-radius: .25rem; box-shadow: 0 18px 34px rgba(0,0,0,.6);
+  transform: rotate(var(--r, 0deg)); transition: transform .9s cubic-bezier(.2,.8,.2,1), opacity .7s ease; }
+.slide:not(.active) .board { opacity: 0; transform: translateY(46px) rotate(var(--r, 0deg)); }
+.slide.active .board { transition-delay: calc(.4s + var(--d, 0) * .16s); }
+.slide.active .board:hover { transform: rotate(0deg) scale(1.04); transition-delay: 0s; }
+.board img { display: block; width: 100%; aspect-ratio: var(--ar, 4 / 3); object-fit: cover; background: #c8c0a4; }
+.board figcaption { color: #23301f; font-size: .73rem; font-weight: 700; line-height: 1.25; margin: .4rem .1rem 0; font-family: var(--serif); }
+
+/* ---------- Shared controls ---------- */
+.switch { display: flex; gap: .4rem; margin: .4rem 0 .6rem; flex-wrap: wrap; }
+.sbtn { font: inherit; font-weight: 700; font-size: .92rem; color: var(--ink); background: var(--panel);
+  border: 2px solid var(--line); border-radius: .3rem; padding: .25em .9em; cursor: pointer; transition: transform .2s; }
+.sbtn:hover { transform: translateY(-2px); }
+.sbtn.on { background: var(--sand); border-color: var(--sand); color: #23301f; }
+.out { min-height: 3.2em; margin-top: .5rem; }
+
+/* ---------- Retention meter ---------- */
+.retbar { position: relative; height: 1.5rem; border-radius: .25rem; background: rgba(255,255,255,.12); overflow: hidden; margin-top: .25rem; }
+.retbar b { position: absolute; left: 0; top: 0; bottom: 0; width: 0; transition: width 1.4s cubic-bezier(.2,.8,.2,1); }
+.retlbl { display: flex; justify-content: space-between; font-size: .78rem; color: var(--muted); }
+.guessrow { display: flex; gap: .3rem; justify-content: center; margin-top: .5rem; flex-wrap: wrap; }
+#retmsg { min-height: 4.2em; margin-top: .5rem; }
+
+/* ---------- Disguise machine ---------- */
+.machine { display: grid; grid-template-columns: 1.05fr 1fr; gap: 1.2vw; margin-top: .6rem; text-align: left; }
+.wordbox { text-align: center; padding: 1rem .8rem; }
+.letters { display: flex; justify-content: center; gap: .18rem; min-height: 4.6rem; flex-wrap: wrap; }
+.letters span { display: inline-grid; place-items: center; min-width: 2.7rem; height: 4rem; padding: 0 .25rem;
+  font: 800 2.9rem/1 var(--sans); border-radius: .3rem; background: rgba(255,255,255,.08);
+  transition: background .4s, color .4s, transform .4s; }
+.letters span.flash { background: var(--coral); color: #fff; transform: translateY(-8px) scale(1.06); }
+.letters span.done { background: var(--jungle); color: #082d12; }
+.gloss2 { color: var(--sea); font-weight: 700; margin-top: .3rem; }
+.rules { display: grid; gap: .4rem; }
+.rule { font: inherit; text-align: left; font-weight: 700; color: var(--ink); background: var(--panel);
+  border: 2px solid var(--line); border-left: 6px solid var(--rc, var(--sand)); border-radius: .3rem;
+  padding: .4em .8em; cursor: pointer; transition: transform .2s; }
+.rule:hover { transform: translateX(4px); }
+.rule small { display: block; font-weight: 400; color: var(--muted); font-size: .74rem; }
+#mmsg { min-height: 2.6em; font-weight: 700; color: var(--sand); }
+
+/* ---------- Nasal switch ---------- */
+.nasalbox { text-align: center; }
+.nasalword { font-family: var(--sans); font-weight: 800; font-size: 2.4rem; line-height: 1.2; }
+.nasalword em { font-style: normal; color: var(--coral); transition: color .4s; }
+.nasalword.nz em { color: var(--jungle); }
+.toggle { display: inline-flex; border: 2px solid var(--line); border-radius: 999px; overflow: hidden; margin: .4rem 0; }
+.toggle button { font: inherit; font-weight: 700; font-size: .9rem; color: var(--ink); background: transparent;
+  border: 0; padding: .3em 1.1em; cursor: pointer; }
+.toggle button.on { background: var(--sand); color: #23301f; }
+#nsmsg { min-height: 4.6em; }
+
+/* ---------- Vigesimal counter ---------- */
+.bodygrid { display: grid; grid-template-columns: repeat(4, 1fr); gap: .35rem; }
+.bodygrid button { font: inherit; font-weight: 800; font-size: 1rem; color: var(--ink); background: var(--panel);
+  border: 2px solid var(--line); border-radius: .3rem; padding: .4em 0; cursor: pointer; }
+.bodygrid button.on { background: var(--rattan); border-color: var(--rattan); color: #2a1a06; }
+.engnum { font-family: var(--sans); font-weight: 800; font-size: 1.6rem; color: var(--sand); text-align: center; min-height: 2.2em; line-height: 1.2; }
+.literal { text-align: center; color: var(--sea); font-weight: 700; }
+#numnote { min-height: 4em; margin-top: .3rem; }
+.people { display: flex; gap: .2rem; justify-content: center; flex-wrap: wrap; min-height: 2.4rem; margin-top: .3rem; }
+.people i { font-style: normal; font-size: 1.4rem; }
+
+/* ---------- Clans ---------- */
+.clans { display: grid; grid-template-columns: repeat(3, 1fr); gap: .4rem; }
+.clan { font: inherit; font-weight: 700; font-size: .86rem; color: var(--ink); background: var(--panel);
+  border: 2px solid var(--line); border-radius: .3rem; padding: .5rem .25rem; cursor: pointer; text-align: center; }
+.clan.on { border-color: var(--rattan); background: rgba(197,139,74,.18); }
+.clan.newcomer { border-style: dashed; }
+#clanmsg { min-height: 5em; margin-top: .4rem; }
+
+/* ---------- Timeline ---------- */
+.tl { display: grid; grid-template-columns: repeat(6, 1fr); gap: .55rem; margin-top: 1rem; position: relative; padding-bottom: 1.4rem; }
+.tl::after { content: ""; position: absolute; left: 0; right: 0; bottom: .45rem; height: 3px; border-radius: 3px;
+  background: linear-gradient(90deg, var(--jungle), var(--coral), var(--sea)); }
+.ev { font: inherit; text-align: left; color: #14241d; background: var(--ec); border: 0; border-radius: .3rem;
+  padding: .65rem .75rem; cursor: pointer; transition: transform .25s, box-shadow .25s; }
+.ev:hover { transform: translateY(-4px); }
+.ev.on { box-shadow: 0 0 0 3px #fff, 0 10px 24px rgba(0,0,0,.4); transform: translateY(-6px); }
+.ev .yr { font-family: var(--serif); font-weight: 900; font-size: 1.3rem; line-height: 1; display: block; }
+.ev small { display: block; font-weight: 700; font-size: .78rem; margin-top: .3rem; }
+#tltext { min-height: 5.4rem; margin-top: .4rem; }
+
+/* ---------- Population chart ---------- */
+.colchart { display: flex; align-items: flex-end; gap: 1rem; height: 19vh; padding: .5rem .6rem 0; }
+.col { flex: 1; height: 100%; display: flex; flex-direction: column; align-items: center; justify-content: flex-end; }
+.col .n { font-family: var(--serif); font-size: 1.05rem; font-weight: 700; }
+.col .colbar { width: 100%; max-width: 4rem; height: 0; border-radius: .3rem .3rem 0 0; background: var(--c);
+  transition: height 1.5s cubic-bezier(.2,.8,.2,1) .6s; }
+.slide.active .col .colbar { height: var(--h); }
+.col .y { color: var(--muted); font-size: .76rem; margin-top: .3rem; }
+
+/* ---------- Quiz tint ---------- */
+.opt.right { background: var(--jungle); }
+.opt.wrong { background: var(--coral); }
+
+@media (max-width: 820px) {
+  .slide { padding: 6vh 6vw 12vh; }
+  h1 { font-size: 3.3rem; }
+  .text, .text.wide { max-width: none; width: auto; }
+  .stage { position: relative; inset: auto; width: 100%; margin-top: 1.5rem; }
+  .board { width: 74vw; }
+  .stage .panel, .stage .speak { width: 100% !important; max-width: none !important; }
+  .machine { grid-template-columns: 1fr; }
+  .tl { grid-template-columns: repeat(2, 1fr); }
+  .bodygrid { grid-template-columns: repeat(3, 1fr); }
+}
+</style>
+</head>
+<body data-map="BlankMap-Equirectangular.svg">
+
+<div id="island" aria-hidden="true">
+  <div class="sun"></div>
+  <div class="shape">
+    <svg viewBox="0 0 1600 260" preserveAspectRatio="none">
+      <path d="M0 260 V210 Q180 190 340 176 Q520 150 720 148 Q940 146 1120 168 Q1320 190 1600 206 V260 Z" fill="#0d3a2c"/>
+      <path d="M520 150 Q640 96 760 112 Q880 128 980 152" fill="#124430"/>
+    </svg>
+  </div>
+  <div class="huts">
+    <svg viewBox="0 0 600 160">
+      <g fill="#6b4a2a">
+        <path d="M60 150 V118 M110 150 V118 M85 150 V118" stroke="#6b4a2a" stroke-width="5"/>
+        <path d="M30 120 Q85 40 140 120 Z" fill="#9c7342"/>
+        <path d="M230 150 V118 M280 150 V118 M255 150 V118" stroke="#6b4a2a" stroke-width="5"/>
+        <path d="M200 120 Q255 44 310 120 Z" fill="#9c7342"/>
+        <path d="M400 150 V122 M450 150 V122 M425 150 V122" stroke="#6b4a2a" stroke-width="5"/>
+        <path d="M374 124 Q425 56 476 124 Z" fill="#9c7342"/>
+      </g>
+    </svg>
+  </div>
+  <div class="water"></div>
+  <div class="mistwrap"><div class="mistband m1"></div><div class="mistband m2"></div></div>
+  <div class="shade"></div>
+</div>
+<div class="progress"></div>
+
+<main>
+
+<!-- 1. Title -->
+<section class="slide" style="--accent: var(--sand)">
+  <div class="text">
+    <p class="kicker in">Rare Languages of the Asia-Pacific · Module 24</p>
+    <h1 class="in" style="--d:1">Enggano</h1>
+    <p class="in" style="--d:2; font-size:1.4rem; font-weight:800; color:var(--sand)">Pulau Enggano · Bengkulu, Indonesia</p>
+    <div class="bar in" style="--d:3"></div>
+    <p class="lead in" style="--d:4">An Austronesian language so thoroughly disguised that serious linguists argued, for forty years, that it belonged to no known family at all</p>
+    <p class="muted in" style="--d:5">Watch the horizon: the island is coming out of the mist.</p>
+  </div>
+  <div class="stage">
+    <figure class="board" style="--w:25vw; --r:1.5deg; --d:0">
+      <img data-wiki="Enggano Island" data-width="1200" alt="Enggano Island, Indonesia">
+      <figcaption>Enggano, 114 km off the southwest coast of Sumatra</figcaption>
+    </figure>
+  </div>
+</section>
+
+<!-- 2. Where and who -->
+<section class="slide" data-tr="left" style="--accent: var(--sea)">
+  <div class="text">
+    <p class="kicker in">Where and who</p>
+    <h2 class="in" style="--d:1">The last of the Barrier Islands</h2>
+    <div class="bar in" style="--d:2"></div>
+    <ul class="dots">
+      <li class="in" style="--d:3">A chain of islands sits off the west coast of Sumatra, out in the Indian Ocean: Simeulue, Nias, Mentawai — and, at the southern end, <strong>Enggano</strong>. Four hundred square kilometres, nowhere higher than 281 metres, six villages on one road.</li>
+      <li class="in" style="--d:4">Around <strong>4,500</strong> people live there now, but most are migrants from Sumatra, Java and elsewhere. Estimates of Enggano speakers range from about <strong>700</strong> to about <strong>1,500</strong>, and children are growing up speaking Indonesian.</li>
+      <li class="in" style="--d:5">The language is <strong>endangered</strong> and the trend is going the wrong way — but it is also, for linguists, one of the great puzzles of the Austronesian world.</li>
+      <li class="in" style="--d:6">When Europeans first reached the island, Enggano culture looked less like Sumatra and more like the <strong>Nicobar Islands</strong>, a thousand kilometres away — right down to round beehive-shaped houses.</li>
+    </ul>
+    <p class="note in" style="--d:7">Being low and exposed has consequences. Enggano would have been hit hard by the tsunami from the 1883 Krakatoa eruption.</p>
+  </div>
+  <div class="stage">
+    <div class="loc" data-lat="-5.4" data-lon="102.25" data-zoom="7" style="--s:13vw; --d:0">
+      <div class="disc"><div class="lmap"></div><div class="tint"></div><div class="sea"></div><span class="pinpt"></span></div>
+      <span class="tag">Enggano, North Bengkulu Regency, Indonesia</span>
+    </div>
+    <div class="panel in" style="--d:4; width:34vw">
+      <strong>Six villages, one road</strong>
+      <p class="note" style="margin:.3rem 0 0">Meok, Apoho, Malakoni, Kaana, Kahyapu and Banjarsari, all strung along the northeast coast. Every one of them now contains Enggano speakers <em>and</em> speakers of Bengkulu Malay, Minangkabau, Javanese, Sundanese and Buginese. Every Enggano speaker alive is bilingual.</p>
+      <p class="note" style="margin:.4rem 0 0">That is the ordinary shape of language loss: not a dramatic ban, just a village where the shared language is somebody else's.</p>
+    </div>
+  </div>
+</section>
+
+<!-- 3. The 21% problem -->
+<section class="slide" data-tr="zoom" style="--accent: var(--coral)">
+  <div class="text">
+    <p class="kicker in">The puzzle</p>
+    <h2 class="in" style="--d:1">A family that left no fingerprints</h2>
+    <div class="bar in" style="--d:2"></div>
+    <p class="in" style="--d:3">To work out which family a language belongs to, linguists start with <strong>basic vocabulary</strong> — eye, house, five, child, water. Those words change slowly, so related languages usually keep recognisable versions of them.</p>
+    <p class="in" style="--d:4">Malay keeps about <strong>59%</strong> of the words reconstructed for the ancient Austronesian ancestor. Enggano keeps about <strong>21%</strong> — 46 words out of 217.</p>
+    <p class="in" style="--d:5">That is so low that in 1982 Arthur Capell proposed Enggano was a <strong>language isolate</strong> that had merely borrowed Austronesian words, and in 2014 Roger Blench reached a similar conclusion from the vocabulary.</p>
+    <p class="note in" style="--d:6">The honest version of this story is that both sides were reasoning carefully from real evidence. The disagreement was about <em>which</em> evidence counts most — and that question gets settled on the next slide.</p>
+  </div>
+  <div class="stage">
+    <div class="panel in" style="--d:3; width:35vw">
+      <strong>Guess first:</strong> what share of Enggano's basic vocabulary is recognisably Austronesian?
+      <div class="guessrow" id="guessrow">
+        <button class="sbtn" data-g="80">about 80%</button>
+        <button class="sbtn" data-g="55">about 55%</button>
+        <button class="sbtn" data-g="21">about 21%</button>
+        <button class="sbtn" data-g="5">about 5%</button>
+      </div>
+      <div style="margin-top:.6rem">
+        <div class="retlbl"><span>Malay</span><span id="malayv">59%</span></div>
+        <div class="retbar"><b id="malaybar" style="background: var(--sea)"></b></div>
+      </div>
+      <div style="margin-top:.5rem">
+        <div class="retlbl"><span>Enggano</span><span id="engv">?</span></div>
+        <div class="retbar"><b id="engbar" style="background: var(--coral)"></b></div>
+      </div>
+      <p id="retmsg" aria-live="polite">Pick an answer to reveal the bar.</p>
+    </div>
+  </div>
+</section>
+
+<!-- 4. The disguise machine -->
+<section class="slide" style="--accent: var(--sand)">
+  <div class="text wide center">
+    <p class="kicker in">Language lab</p>
+    <h2 class="in" style="--d:1">The disguise machine</h2>
+    <div class="bar in" style="--d:2"></div>
+    <p class="in" style="--d:3; max-width:72vw; margin:0 auto">Here is how the argument was settled. Owen Edwards showed in 2015 that Enggano's words <em>are</em> Austronesian — they have just been through an unusually brutal set of regular sound changes. Every <strong>m</strong> became <strong>b</strong>. Every <strong>n</strong> became <strong>d</strong>. Every <strong>t</strong> became <strong>k</strong>. Run a familiar Malay word through the machine and watch it turn into something unrecognisable.</p>
+    <div class="machine">
+      <div class="panel wordbox in" style="--d:4">
+        <div class="switch" id="mwords" style="justify-content:center">
+          <button class="sbtn on" data-v="0">mata</button><button class="sbtn" data-v="1">lima</button><button class="sbtn" data-v="2">anak</button><button class="sbtn" data-v="3">rumah</button>
+        </div>
+        <div class="letters" id="letters" aria-live="polite"></div>
+        <div class="gloss2" id="mgloss"></div>
+        <div id="mmsg"></div>
+        <button class="linkbtn sbtn" id="mreset" style="font-size:.8rem">↺ start again</button>
+      </div>
+      <div class="rules in" style="--d:5">
+        <button class="rule" data-r="m" style="--rc: var(--coral)">m → b<small>every single one</small></button>
+        <button class="rule" data-r="n" style="--rc: var(--rattan)">n → d<small>every single one</small></button>
+        <button class="rule" data-r="t" style="--rc: var(--sand)">t → k<small>the only language in western Indonesia that did this</small></button>
+        <button class="rule" data-r="l" style="--rc: var(--jungle)">l → r<small>and sometimes → d</small></button>
+        <button class="rule" data-r="e" style="--rc: var(--sea)">trim the ends<small>drop the final consonant and vowel, add the article e-</small></button>
+      </div>
+    </div>
+    <p class="note in" style="--d:6; margin-top:.5rem">Two more for free: <em>telinga</em> "ear" becomes <strong>e-kadiha</strong>, and the pronouns and numerals come straight from Proto-Malayo-Polynesian too. Pile up enough regular changes and a cousin stops looking like a cousin.</p>
+  </div>
+</section>
+
+<!-- 5. Nasal harmony -->
+<section class="slide" data-tr="left" style="--accent: var(--jungle)">
+  <div class="text">
+    <p class="kicker in">Language lab</p>
+    <h2 class="in" style="--d:1">One nasal, and the whole word changes</h2>
+    <div class="bar in" style="--d:2"></div>
+    <p class="in" style="--d:3">Enggano has a rule that runs across the entire word. If a word contains anything nasal, <strong>every</strong> vowel in it goes nasal, and every <strong>b</strong> turns into <strong>m</strong> and every <strong>d</strong> into <strong>n</strong>. If the word is oral, no nasal consonant can appear in it at all.</p>
+    <p class="in" style="--d:4">So <em>m</em> and <em>b</em> are not really different sounds in Enggano. They are the same sound wearing two different outfits, and the word decides which one. Linguists call this <strong>nasal harmony</strong>; Guaraní in South America does something similar.</p>
+    <ul class="dots">
+      <li class="in" style="--d:5">That is why the word for "house," from an ancestor form <em>*Rumaq</em>, comes out as <strong>e-uba</strong> with a <em>b</em> — the word has no nasal vowel, so it cannot keep its <em>m</em>.</li>
+      <li class="in" style="--d:6">Flip the switch in the panel and watch the same endings change shape depending on the word they attach to.</li>
+    </ul>
+    <p class="note in" style="--d:7">Note what this does to a learner: you cannot memorise an ending. You have to know what the whole word is doing first.</p>
+  </div>
+  <div class="stage">
+    <div class="panel in" style="--d:3; width:34vw">
+      <strong>The same two endings, two different words:</strong>
+      <div class="nasalbox">
+        <div class="toggle" id="ntoggle">
+          <button class="on" data-n="0">oral word: "bag"</button><button data-n="1">nasal word: "age"</button>
+        </div>
+        <div class="nasalword" id="nword"></div>
+        <div class="note" id="ngloss" style="margin-top:.2rem"></div>
+      </div>
+      <p id="nsmsg" aria-live="polite"></p>
+    </div>
+  </div>
+</section>
+
+<!-- 6. Counting by people -->
+<section class="slide" data-tr="zoom" style="--accent: var(--rattan)">
+  <div class="text">
+    <p class="kicker in">Counting</p>
+    <h2 class="in" style="--d:1">Twenty is "one person"</h2>
+    <div class="bar in" style="--d:2"></div>
+    <p class="in" style="--d:3">Enggano counts in <strong>twenties</strong>, and the reason is standing right in front of you: ten fingers and ten toes. <span class="hl">kahaiʼ kak</span> means "one person" and it means <strong>20</strong>. A hundred is "five people."</p>
+    <ul class="dots">
+      <li class="in" style="--d:4">Eight is <span class="hl">kĩpãʼĩõp</span>, from the verb "to hug" — both arms wrapped around something.</li>
+      <li class="in" style="--d:5">Nine is "eight, one coming." Seven is "five and two." Six looks like "three" said twice.</li>
+      <li class="in" style="--d:6">And 400 was recorded as <strong>"one our-body"</strong> — possibly two people counting together: every time one person finishes all twenty digits, the other counts off one of theirs. Twenty twenties.</li>
+      <li class="in" style="--d:7">Most speakers now use <strong>Malay numerals</strong> for anything large. One of the first parts of a language to go is usually the counting.</li>
+    </ul>
+  </div>
+  <div class="stage">
+    <div class="panel in" style="--d:3; width:35vw">
+      <strong>Say a number in Enggano:</strong>
+      <div class="bodygrid" id="bodygrid" style="margin-top:.5rem">
+        <button data-n="1">1</button><button data-n="2">2</button><button data-n="5">5</button><button data-n="7">7</button>
+        <button data-n="8">8</button><button data-n="9">9</button><button data-n="10">10</button><button data-n="12">12</button>
+        <button data-n="20">20</button><button data-n="30">30</button><button data-n="100">100</button><button data-n="400">400</button>
+      </div>
+      <div class="engnum" id="engnum"></div>
+      <div class="literal" id="literal"></div>
+      <div class="people" id="people"></div>
+      <p id="numnote" aria-live="polite">Pick a number.</p>
+    </div>
+  </div>
+</section>
+
+<!-- 7. The island of women -->
+<section class="slide" style="--accent: var(--rattan)">
+  <div class="text">
+    <p class="kicker in">Cultural significance</p>
+    <h2 class="in" style="--d:1">Beehives, clans and mothers</h2>
+    <div class="bar in" style="--d:2"></div>
+    <ul class="dots">
+      <li class="in" style="--d:3">Until about 1900, Enggano villages were clusters of <strong>round beehive houses</strong> on piles, roughly nine metres across, thatched with woven rattan leaves, entered by climbing a notched beam. Inside was one big room around a hearth. Each village had a <span class="hl">kadiofe</span>, an open-sided meeting hall.</li>
+      <li class="in" style="--d:4">Enggano society is <strong>matrilineal</strong>: you belong to your mother's clan. There are five original clans, with names drawn from trees and animals, each divided into smaller matrilineages.</li>
+      <li class="in" style="--d:5">There is a sixth clan — <span class="hl">Kamay</span> — and it is a modern invention: everyone who has settled on the island since is placed in it. A whole kinship system extended to absorb newcomers rather than exclude them.</li>
+      <li class="in" style="--d:6">In 1771 Charles Miller reported that women played a dominant role here. The Italian anthropologist <strong>Elio Modigliani</strong> spent three months on Enggano in 1891 and called his book <em>L'Isola delle donne</em> — "The Island of Women."</li>
+    </ul>
+    <p class="note in" style="--d:7">Modigliani's account is also the best record we have of pre-20th-century Enggano life — which means much of what is known about this culture was written by a visitor who stayed one season.</p>
+  </div>
+  <div class="stage">
+    <div class="panel in" style="--d:3; width:35vw">
+      <strong>The six clans:</strong> click one.
+      <div class="clans" id="clans" style="margin-top:.5rem">
+        <button class="clan" data-c="0">Kaitora</button><button class="clan" data-c="1">Kaharuba</button><button class="clan" data-c="2">Kaahoao</button>
+        <button class="clan" data-c="3">Kauno</button><button class="clan" data-c="4">Kaarubi</button><button class="clan newcomer" data-c="5">Kamay</button>
+      </div>
+      <p id="clanmsg" aria-live="polite">Five are original. One is not — see if you can guess which before clicking.</p>
+      <p class="note" style="margin:.3rem 0 0">Clan names are given slightly differently in different sources; these are the forms most commonly listed. Within each clan are smaller matrilineages called <em>kaudara</em>.</p>
+    </div>
+  </div>
+</section>
+
+<!-- 8. Timeline -->
+<section class="slide" data-tr="zoom" style="--accent: var(--coral)">
+  <div class="text wide">
+    <p class="kicker in">History</p>
+    <h2 class="in" style="--d:1">A century that nearly ended a people</h2>
+    <div class="bar in" style="--d:2"></div>
+    <p class="in" style="--d:3">Click each moment to explore it.</p>
+    <div class="tl in" id="tl" style="--d:4">
+      <button class="ev" style="--ec: var(--sand)"><span class="yr">1771</span><small>First landing</small></button>
+      <button class="ev" style="--ec: #e4c79a"><span class="yr">1862</span><small>About 3,000 people</small></button>
+      <button class="ev" style="--ec: var(--coral)"><span class="yr">1870s–80s</span><small>Collapse</small></button>
+      <button class="ev" style="--ec: #e9a2b5"><span class="yr">1891–1902</span><small>Modigliani, missionaries</small></button>
+      <button class="ev" style="--ec: #b9a8d8"><span class="yr">1960s</span><small>Four hundred left</small></button>
+      <button class="ev" style="--ec: var(--sea)"><span class="yr">today</span><small>A minority at home</small></button>
+    </div>
+    <div class="panel in" id="tltext" style="--d:5" aria-live="polite"></div>
+  </div>
+</section>
+
+<!-- 9. The numbers -->
+<section class="slide" data-tr="left" style="--accent: var(--sea)">
+  <div class="text">
+    <p class="kicker in">Why it matters now</p>
+    <h2 class="in" style="--d:1">Outnumbered at home</h2>
+    <div class="bar in" style="--d:2"></div>
+    <p class="in" style="--d:3">Enggano's problem is not the one most endangered languages have. The population is actually <em>rising</em> — it just isn't rising with Enggano speakers in it.</p>
+    <ul class="dots">
+      <li class="in" style="--d:4">Indigenous Enggano are now roughly a third to a half of the island's residents, and in most villages the shared language is <strong>Indonesian or Bengkulu Malay</strong>, not Enggano.</li>
+      <li class="in" style="--d:5">School is in Indonesian. Government is in Indonesian. The ferry, the radio and the phone are in Indonesian. A child has almost no situation in which Enggano is the <em>useful</em> choice.</li>
+      <li class="in" style="--d:6">And the language keeps taking on Malay vocabulary — including, as we saw, the numbers. Researchers studying Enggano now spend real effort just separating which words are inherited and which arrived last century.</li>
+    </ul>
+    <p class="note in" style="--d:7">There is a modern twist. Indonesia's space agency has proposed Enggano as a <strong>spaceport site</strong>, citing its "low population and remoteness" — the same two facts that made it a place nobody protected.</p>
+  </div>
+  <div class="stage">
+    <div class="panel in" style="--d:3; width:34vw">
+      <strong>Indigenous Enggano population</strong>
+      <div class="colchart">
+        <div class="col"><div class="n">~3,000</div><div class="colbar" style="--h:92%; --c: var(--jungle)"></div><div class="y">1862</div></div>
+        <div class="col"><div class="n">~400</div><div class="colbar" style="--h:13%; --c: var(--coral)"></div><div class="y">1960s</div></div>
+        <div class="col"><div class="n">~1,500</div><div class="colbar" style="--h:46%; --c: var(--rattan)"></div><div class="y">2000</div></div>
+        <div class="col"><div class="n">700–1,500</div><div class="colbar" style="--h:34%; --c: var(--sea)"></div><div class="y">speakers now</div></div>
+      </div>
+      <p class="note" style="margin:.3rem 0 0">Figures for Enggano are rough — the population has never been closely tracked, and with so much intermarriage, "who counts as Enggano" is a genuinely hard question that the community answers through clan membership.</p>
+    </div>
+  </div>
+</section>
+
+<!-- 10. Now -->
+<section class="slide" style="--accent: var(--jungle)">
+  <div class="text">
+    <p class="kicker in">What is being done</p>
+    <h2 class="in" style="--d:1">One German, one thesis, one team from Oxford</h2>
+    <div class="bar in" style="--d:2"></div>
+    <ul class="dots">
+      <li class="in" style="--d:3">For most of the 20th century, nearly everything known about Enggano came from one researcher: <strong>Hans Kähler</strong>, who worked on the island in 1937 and spent fifty years publishing a grammar, text collections and a dictionary. His grammar and his dictionary <em>disagree with each other</em>, and parts of the handwriting cannot be read.</li>
+      <li class="in" style="--d:4">That is what a language with a single documenter looks like. Everything downstream — every classification argument — ran on those notebooks.</li>
+      <li class="in" style="--d:5">Things have changed fast. A 2011 thesis by <strong>Brendon Yoder</strong> re-described the vowels; <strong>Owen Edwards</strong> settled the family question in 2015; and since 2018 a team led by <strong>Mary Dalrymple</strong> at Oxford has worked with the five clans, recording stories and training younger speakers, including Engganese students.</li>
+      <li class="in" style="--d:6">In Indonesia, researchers at Gadjah Mada University have made a documentary about the language, and local students have been surveying the island's linguistic situation.</li>
+    </ul>
+    <p class="note in" style="--d:7">Note the difference between old and new documentation: Kähler took the language away in notebooks. The current projects train speakers from the island to do the work.</p>
+  </div>
+  <div class="stage">
+    <div class="cards in" style="--d:3; grid-template-columns:1fr; width:34vw">
+      <div class="card" style="--cardc: var(--sand)"><div class="word">Why did it take so long?</div><div class="meaning">Because the sound changes were so extreme that the resemblances were invisible. You can only see a regular correspondence if you line up enough words — and Enggano's documentation was thin, inconsistent, and written in German in the 1940s.</div><div class="tap">click to reveal</div></div>
+      <div class="card" style="--cardc: var(--coral)"><div class="word">Is the puzzle fully solved?</div><div class="meaning">No. Enggano is clearly Austronesian — but roughly 79% of its basic vocabulary still cannot be traced to Proto-Malayo-Polynesian. Did it come from an older, unknown language once spoken on the island, or did Enggano just replace its own words over time? Nobody knows.</div><div class="tap">click to reveal</div></div>
+      <div class="card" style="--cardc: var(--jungle)"><div class="word">Why care?</div><div class="meaning">If there is a lost language underneath Enggano, its only surviving trace is in the vocabulary of 700 people. That would make Enggano the single remaining record of a people who left nothing else at all.</div><div class="tap">click to reveal</div></div>
+    </div>
+  </div>
+</section>
+
+<!-- 11. Quiz -->
+<section class="slide" style="--accent: var(--sand)">
+  <div class="text wide center">
+    <p class="kicker in">Review at the shoreline</p>
+    <h2 class="in" style="--d:1">Quick quiz!</h2>
+    <div class="bar in" style="--d:2"></div>
+    <div class="quizgrid">
+      <div class="quiz panel in" style="--d:3" data-right="Yes — only about 21%, which is why some argued it wasn't Austronesian." data-wrong="Hint: it's much lower than Malay's 59%.">
+        <div class="q">Why did linguists doubt Enggano was Austronesian?</div>
+        <div class="options"><button class="opt">It has no verbs</button><button class="opt" data-correct>Too few recognisable words</button><button class="opt">It is written differently</button></div>
+        <div class="feedback"></div>
+      </div>
+      <div class="quiz panel in" style="--d:4" data-right="Right — regular sound changes, repeated across the whole vocabulary." data-wrong="Hint: m→b, n→d, t→k.">
+        <div class="q">What showed that Enggano <em>is</em> Austronesian after all?</div>
+        <div class="options"><button class="opt">DNA evidence</button><button class="opt" data-correct>Regular sound changes</button><button class="opt">Old maps</button></div>
+        <div class="feedback"></div>
+      </div>
+      <div class="quiz panel in" style="--d:5" data-right="Correct — ten fingers plus ten toes. A hundred is 'five people'." data-wrong="Hint: count everything on one human being.">
+        <div class="q">In Enggano, "one person" is a number. Which one?</div>
+        <div class="options"><button class="opt">10</button><button class="opt" data-correct>20</button><button class="opt">100</button></div>
+        <div class="feedback"></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- 12. Closing -->
+<section class="slide end" style="--accent: var(--sand)">
+  <div class="text">
+    <h1 class="in" style="font-size:4.6rem">e-uba</h1>
+    <p class="lead in" style="--d:1; margin-top:.8rem">"House" — from an ancestor word that also gave Malay <em>rumah</em>. Thank you! Questions?</p>
+    <p class="quote in" style="--d:2">For forty years Enggano looked like a language from nowhere. It turned out to be a cousin in heavy disguise — and four fifths of its vocabulary is still unaccounted for.</p>
+  </div>
+  <details class="fine in" style="--d:3">
+    <summary>Sources &amp; image credits</summary>
+    <div class="box">
+      <h4>Sources</h4>
+      <ul>
+        <li><a href="https://en.wikipedia.org/wiki/Enggano_language">Enggano language (Wikipedia)</a> — sound changes, nasal harmony, numerals, pronouns, the classification debate</li>
+        <li><a href="https://en.wikipedia.org/wiki/Enggano_Island">Enggano Island (Wikipedia)</a> — geography, Miller 1771, Modigliani, the population collapse, the spaceport proposal</li>
+        <li><a href="https://en.wikipedia.org/wiki/Traditional_architecture_of_Enggano">Traditional architecture of Enggano (Wikipedia)</a> — beehive houses, the kadiofe</li>
+        <li><a href="https://en.wikipedia.org/wiki/Northwest_Sumatra%E2%80%93Barrier_Islands_languages">Northwest Sumatra–Barrier Islands languages (Wikipedia)</a></li>
+        <li><a href="https://doi.org/10.1353/ol.2015.0001">Edwards, "The Position of Enggano within Austronesian," <em>Oceanic Linguistics</em> (2015)</a> — the 21% retention figure and the decisive sound correspondences</li>
+        <li><a href="https://www.rogerblench.info/Language/Austronesian/Enggano/Enggano%20and%20its%20history.pdf">Blench, "The Enggano: archaic foragers and their interactions with the Austronesian world" (2014)</a> — the case for a non-Austronesian substrate</li>
+        <li><a href="https://doi.org/10.1353/ol.2005.0001">Blust, "*t to k: An Austronesian sound change revisited," <em>Oceanic Linguistics</em> (2004)</a></li>
+        <li><a href="https://muse.jhu.edu/article/782055">Smith, "Nasalization in Enggano Historical Phonology," <em>Oceanic Linguistics</em> (2020)</a></li>
+        <li><a href="https://web.archive.org/web/20201029013543/https://arts-sciences.und.edu/academics/summer-institute-of-linguistics/theses/_files/docs/2011-yoder-brendon-e.pdf">Yoder, <em>Phonological and phonetic aspects of Enggano vowels</em> (2011)</a></li>
+        <li>Kähler, <em>Grammatischer Abriss des Enggano</em> (1940) and <em>Enggano-deutsches Wörterbuch</em> (1987)</li>
+        <li><a href="https://ora.ox.ac.uk/objects/uuid:ef94c811-ce91-4bfb-b555-033854e7ad0b/files/r6q182m519">Hemmings &amp; Arka, "Evidence of contact with Malay/Indonesian in Enggano" (2023)</a></li>
+        <li><a href="https://medium.com/talking-languages/the-race-to-save-the-enggano-language-c213beaddbaf">"The race to save the Enggano language"</a> — the Oxford project led by Mary Dalrymple</li>
+        <li><a href="https://www.forestpeoples.org/fileadmin/uploads/fpp/migration/documents/The%20Enggano%20an%20island%20people%20of%20Indonesia%20in%20search%20of%20recognition.pdf">Forest Peoples Programme, <em>The Enggano: an island people of Indonesia in search of recognition</em></a> — the clan system, described by Enggano representatives</li>
+        <li><a href="https://ugm.ac.id/en/news/enggano-language-on-the-brink-of-extinction/">Universitas Gadjah Mada: "Enggano language on the brink of extinction"</a></li>
+        <li><a href="https://www.artoftheancestors.com/enggano">Art of the Ancestors: Enggano</a> — 19th-century collapse, material culture</li>
+      </ul>
+      <h4>Images (Wikimedia Commons)</h4>
+      <ul id="credits"></ul>
+    </div>
+  </details>
+</section>
+
+</main>
+
+<nav class="controls">
+  <button id="prev" aria-label="Previous slide">‹</button>
+  <span id="counter">1 / 12</span>
+  <button id="next" aria-label="Next slide">›</button>
+  <button id="fs" aria-label="Fullscreen">⤢</button>
+</nav>
+<p class="hint">Use ← → to move. Press F for fullscreen.</p>
+
+<!-- Enggano effects: mist clearing, retention meter, disguise machine, nasal harmony, vigesimal counter, clans -->
+<script>
+(function () {
+  document.addEventListener("slidechange", function (e) {
+    document.body.style.setProperty("--t", e.detail.index / (e.detail.total - 1));
+  });
+
+  function single(selector, callback) {
+    var grp = document.querySelectorAll(selector);
+    grp.forEach(function (b) {
+      b.addEventListener("click", function () {
+        grp.forEach(function (x) { x.classList.remove("on"); });
+        b.classList.add("on");
+        callback(b);
+      });
+    });
+  }
+
+  /* ---------- Retention meter ---------- */
+  var retmsg = document.getElementById("retmsg");
+  document.getElementById("malaybar").style.width = "59%";
+  single("#guessrow .sbtn", function (b) {
+    var g = Number(b.dataset.g);
+    document.getElementById("engbar").style.width = "21%";
+    document.getElementById("engv").textContent = "21%";
+    retmsg.innerHTML = (g === 21
+      ? "<strong style='color:var(--jungle)'>Correct.</strong> "
+      : "<strong style='color:var(--coral)'>Lower than that.</strong> ")
+      + "Only 46 of 217 basic words in Enggano can be traced to the reconstructed Austronesian ancestor — about 21%. Malay keeps 59%. Low retention rates like Enggano's are usually seen far to the east, in Melanesia, not in western Indonesia.";
+  });
+
+  /* ---------- Disguise machine ---------- */
+  var WORDS = [
+    { jp: "mata", ya: "ebaka", en: "eye", ok: ["m", "t", "e"], note: "Malay mata, Enggano e-baka. Two changes and one trim, and the word is unrecognisable." },
+    { jp: "lima", ya: "ariba", en: "five", ok: ["l", "m", "e"], note: "Malay lima, Enggano ʼa-riba. The numeral is inherited — which is one of the things that proved the family link." },
+    { jp: "anak", ya: "eada", en: "child", ok: ["n", "e"], note: "Malay anak, Enggano e-ada. Just one consonant change, plus the lost ending." },
+    { jp: "rumah", ya: "euba", en: "house", ok: ["m", "e"], note: "Malay rumah, Enggano e-uba. The m had to become b — and nasal harmony means it could never go back." }
+  ];
+  var RULES = {
+    m: function (w) { return w.replace(/m/g, "b"); },
+    n: function (w) { return w.replace(/n/g, "d"); },
+    t: function (w) { return w.replace(/t/g, "k"); },
+    l: function (w) { return w.replace(/^l/, "r"); },
+    e: function (w) { return "e" + w.replace(/[hk]$/, "").replace(/^r(?=u)/, ""); }
+  };
+  var cur = 0, word = "";
+  var lettersEl = document.getElementById("letters");
+  var mmsg = document.getElementById("mmsg");
+  function draw(changed, done) {
+    lettersEl.innerHTML = "";
+    word.split("").forEach(function (ch, i) {
+      var span = document.createElement("span");
+      span.textContent = ch;
+      if (done) span.className = "done";
+      else if (changed && changed[i]) span.className = "flash";
+      lettersEl.appendChild(span);
+    });
+  }
+  function loadWord(i) {
+    cur = i; word = WORDS[i].jp;
+    document.getElementById("mgloss").textContent = "Malay: " + WORDS[i].jp + ", \u201c" + WORDS[i].en + "\u201d";
+    mmsg.textContent = "Which changes apply? Click the rules.";
+    draw();
+  }
+  single("#mwords .sbtn", function (b) { loadWord(Number(b.dataset.v)); });
+  document.querySelectorAll(".rule").forEach(function (r) {
+    r.addEventListener("click", function () {
+      var id = r.dataset.r;
+      if (WORDS[cur].ok.indexOf(id) === -1) { mmsg.textContent = "That change doesn't affect this word."; return; }
+      var next = RULES[id](word);
+      if (next === word) { mmsg.textContent = "Nothing to change there. Try another rule."; return; }
+      var changed = next.split("").map(function (ch, i) { return ch !== word[i]; });
+      word = next;
+      if (word === WORDS[cur].ya) {
+        draw(changed);
+        mmsg.textContent = "";
+        setTimeout(function () {
+          draw(null, true);
+          mmsg.innerHTML = "✓ " + word + " — " + WORDS[cur].note;
+        }, 700);
+      } else {
+        draw(changed);
+        mmsg.textContent = "Changed! Keep going.";
+      }
+    });
+  });
+  document.getElementById("mreset").addEventListener("click", function () { loadWord(cur); });
+  loadWord(0);
+
+  /* ---------- Nasal harmony ---------- */
+  var NAS = [
+    { base: "tahi", forms: ["tahi<em>ʼ</em>", "tahi<em>b</em>"], gl: "\u201cmy bag\u201d / \u201cyour bag\u201d",
+      msg: "An <strong>oral</strong> word. The \"your\" ending shows up as <strong>-b</strong>, and every vowel is plain. No nasal consonant can appear anywhere in this word." },
+    { base: "ʼumunu", forms: ["ʼumunu<em>ʼ</em>", "ʼumunu<em>m</em>"], gl: "\u201cmy age\u201d / \u201cyour age\u201d",
+      msg: "A <strong>nasal</strong> word. The very same ending now shows up as <strong>-m</strong>, and every vowel in the word is nasalised. Same grammar, different outfit — chosen by the word, not by the ending." }
+  ];
+  function setNasal(i) {
+    var N = NAS[i];
+    document.getElementById("nword").innerHTML = N.forms[0] + " &nbsp;·&nbsp; " + N.forms[1];
+    document.getElementById("nword").className = "nasalword" + (i ? " nz" : "");
+    document.getElementById("ngloss").textContent = N.gl;
+    document.getElementById("nsmsg").innerHTML = N.msg;
+  }
+  single("#ntoggle button", function (b) { setNasal(Number(b.dataset.n)); });
+  setNasal(0);
+
+  /* ---------- Vigesimal counter ---------- */
+  var NUMS = {
+    1: ["kahaiʼ", "", 0, "The base of everything. Numbers one to five are inherited Austronesian words."],
+    2: ["ʼaru", "", 0, "Compare Malay dua, Lampung rua. The family resemblance is still just visible here."],
+    5: ["ʼarib", "", 0, "From the same ancient word as Malay lima — after l→r and m→b."],
+    7: ["ʼarib he ʼaru", "\u201cfive and two\u201d", 0, "Seven is built by addition, which is common across the region."],
+    8: ["kĩpãʼĩõp", "\u201chugging\u201d", 0, "From the verb \u201cto hug.\u201d Try it: wrap both arms around something and look at your hands."],
+    9: ["kĩpãʼĩõp kabai kahaiʼ", "\u201ceight, one coming\u201d", 0, "Nine is described as eight with one more on the way."],
+    10: ["kĩpãʼãũp", "", 0, "Ten may itself be built from a verb — the pieces at the front are the same ones Enggano uses to make verbs."],
+    12: ["kĩpãʼãũp he ʼaru", "\u201cten and two\u201d", 0, "The word he means \u201cand.\u201d"],
+    20: ["kahaiʼ kak", "\u201cone person\u201d", 1, "Here is the whole system in two words. kak means \u201cperson\u201d — and one complete person is ten fingers and ten toes."],
+    30: ["kahaiʼ kak he kĩpãʼãũp", "\u201cone person and ten\u201d", 1, "One person, plus one more pair of hands and feet."],
+    100: ["ʼarib kak", "\u201cfive people\u201d", 5, "A hundred is five whole people. You can also hear kahaiʼ ratuh, borrowed straight from Malay ratus."],
+    400: ["kahaiʼ edudodoka", "\u201cone our-body\u201d", 20, "Twenty twenties. One suggestion: two people count together, and every time the first finishes all twenty digits, the second ticks off one of theirs."]
+  };
+  var numnote = document.getElementById("numnote");
+  single("#bodygrid button", function (b) {
+    var n = Number(b.dataset.n), N = NUMS[n];
+    document.getElementById("engnum").textContent = N[0];
+    document.getElementById("literal").textContent = N[1];
+    var p = document.getElementById("people");
+    p.innerHTML = "";
+    for (var i = 0; i < Math.min(N[2], 20); i++) { var e = document.createElement("i"); e.textContent = "🧍"; p.appendChild(e); }
+    if (N[2] > 20) p.innerHTML += " ×20";
+    numnote.textContent = N[3];
+  });
+
+  /* ---------- Clans ---------- */
+  var CLANS = [
+    "One of the five original Enggano clans. Clan names are said to come from trees and animals, each carrying a meaning for the people who belong to it.",
+    "An original clan. You belong to your mother's clan, and traditionally you marry outside it — which is how a very small island keeps its families from becoming one family.",
+    "An original clan. Within it are smaller matrilineages called kaudara, which hold land and are led by their elders.",
+    "An original clan. Enggano customary law governs how land is opened, used and passed on — and it passes through women.",
+    "An original clan. Clan leaders together form the island's traditional governance, alongside the Indonesian state's village administration.",
+    "<strong>Not original.</strong> Kamay is the clan created for everyone who has arrived on Enggano since — Javanese, Bugis, Batak, Sumatran settlers and their descendants. Rather than treating newcomers as outsiders forever, the system grew a sixth branch to hold them."
+  ];
+  var clanmsg = document.getElementById("clanmsg");
+  single("#clans .clan", function (b) { clanmsg.innerHTML = CLANS[Number(b.dataset.c)]; });
+
+  /* ---------- Timeline ---------- */
+  var EVENTS = [
+    ["First landing", "Charles Miller managed to land on Enggano in 1771 and meet the islanders — earlier European attempts had mostly failed. He described a tall, healthy population and a society in which women held conspicuous authority. At this point the island's culture resembled the distant Nicobar Islands more than nearby Sumatra."],
+    ["About three thousand people", "A Portuguese record from 1862 puts the island's population at around 3,000. This is the last snapshot before the collapse, and a reminder that the Enggano were once a substantial island people, not a remnant."],
+    ["Collapse", "Within about twenty years the population fell by roughly 80%. The causes stack up: repeated epidemics of introduced disease, slave raids and piracy, forced labour and cash-crop demands from the colonial system, and in 1883 the tsunami and ash from the eruption of Krakatoa. On an island whose highest point is 281 metres, that last one mattered enormously."],
+    ["Modigliani and the missionaries", "The Italian anthropologist Elio Modigliani spent April to July 1891 on Enggano and published L'Isola delle donne — \u201cThe Island of Women\u201d — in 1894. It remains the best record of pre-20th-century Enggano life. The Rhenish Missionary Society arrived in 1902, by which time the last traditional beehive houses had probably already been pulled down."],
+    ["Four hundred left", "The indigenous population never recovered. By the early 1960s there were only about 400 Enggano people. Everything that survives of the language and culture passed through that bottleneck — a few hundred people carrying what had belonged to thousands."],
+    ["A minority at home", "The island's population has risen again, to about 4,500 — but mostly through migration from Sumatra and Java. Enggano people are now a minority or a slim majority on their own island, depending on how you count, and the shared language of the six villages is Indonesian."]
+  ];
+  var tlText = document.getElementById("tltext");
+  var evs = document.querySelectorAll("#tl .ev");
+  function setEvent(i) {
+    evs.forEach(function (e, k) { e.classList.toggle("on", k === i); });
+    tlText.innerHTML = '<strong style="color:var(--sand); font-size:1.2rem">' + EVENTS[i][0] + "</strong><br>" + EVENTS[i][1];
+  }
+  evs.forEach(function (e, i) { e.addEventListener("click", function () { setEvent(i); }); });
+  setEvent(0);
+})();
+</script>
+<script src="../assets/deck.js"></script>
+</body>
+</html>
