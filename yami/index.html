@@ -1,0 +1,827 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Yami / Tao: The Island That Counts Its Years in Flying Fish</title>
+<link rel="stylesheet" href="../assets/deck.css">
+<style>
+@import url("https://fonts.googleapis.com/css2?family=Archivo+Black&family=Archivo:wght@400;500;600;700&display=swap");
+
+/* ---------- Tao theme: night sea, boat red, bone white, silver helmet ---------- */
+:root {
+  --bg: #050f1c;
+  --ink: #f6f1e8;
+  --muted: #bfd0dc;
+  --line: rgba(246, 241, 232, .22);
+  --panel: rgba(8, 26, 44, .84);
+  --red: #cf4530;
+  --bone: #f6f1e8;
+  --coal: #140f12;
+  --silver: #cfd8e2;
+  --taro: #8fbf7a;
+  --sun: #f2b544;
+  --wave: #2d7fa6;
+  --rose: #cf4530;
+  --accent: var(--red);
+  --serif: "Archivo Black", Impact, sans-serif;
+  --sans: "Archivo", "Noto Sans TC", system-ui, sans-serif;
+  --t: 0;
+  font-size: clamp(12px, 1.3vw, 28px);
+}
+h1 { font-family: var(--serif); font-size: 5.6rem; font-weight: 400; line-height: 1; letter-spacing: -.02em; }
+h2 { font-family: var(--serif); font-size: 2.7rem; font-weight: 400; line-height: 1.1; }
+.slide { padding: 7vh 4vw 8vh 6vw; }
+.text { max-width: 44vw; }
+.text.wide { max-width: 86vw; width: 86vw; }
+.stage {
+  right: 5vw; top: 6vh; bottom: 10vh; width: 39vw;
+  display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 1.1rem;
+}
+ul.dots li { font-size: 1.04rem; }
+.speak .line, .card .word { font-family: var(--sans); font-weight: 700; }
+.card.revealed .meaning { max-height: 14rem; }
+.btn { background: var(--red); color: #fff; }
+.syl.on { background: var(--red); color: #fff; }
+.loc .disc { border-color: var(--red); box-shadow: 0 0 0 .55rem rgba(207,69,48,.18), 0 22px 40px rgba(0,0,0,.55); }
+.loc .tint { background: #cfe0bb; }
+.loc .sea { background: #0b3147; }
+.loc .tag { background: #081d30; border-color: var(--red); }
+.note { font-size: .82rem; color: var(--muted); }
+.quote { font-size: 1.7rem; font-weight: 700; line-height: 1.3; color: var(--sun); }
+
+/* ---------- Background: night sea, leaping flying fish, a boat with eyes ---------- */
+#sea { position: fixed; inset: 0; z-index: 0; overflow: hidden; pointer-events: none;
+  background: linear-gradient(180deg, #02070f 0%, #06172a 44%, #0a2b45 72%, #061d31 100%); }
+#sea .dawn { position: absolute; inset: 0;
+  background: linear-gradient(180deg, rgba(242,181,68,.22) 0%, rgba(207,69,48,.12) 34%, rgba(0,0,0,0) 62%);
+  opacity: calc(var(--t) * 1.15); transition: opacity 1.6s ease; }
+#sea .moon { position: absolute; right: 12vw; top: 9vh; width: 6vw; height: 6vw; border-radius: 50%;
+  background: radial-gradient(circle at 38% 36%, #fffdf2, #e3e8ee 60%, #b9c6d2);
+  box-shadow: 0 0 60px 18px rgba(220,235,255,.25);
+  opacity: calc(1 - var(--t) * .8); transition: opacity 1.6s ease; }
+#sea .water { position: absolute; left: 0; right: 0; bottom: 0; height: 34vh;
+  background: linear-gradient(180deg, #0d4663 0%, #041726 100%); }
+#sea .water::before { content: ""; position: absolute; inset: 0;
+  background: repeating-linear-gradient(180deg, rgba(255,255,255,.08) 0 2px, transparent 2px 16px);
+  animation: swell 8s ease-in-out infinite alternate; }
+@keyframes swell { to { transform: translateY(8px); } }
+#sea .fish { position: absolute; width: 3.4vw; height: 1.5vw; animation: leap 9s ease-in-out infinite; }
+#sea .fish svg { width: 100%; height: 100%; display: block; }
+@keyframes leap {
+  0%   { transform: translate(4vw, 3vh) rotate(-26deg); opacity: 0; }
+  18%  { opacity: 1; }
+  50%  { transform: translate(-3vw, -5vh) rotate(0deg); }
+  82%  { opacity: 1; }
+  100% { transform: translate(-11vw, 3vh) rotate(26deg); opacity: 0; }
+}
+#sea .prow { position: absolute; left: -2vw; bottom: 4vh; width: 26vw; height: 20vh; opacity: .95; }
+#sea .prow svg { width: 100%; height: 100%; }
+#sea .torch { position: absolute; left: 16vw; bottom: 16vh; width: 10vw; height: 10vw; border-radius: 50%;
+  background: radial-gradient(circle, rgba(242,181,68,.4), rgba(242,181,68,0) 70%);
+  animation: flick 2.6s ease-in-out infinite alternate; }
+@keyframes flick { to { transform: scale(1.14); opacity: .7; } }
+#sea .shade { position: absolute; inset: 0;
+  background: linear-gradient(90deg, rgba(2,8,16,.94) 0%, rgba(2,8,16,.76) 50%, rgba(2,8,16,.24) 100%); }
+
+/* ---------- Photos ---------- */
+.board { position: relative; margin: 0; width: var(--w, 19vw); padding: .6rem .6rem .5rem;
+  background: var(--bone); border-radius: .2rem; box-shadow: 0 18px 34px rgba(0,0,0,.6);
+  transform: rotate(var(--r, 0deg)); transition: transform .9s cubic-bezier(.2,.8,.2,1), opacity .7s ease; }
+.board::after { content: ""; position: absolute; left: 0; right: 0; bottom: 0; height: .35rem;
+  background: repeating-linear-gradient(90deg, var(--red) 0 10px, var(--coal) 10px 20px); border-radius: 0 0 .2rem .2rem; }
+.slide:not(.active) .board { opacity: 0; transform: translateY(46px) rotate(var(--r, 0deg)); }
+.slide.active .board { transition-delay: calc(.4s + var(--d, 0) * .16s); }
+.slide.active .board:hover { transform: rotate(0deg) scale(1.04); transition-delay: 0s; }
+.board img { display: block; width: 100%; aspect-ratio: var(--ar, 4 / 3); object-fit: cover; background: #c7cdd4; }
+.board figcaption { color: #1a1512; font-size: .73rem; font-weight: 700; line-height: 1.25; margin: .4rem .1rem .5rem; }
+
+/* ---------- Shared controls ---------- */
+.switch { display: flex; gap: .4rem; margin: .4rem 0 .6rem; flex-wrap: wrap; }
+.sbtn { font: inherit; font-weight: 700; font-size: .92rem; color: var(--ink); background: var(--panel);
+  border: 2px solid var(--line); border-radius: .3rem; padding: .25em .95em; cursor: pointer; transition: transform .2s; }
+.sbtn:hover { transform: translateY(-2px); }
+.sbtn.on { background: var(--red); border-color: var(--red); color: #fff; }
+.out { min-height: 3.2em; margin-top: .5rem; }
+
+/* ---------- Cognate bridge ---------- */
+.chips { display: flex; flex-wrap: wrap; gap: .3rem; justify-content: center; }
+.chip { font: inherit; font-size: .85rem; font-weight: 600; color: var(--ink); background: var(--panel);
+  border: 2px solid var(--line); border-radius: 999px; padding: .2em .8em; cursor: pointer; }
+.chip:hover { border-color: var(--sun); }
+.chip.on { background: var(--sun); border-color: var(--sun); color: #2a1c05; }
+.bridge { display: grid; grid-template-columns: 1fr auto 1fr; align-items: center; gap: .5rem; margin-top: .7rem; }
+.bcol { text-align: center; }
+.bcol .lang { font-size: .74rem; font-weight: 700; color: var(--muted); letter-spacing: .08em; text-transform: uppercase; }
+.bcol .w { font-family: var(--sans); font-weight: 700; font-size: 1.9rem; color: var(--sun); line-height: 1.1; }
+.span { width: 100%; height: 2px; background: repeating-linear-gradient(90deg, var(--line) 0 6px, transparent 6px 12px); position: relative; }
+.span::after { content: "≈"; position: absolute; left: 50%; top: 50%; transform: translate(-50%,-50%);
+  background: var(--panel); padding: 0 .3rem; color: var(--muted); font-weight: 700; }
+#bnote { min-height: 3.6em; margin-top: .4rem; text-align: center; }
+
+/* ---------- Season wheel ---------- */
+.wheel { position: relative; width: 100%; max-width: 16rem; aspect-ratio: 1; margin: .4rem auto; }
+.wheel svg { width: 100%; height: 100%; }
+.wheel path.seg { cursor: pointer; transition: opacity .3s, transform .3s; transform-origin: 50% 50%; opacity: .55; }
+.wheel path.seg:hover { opacity: .85; }
+.wheel path.seg.on { opacity: 1; transform: scale(1.05); }
+.wheel .hub { font-family: var(--serif); fill: var(--ink); font-size: 11px; text-anchor: middle; }
+#wmsg { min-height: 6em; }
+#wmsg b { color: var(--sun); font-size: 1.15rem; }
+
+/* ---------- Fish sorter ---------- */
+.fishlist { display: grid; gap: .35rem; }
+.fcard { font: inherit; text-align: left; font-weight: 600; font-size: .9rem; color: var(--ink); background: var(--panel);
+  border: 2px solid var(--line); border-radius: .35rem; padding: .4em .7em; cursor: pointer; }
+.fcard:hover { border-color: var(--sun); }
+.fcard.on { background: rgba(242,181,68,.16); border-color: var(--sun); }
+.fcard.solved { border-color: var(--taro); opacity: .7; }
+.fcard.solved::after { content: " ✓"; color: var(--taro); font-weight: 900; }
+.cats { display: grid; grid-template-columns: repeat(2, 1fr); gap: .35rem; margin-top: .5rem; }
+.cat { font: inherit; font-weight: 700; font-size: .88rem; color: var(--ink); background: rgba(45,127,166,.16);
+  border: 2px solid var(--line); border-radius: .35rem; padding: .35em .5em; cursor: pointer; }
+.cat:hover { border-color: var(--wave); }
+#fmsg { min-height: 4.4em; margin-top: .4rem; font-weight: 600; }
+
+/* ---------- Boat builder ---------- */
+.boatbox { width: 100%; max-width: 20rem; margin: .3rem auto; display: block; }
+.boatbox g { opacity: 0; transition: opacity .5s; }
+.boatbox g.on { opacity: 1; }
+.plankcount { font-family: var(--serif); font-size: 2.2rem; color: var(--red); text-align: center; line-height: 1; }
+#bmsg { min-height: 4.4em; }
+
+/* ---------- Name stepper ---------- */
+.namecard { text-align: center; padding: .6rem 0; }
+.namecard .nm { font-family: var(--sans); font-weight: 700; font-size: 1.7rem; color: var(--sun); min-height: 1.3em; }
+.namecard .who { font-size: .78rem; color: var(--muted); font-weight: 700; letter-spacing: .06em; text-transform: uppercase; }
+.family { display: grid; grid-template-columns: repeat(3, 1fr); gap: .5rem; margin-top: .4rem; }
+.family div { background: var(--panel); border: 2px solid var(--line); border-radius: .35rem; padding: .45rem .3rem; }
+.stepbar { display: flex; gap: .25rem; margin: .5rem 0 .4rem; }
+.stepbar i { flex: 1; height: .35rem; border-radius: 999px; background: rgba(255,255,255,.14); transition: background .4s; }
+.stepbar i.on { background: var(--red); }
+.steprow { display: flex; align-items: center; justify-content: space-between; gap: .5rem; }
+.arrow { font: inherit; font-weight: 700; font-size: 1.3rem; color: var(--ink); background: var(--panel);
+  border: 2px solid var(--line); border-radius: 50%; width: 2.3rem; height: 2.3rem; cursor: pointer; }
+.arrow:hover { border-color: var(--red); }
+.stepbody { flex: 1; text-align: center; }
+.stepbody p { margin: .3rem 0 0; min-height: 4.4em; font-size: .92rem; }
+
+/* ---------- Loanword game ---------- */
+.loanword { font-family: var(--sans); font-weight: 700; font-size: 2.2rem; color: var(--sun); text-align: center; line-height: 1.1; }
+.loangloss { text-align: center; color: var(--muted); font-weight: 600; }
+.loanbtns { display: flex; gap: .4rem; justify-content: center; margin-top: .6rem; flex-wrap: wrap; }
+#lmsg { min-height: 4.2em; margin-top: .4rem; text-align: center; }
+.score { text-align: center; font-size: .82rem; color: var(--muted); }
+
+/* ---------- Barrels ---------- */
+.barrels { display: grid; grid-template-columns: repeat(20, 1fr); gap: 2px; margin: .5rem 0; }
+.barrels i { display: block; aspect-ratio: 1 / 1.3; background: var(--red); border-radius: 1px; opacity: .85; }
+
+/* ---------- Timeline ---------- */
+.tl { display: grid; grid-template-columns: repeat(6, 1fr); gap: .55rem; margin-top: 1rem; position: relative; padding-bottom: 1.4rem; }
+.tl::after { content: ""; position: absolute; left: 0; right: 0; bottom: .45rem; height: 3px; border-radius: 3px;
+  background: repeating-linear-gradient(90deg, var(--red) 0 16px, var(--bone) 16px 24px, var(--coal) 24px 32px); }
+.ev { font: inherit; text-align: left; color: #11161d; background: var(--ec); border: 0; border-radius: .35rem;
+  padding: .65rem .75rem; cursor: pointer; transition: transform .25s, box-shadow .25s; }
+.ev:hover { transform: translateY(-4px); }
+.ev.on { box-shadow: 0 0 0 3px #fff, 0 10px 24px rgba(0,0,0,.4); transform: translateY(-6px); }
+.ev .yr { font-family: var(--serif); font-size: 1.3rem; line-height: 1; display: block; }
+.ev small { display: block; font-weight: 700; font-size: .78rem; margin-top: .3rem; }
+#tltext { min-height: 5.4rem; margin-top: .4rem; }
+
+/* ---------- Quiz tint ---------- */
+.opt.right { background: var(--taro); }
+.opt.wrong { background: var(--red); }
+
+@media (max-width: 820px) {
+  .slide { padding: 6vh 6vw 12vh; }
+  h1 { font-size: 3.2rem; }
+  .text, .text.wide { max-width: none; width: auto; }
+  .stage { position: relative; inset: auto; width: 100%; margin-top: 1.5rem; }
+  .board { width: 74vw; }
+  .stage .panel, .stage .speak { width: 100% !important; max-width: none !important; }
+  .tl { grid-template-columns: repeat(2, 1fr); }
+  .cats { grid-template-columns: 1fr; }
+  #sea .fish { width: 9vw; height: 4vw; }
+  .barrels { grid-template-columns: repeat(10, 1fr); }
+}
+</style>
+</head>
+<body data-map="BlankMap-Equirectangular.svg">
+
+<div id="sea" aria-hidden="true">
+  <div class="dawn"></div>
+  <div class="moon"></div>
+  <div class="fishes"></div>
+  <div class="water"></div>
+  <div class="torch"></div>
+  <div class="prow">
+    <svg viewBox="0 0 400 200"><path d="M10 170 Q60 120 150 118 L390 118 Q360 170 300 182 L70 182 Q30 180 10 170 Z" fill="#171013"/><path d="M12 166 Q62 124 150 124 L380 124" fill="none" stroke="#f6f1e8" stroke-width="5"/><path d="M26 176 Q74 136 152 134 L386 134" fill="none" stroke="#cf4530" stroke-width="5"/><g transform="translate(96,150)"><circle r="20" fill="#f6f1e8"/><circle r="13" fill="#cf4530"/><circle r="6" fill="#171013"/><g stroke="#f6f1e8" stroke-width="3"><path d="M0 -28 V-22"/><path d="M0 28 V22"/><path d="M-28 0 H-22"/><path d="M28 0 H22"/><path d="M-20 -20 l4 4"/><path d="M20 20 l-4 -4"/><path d="M-20 20 l4 -4"/><path d="M20 -20 l-4 4"/></g></g></svg>
+  </div>
+  <div class="shade"></div>
+</div>
+<div class="progress"></div>
+
+<main>
+
+<!-- 1. Title -->
+<section class="slide" style="--accent: var(--red)">
+  <div class="text">
+    <p class="kicker in">Rare Languages of the Asia-Pacific · Module 21</p>
+    <h1 class="in" style="--d:1">Yami / Tao</h1>
+    <p class="in" style="--d:2; font-size:1.4rem; font-weight:700; color:var(--sun)">ciriciring no Tao · 達悟語 · Pongso no Tao</p>
+    <div class="bar in" style="--d:3"></div>
+    <p class="lead in" style="--d:4">Taiwan's only indigenous language that doesn't belong to Taiwan's language family — spoken on a volcanic island whose calendar is set by a fish</p>
+    <p class="muted in" style="--d:5">Watch the sea: the flying fish are arriving, and the night is turning to dawn.</p>
+  </div>
+  <div class="stage">
+    <figure class="board" style="--w:25vw; --r:-1.5deg; --d:0">
+      <img data-wiki="Orchid Island" data-width="1200" alt="Orchid Island, Taiwan">
+      <figcaption>Pongso no Tao — "island of people" — 46 km off the southeast coast of Taiwan</figcaption>
+    </figure>
+  </div>
+</section>
+
+<!-- 2. Where and who -->
+<section class="slide" data-tr="left" style="--accent: var(--wave)">
+  <div class="text">
+    <p class="kicker in">Where and who</p>
+    <h2 class="in" style="--d:1">An island that faces south</h2>
+    <div class="bar in" style="--d:2"></div>
+    <ul class="dots">
+      <li class="in" style="--d:3"><strong>Tao</strong> means "person." The island is <span class="hl">Pongso no Tao</span>, the island of people, and the language is <span class="hl">ciriciring no Tao</span>, human speech. Everything is named from the inside out.</li>
+      <li class="in" style="--d:4">About <strong>4,700</strong> Tao people, roughly <strong>4,000</strong> speakers, on a volcanic island of 46 square kilometres. UNESCO calls the language <strong>definitely endangered</strong>.</li>
+      <li class="in" style="--d:5">Every other indigenous language of Taiwan is <strong>Formosan</strong> — a deep, ancient branch of Austronesian. Yami is not. It is <strong>Malayo-Polynesian</strong>, the branch that left Taiwan thousands of years ago and spread across half the world.</li>
+      <li class="in" style="--d:6">Its closest relatives are not on Taiwan at all. They are 100 km <strong>south</strong>, in the Batanes Islands of the Philippines.</li>
+    </ul>
+    <p class="note in" style="--d:7">"Yami" was the name given by Japanese ethnologists in the early 1900s and is still the official term; many islanders prefer <strong>Tao</strong>. Both are used — including by Tao people themselves.</p>
+  </div>
+  <div class="stage">
+    <div class="loc" data-lat="22.05" data-lon="121.53" data-zoom="9" style="--s:13vw; --d:0">
+      <div class="disc"><div class="lmap"></div><div class="tint"></div><div class="sea"></div><span class="pinpt"></span></div>
+      <span class="tag">Lanyu Township, Taitung County, Taiwan</span>
+    </div>
+    <div class="panel in" style="--d:4; width:34vw">
+      <strong>The family that came back</strong>
+      <p class="note" style="margin:.3rem 0 0">Austronesian languages began in Taiwan and spread out by sea — to the Philippines, Indonesia, Madagascar, Hawaiʻi, New Zealand. Roughly <strong>800 years ago</strong>, one group sailed back <em>north</em> from the Batanes and settled Orchid Island. Oral history, language and genetics all tell the same story.</p>
+      <p class="note" style="margin:.4rem 0 0">So Yami is the only language in Taiwan that is a <em>returning</em> cousin rather than a stay-at-home one.</p>
+    </div>
+  </div>
+</section>
+
+<!-- 3. The bridge south -->
+<section class="slide" data-tr="zoom" style="--accent: var(--sun)">
+  <div class="text">
+    <p class="kicker in">Speak along</p>
+    <h2 class="in" style="--d:1">Words that cross the strait</h2>
+    <div class="bar in" style="--d:2"></div>
+    <p class="in" style="--d:3">If you speak Tagalog or Ilokano, a surprising amount of Yami will look familiar — and Yami speakers and Ivatan speakers from Batanes have historically been able to understand one another.</p>
+    <p class="in" style="--d:4">For centuries the two peoples <strong>traded by boat</strong>, exchanging pigs, goats and millet for gold, beads and iron, until the voyages stopped about three hundred years ago after a disastrous fight.</p>
+    <div class="speak panel compact in" data-tempo="520" style="--d:5; padding:.8rem 1rem; margin-top:.5rem">
+      <div class="line" data-syl="ci·ri·ci·ring no Ta·o"></div><p class="gloss">human speech — what the language is called</p>
+      <div class="line" data-syl="a·li·bang·bang"></div><p class="gloss">flying fish</p>
+      <button class="btn play">▶ Say them</button>
+    </div>
+  </div>
+  <div class="stage">
+    <div class="panel in" style="--d:3; width:35vw">
+      <strong>Click a word to cross the bridge:</strong>
+      <div class="chips" id="chips" style="margin-top:.5rem"></div>
+      <div class="bridge">
+        <div class="bcol"><div class="lang">Yami (Orchid Island)</div><div class="w" id="wy">tao</div></div>
+        <div class="span"></div>
+        <div class="bcol"><div class="lang" id="lx">Tagalog</div><div class="w" id="wx">tao</div></div>
+      </div>
+      <p id="bnote" aria-live="polite"></p>
+    </div>
+  </div>
+</section>
+
+<!-- 4. The flying fish calendar -->
+<section class="slide" style="--accent: var(--wave)">
+  <div class="text">
+    <p class="kicker in">Cultural significance</p>
+    <h2 class="in" style="--d:1">A year measured in fish</h2>
+    <div class="bar in" style="--d:2"></div>
+    <ul class="dots">
+      <li class="in" style="--d:3">Every spring the Kuroshio Current brings schools of <span class="hl">alibangbang</span>, flying fish, past the island. The Tao year is built around their arrival — not around a date on a paper calendar.</li>
+      <li class="in" style="--d:4">The traditional calendar, <strong>Ahehep no Tao</strong>, splits the year into three seasons defined entirely by what the fish are doing. Click the wheel to visit each.</li>
+      <li class="in" style="--d:5">The "Flying Fish Festival" isn't one day. It is a whole season containing roughly <strong>eleven separate rituals</strong> and three sets of taboos: when to catch, who may eat, how to cook, and when to stop.</li>
+      <li class="in" style="--d:6">The origin story is unusual. In most myths a god makes people; in this one a <strong>black-winged flying fish</strong> appears and gives the Tao a set of rules — and the people who follow them stay well.</li>
+    </ul>
+  </div>
+  <div class="stage">
+    <div class="panel in" style="--d:3; width:34vw">
+      <div class="wheel" id="wheel">
+        <svg viewBox="0 0 200 200">
+          <circle cx="100" cy="100" r="96" fill="rgba(255,255,255,.04)"/>
+          <path class="seg on" data-s="0" d="M100 100 L100 8 A92 92 0 0 1 179.7 146 Z" fill="#cf4530"/>
+          <path class="seg" data-s="1" d="M100 100 L179.7 146 A92 92 0 0 1 20.3 146 Z" fill="#f2b544"/>
+          <path class="seg" data-s="2" d="M100 100 L20.3 146 A92 92 0 0 1 100 8 Z" fill="#2d7fa6"/>
+          <circle cx="100" cy="100" r="36" fill="#081d30"/>
+          <text class="hub" x="100" y="97">Ahehep</text><text class="hub" x="100" y="110">no Tao</text>
+        </svg>
+      </div>
+      <p id="wmsg" aria-live="polite"></p>
+    </div>
+  </div>
+</section>
+
+<!-- 5. Good fish, bad fish -->
+<section class="slide" data-tr="left" style="--accent: var(--taro)">
+  <div class="text">
+    <p class="kicker in">Think like a scientist</p>
+    <h2 class="in" style="--d:1">Good fish, bad fish</h2>
+    <div class="bar in" style="--d:2"></div>
+    <p class="in" style="--d:3">The Tao sort every fish in the sea into categories — and the categories decide <strong>who in the family eats it</strong>. Broadly: <span class="hl">oyod</span>, "good fish," go first to women and children; <span class="hl">rahet</span>, "bad fish," are eaten by men; and some fish are reserved for the oldest people in the village.</p>
+    <p class="in" style="--d:4">It sounds arbitrary. Look closer. The "good" fish are the shy, delicate reef fish that are hard to catch. The "bad" fish are the slow ones that grab any bait. Researchers who have studied the system argue it works as a <strong>fishing quota in disguise</strong>: the species that would collapse first under heavy fishing are precisely the ones that only part of the community may eat.</p>
+    <p class="note in" style="--d:5">Nobody wrote it down as a conservation policy. It arrived as a set of rules from a fish, and it has run for centuries.</p>
+  </div>
+  <div class="stage">
+    <div class="panel in" style="--d:3; width:35vw">
+      <strong>Who eats this one?</strong> Click a fish, then a category.
+      <div class="fishlist" id="fishlist" style="margin-top:.5rem">
+        <button class="fcard" data-a="rahet">Thick-skinned, slow-moving, strong-smelling. Takes any bait you drop.</button>
+        <button class="fcard" data-a="oyod">Shy and quick, hides in the reef, fine pale flesh, hard to land.</button>
+        <button class="fcard" data-a="elder">A species the village sets aside entirely for its oldest members.</button>
+        <button class="fcard" data-a="fly">Arrives in huge schools on the spring current, caught at night by torchlight.</button>
+      </div>
+      <div class="cats" id="cats">
+        <button class="cat" data-c="rahet">rahet — men's fish</button>
+        <button class="cat" data-c="oyod">oyod — women's &amp; children's fish</button>
+        <button class="cat" data-c="elder">elders' fish</button>
+        <button class="cat" data-c="fly">flying fish — in season only</button>
+      </div>
+      <p id="fmsg" aria-live="polite">Four fish, four answers.</p>
+    </div>
+  </div>
+</section>
+
+<!-- 6. Boats and houses -->
+<section class="slide" style="--accent: var(--red)">
+  <div class="text">
+    <p class="kicker in">Built for this island</p>
+    <h2 class="in" style="--d:1">No nails, no screws, no glue</h2>
+    <div class="bar in" style="--d:2"></div>
+    <ul class="dots">
+      <li class="in" style="--d:3">A Tao plank boat is assembled from <strong>21 to 27 separate pieces of wood</strong>, pegged and lashed together without a single nail. A small <span class="hl">tatala</span> carries one to three people; a large <span class="hl">cinedkeran</span> carries six to ten.</li>
+      <li class="in" style="--d:4">The wood must come from <strong>living trees</strong> — using dead wood on a boat is taboo — and the trees are often ones the builder's family planted generations earlier. A boat can take years to finish.</li>
+      <li class="in" style="--d:5">The painted patterns are not decoration. They say which village and which family the boat belongs to, and the <strong>eye on the prow</strong>, <em>mata no tatala</em>, watches for fish and keeps bad spirits off. Launching one is one of the great honours of a family's life.</li>
+      <li class="in" style="--d:6">Houses are engineered too. Orchid Island sits in the typhoon lane, so the traditional <span class="hl">vahay</span> is built <strong>partly underground</strong>, stepped into the slope, where the strongest wind passes over the roof.</li>
+    </ul>
+    <p class="note in" style="--d:7">Boats are men's work, and the taboo against women touching them applies to visitors too — something to know before you photograph one.</p>
+  </div>
+  <div class="stage">
+    <div class="panel in" style="--d:3; width:35vw">
+      <strong>Build a tatala:</strong> add the pieces, then paint it.
+      <svg class="boatbox" id="boatbox" viewBox="0 0 320 150" aria-label="A Tao plank boat being assembled">
+        <g class="on" data-b="0"><path d="M40 108 Q160 128 280 108 L276 116 Q160 138 44 116 Z" fill="#8a6a46"/></g>
+        <g data-b="1"><path d="M34 96 Q160 118 286 96 L284 106 Q160 128 36 106 Z" fill="#9b7a53"/></g>
+        <g data-b="2"><path d="M26 84 Q160 108 294 84 L292 94 Q160 118 28 94 Z" fill="#a98961"/></g>
+        <g data-b="3"><path d="M18 70 Q160 98 302 70 L300 82 Q160 110 20 82 Z" fill="#b8976d"/></g>
+        <g data-b="4"><path d="M18 70 Q10 44 24 22 Q34 40 34 62 Z" fill="#b8976d"/><path d="M302 70 Q310 44 296 22 Q286 40 286 62 Z" fill="#b8976d"/></g>
+        <g data-b="5">
+          <path d="M40 108 Q160 128 280 108 L276 116 Q160 138 44 116 Z" fill="#171013"/>
+          <path d="M26 84 Q160 108 294 84 L292 94 Q160 118 28 94 Z" fill="#f6f1e8"/>
+          <path d="M18 70 Q160 98 302 70 L300 82 Q160 110 20 82 Z" fill="#cf4530"/>
+          <path d="M18 70 Q10 44 24 22 Q34 40 34 62 Z" fill="#cf4530"/><path d="M302 70 Q310 44 296 22 Q286 40 286 62 Z" fill="#cf4530"/>
+          <g transform="translate(62,92)"><circle r="15" fill="#f6f1e8"/><circle r="10" fill="#cf4530"/><circle r="4.5" fill="#171013"/><g stroke="#f6f1e8" stroke-width="2.4"><path d="M0 -21 V-17"/><path d="M0 21 V17"/><path d="M-21 0 H-17"/><path d="M21 0 H17"/></g></g>
+          <g transform="translate(258,92)"><circle r="15" fill="#f6f1e8"/><circle r="10" fill="#cf4530"/><circle r="4.5" fill="#171013"/><g stroke="#f6f1e8" stroke-width="2.4"><path d="M0 -21 V-17"/><path d="M0 21 V17"/><path d="M-21 0 H-17"/><path d="M21 0 H17"/></g></g>
+        </g>
+      </svg>
+      <div class="plankcount" id="pcount">1 piece</div>
+      <div class="switch" style="justify-content:center; margin-top:.4rem">
+        <button class="btn" id="addplank">+ add pieces</button>
+        <button class="sbtn" id="paintboat">paint it</button>
+        <button class="sbtn" id="resetboat">↺ start again</button>
+      </div>
+      <p id="bmsg" aria-live="polite">Start with the keel — the single piece that runs the length of the hull.</p>
+    </div>
+  </div>
+</section>
+
+<!-- 7. Names -->
+<section class="slide" data-tr="zoom" style="--accent: var(--sun)">
+  <div class="text">
+    <p class="kicker in">Grammar of a family</p>
+    <h2 class="in" style="--d:1">Your name changes when your child is born</h2>
+    <div class="bar in" style="--d:2"></div>
+    <p class="in" style="--d:3">In most of the world, a name is fixed at birth and follows you to the grave. On Orchid Island it moves. When a couple's first child is born and named, <strong>the parents are renamed after the baby</strong> — and when the first grandchild arrives, the grandparents are renamed too.</p>
+    <ul class="dots">
+      <li class="in" style="--d:4"><span class="hl">Si-</span> marks a person's own name · <span class="hl">Syaman-</span> "father of" · <span class="hl">Sinan-</span> "mother of" · <span class="hl">Syapen-</span> "grandparent of"</li>
+      <li class="in" style="--d:5">Anthropologists call this <strong>teknonymy</strong>. It exists elsewhere — in Bali, among the Penan of Borneo, in Arabic <em>Abu</em> and <em>Umm</em> names — but few societies carry it as far as the Tao do.</li>
+      <li class="in" style="--d:6">Think about what it means: your place in the community is stated, out loud, every time somebody says your name. You are <em>whose parent</em> you are.</li>
+    </ul>
+    <p class="note in" style="--d:7">Taiwan's best-known Tao writer publishes as <strong>Syaman Rapongan</strong> — "father of Rapongan." His novels and essays about the sea and about growing up between two worlds are read far beyond the island.</p>
+  </div>
+  <div class="stage">
+    <div class="panel in" style="--d:3; width:34vw">
+      <strong>Follow one family through time:</strong>
+      <div class="namecard">
+        <div class="who" id="nwho"></div>
+        <div class="nm" id="nname"></div>
+      </div>
+      <div class="family" id="fam">
+        <div><div class="who">father</div><div class="nm" id="nf" style="font-size:1rem"></div></div>
+        <div><div class="who">mother</div><div class="nm" id="nm2" style="font-size:1rem"></div></div>
+        <div><div class="who">grandparents</div><div class="nm" id="ng" style="font-size:1rem"></div></div>
+      </div>
+      <div class="stepbar" id="nbar"></div>
+      <div class="steprow">
+        <button class="arrow" id="nprev" aria-label="Earlier">‹</button>
+        <div class="stepbody"><p id="ntext" aria-live="polite"></p></div>
+        <button class="arrow" id="nnext" aria-label="Later">›</button>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- 8. Timeline -->
+<section class="slide" data-tr="zoom" style="--accent: var(--silver)">
+  <div class="text wide">
+    <p class="kicker in">History</p>
+    <h2 class="in" style="--d:1">Eight hundred years on one island</h2>
+    <div class="bar in" style="--d:2"></div>
+    <p class="in" style="--d:3">Click each moment to explore it.</p>
+    <div class="tl in" id="tl" style="--d:4">
+      <button class="ev" style="--ec: var(--sun)"><span class="yr">c. 1200</span><small>Arrival from the south</small></button>
+      <button class="ev" style="--ec: #f0cf94"><span class="yr">to c. 1700</span><small>The trading voyages</small></button>
+      <button class="ev" style="--ec: var(--silver)"><span class="yr">1895–1945</span><small>Named by outsiders</small></button>
+      <button class="ev" style="--ec: #c3b9d6"><span class="yr">1945 →</span><small>School in Mandarin</small></button>
+      <button class="ev" style="--ec: var(--red)"><span class="yr">1982</span><small>The barrels arrive</small></button>
+      <button class="ev" style="--ec: var(--taro)"><span class="yr">today</span><small>Written down at last</small></button>
+    </div>
+    <div class="panel in" id="tltext" style="--d:5" aria-live="polite"></div>
+  </div>
+</section>
+
+<!-- 9. Nuclear waste -->
+<section class="slide" data-tr="left" style="--accent: var(--red)">
+  <div class="text">
+    <p class="kicker in">Why it matters now</p>
+    <h2 class="in" style="--d:1">Nearly 100,000 barrels</h2>
+    <div class="bar in" style="--d:2"></div>
+    <ul class="dots">
+      <li class="in" style="--d:3">In <strong>1982</strong>, Taiwan's state power company began shipping low-level radioactive waste to Orchid Island. Residents were not told what it was. The site stopped taking new waste in 1996, with close to <strong>100,000 barrels</strong> stored on an island of around 5,000 people.</li>
+      <li class="in" style="--d:4">The Tao have protested since <strong>1988</strong>. Elders describe the barrels in their own terms: as <em>anito</em>, evil spirits, dumped on the island of people.</li>
+      <li class="in" style="--d:5">In <strong>2016</strong> the president apologised to Taiwan's indigenous peoples, and a government report later confirmed that the Tao had never consented. In <strong>2019</strong> compensation of around NT$2.55 billion was offered — and <strong>refused</strong>. Spend it on removal instead, the community said.</li>
+      <li class="in" style="--d:6">The waste is still there. No final disposal site has been agreed anywhere in Taiwan.</li>
+    </ul>
+    <p class="note in" style="--d:7">This is a language module, and this belongs in it. A community fighting for its island's survival is a community with less time for language classes — and a reason to insist on being heard in its own words.</p>
+  </div>
+  <div class="stage">
+    <div class="panel in" style="--d:3; width:34vw">
+      <strong>Each mark is 500 barrels.</strong>
+      <div class="barrels" id="barrels"></div>
+      <p class="note" style="margin:.2rem 0 0">About 100,000 barrels, on 46 square kilometres, for a population of roughly 5,000.</p>
+      <p style="margin:.6rem 0 0"><strong>Discuss:</strong> the site was chosen in the 1970s partly because the island is small, remote and has few voters. What does it cost a society to make decisions that way — and who should have to agree before something like this is built?</p>
+    </div>
+  </div>
+</section>
+
+<!-- 10. Language now -->
+<section class="slide" style="--accent: var(--taro)">
+  <div class="text">
+    <p class="kicker in">The language today</p>
+    <h2 class="in" style="--d:1">Layers you can hear</h2>
+    <div class="bar in" style="--d:2"></div>
+    <ul class="dots">
+      <li class="in" style="--d:3">Yami carries its history in its vocabulary. Fifty years of Japanese rule left words like <em>gako</em> (school) and <em>sinsi</em> (teacher). Decades of Mandarin schooling left a few more. Play the game and listen for the seams.</li>
+      <li class="in" style="--d:4">Two things have helped the language hold on: <strong>isolation</strong> — it is a two-hour boat ride from anywhere — and the <strong>church</strong>, which put Yami into writing and uses it in services.</li>
+      <li class="in" style="--d:5">There is now a full reference grammar and dictionary, an online dictionary, government teaching materials, and a documentation project with recordings and lessons on the web.</li>
+      <li class="in" style="--d:6">And there is literature. Syaman Rapongan writes books in which the sea, not the mainland, is the centre of the world — putting Orchid Island at the middle of the map instead of the edge.</li>
+    </ul>
+  </div>
+  <div class="stage">
+    <div class="panel in" style="--d:3; width:34vw">
+      <strong>Where did this word come from?</strong>
+      <div class="loanword" id="lw"></div>
+      <div class="loangloss" id="lg"></div>
+      <div class="loanbtns">
+        <button class="sbtn" data-o="jp">Japanese</button>
+        <button class="sbtn" data-o="zh">Mandarin</button>
+        <button class="sbtn" data-o="na">Tao's own</button>
+      </div>
+      <p id="lmsg" aria-live="polite"></p>
+      <p class="score" id="lscore"></p>
+    </div>
+  </div>
+</section>
+
+<!-- 11. Quiz -->
+<section class="slide" style="--accent: var(--sun)">
+  <div class="text wide center">
+    <p class="kicker in">Review at dawn</p>
+    <h2 class="in" style="--d:1">Quick quiz!</h2>
+    <div class="bar in" style="--d:2"></div>
+    <div class="quizgrid">
+      <div class="quiz panel in" style="--d:3" data-right="Yes — it's Malayo-Polynesian, with its closest relatives in the Batanes." data-wrong="Hint: its cousins are south of Taiwan, not on it.">
+        <div class="q">What makes Yami unique among Taiwan's indigenous languages?</div>
+        <div class="options"><button class="opt">It has no verbs</button><button class="opt" data-correct>It isn't a Formosan language</button><button class="opt">It is written in Chinese characters</button></div>
+        <div class="feedback"></div>
+      </div>
+      <div class="quiz panel in" style="--d:4" data-right="Right — 21 to 27 pieces, pegged and lashed, from living trees." data-wrong="Hint: the whole point is what is NOT holding it together.">
+        <div class="q">A Tao plank boat is built…</div>
+        <div class="options"><button class="opt">from one hollowed log</button><button class="opt" data-correct>from 21–27 planks, with no nails</button><button class="opt">from bamboo and rope only</button></div>
+        <div class="feedback"></div>
+      </div>
+      <div class="quiz panel in" style="--d:5" data-right="Correct — parents are renamed after their first child, and grandparents after the first grandchild." data-wrong="Hint: it happens when a baby is named.">
+        <div class="q">When does a Tao adult's name change?</div>
+        <div class="options"><button class="opt">At marriage</button><button class="opt" data-correct>When their first child is born</button><button class="opt">At the Flying Fish Festival</button></div>
+        <div class="feedback"></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- 12. Closing -->
+<section class="slide end" style="--accent: var(--red)">
+  <div class="text">
+    <h1 class="in" style="font-size:4.4rem">Pongso no Tao</h1>
+    <p class="lead in" style="--d:1; margin-top:.8rem">The island of people. Thank you! Questions?</p>
+    <p class="quote in" style="--d:2">A language that sailed north against the current, named every fish in the sea, and still has to argue for the right to decide what gets buried in its own ground.</p>
+  </div>
+  <details class="fine in" style="--d:3">
+    <summary>Sources &amp; image credits</summary>
+    <div class="box">
+      <h4>Sources</h4>
+      <ul>
+        <li><a href="https://en.wikipedia.org/wiki/Yami_language">Yami language (Wikipedia)</a> — classification, phonology, cognate and loanword tables</li>
+        <li><a href="https://en.wikipedia.org/wiki/Tao_people">Tao people (Wikipedia)</a> — population, Batanes origins</li>
+        <li><a href="https://en.wikipedia.org/wiki/Orchid_Island">Orchid Island (Wikipedia)</a></li>
+        <li><a href="https://en.wikipedia.org/wiki/Batanic_languages">Batanic languages (Wikipedia)</a></li>
+        <li><a href="https://en.wikipedia.org/wiki/Ipanitika">Ipanitika (Wikipedia)</a> — plank boats, the eye motif, trading voyages to Batanes</li>
+        <li><a href="https://web.archive.org/web/20211024182448/http://www.ling.sinica.edu.tw/Files/LL/UploadFiles/MonoFullText/Yami%20Texts%20with%20Reference%20Grammar%20and%20Dictionary.pdf">Rau &amp; Dong, <em>Yami Texts with Reference Grammar and Dictionary</em> (Academia Sinica, 2006)</a></li>
+        <li><a href="https://web.archive.org/web/20220124010544/http://yamiproject.cs.pu.edu.tw/yami/">Yami Language Documentation Project (Providence University)</a></li>
+        <li><a href="https://e-dictionary.ilrdf.org.tw/tao/search.htm">Yami online dictionary (Indigenous Languages Research and Development Foundation)</a></li>
+        <li><a href="https://www.ncbi.nlm.nih.gov/pmc/articles/PMC3044674/">Loo et al., "Genetic affinities between the Yami and the Batanes islanders" (2011)</a></li>
+        <li><a href="https://www.cip.gov.tw/en/tribe/grid-list/6521E76602C72C42D0636733C6861689/info.html?cumid=D0636733C6861689">Council of Indigenous Peoples: Yami (Tao)</a> — tatala, cinedkeran, vahay, rituals</li>
+        <li><a href="https://taiwan.md/en/food/flying-fish-tao-people/">Flying fish: the calendar, the table and the taboos of Lanyu</a> — Ahehep no Tao, the three seasons, fish categories</li>
+        <li><a href="https://taiwan.md/en/nature/taiwan-marine-ecology/">Taiwan marine ecology: the ecological logic of Tao fishing taboos</a></li>
+        <li><a href="https://www.marine.gov.tw/en/news/marinenews/From-mountains-to-oceans-%E2%80%93-experience-the-scenery-of-Orchid-Island-40692064">Ocean Affairs Council: Orchid Island and the flying-fish year</a></li>
+        <li><a href="https://topics.amcham.com.tw/2018/03/lanyu-taiwans-orchid-island/">Taiwan Business TOPICS: Lanyu, Taiwan's Orchid Island</a> — alibangbang, taboos, naming</li>
+        <li><a href="https://www.encyclopedia.com/science/encyclopedias-almanacs-transcripts-and-maps/tao">Encyclopedia.com: Tao</a> — teknonymy worked example, trade with Batanes</li>
+        <li><a href="https://en.wikipedia.org/wiki/Low-Level_Radioactive_Waste_Storage_Site">Low-Level Radioactive Waste Storage Site (Wikipedia)</a></li>
+        <li><a href="https://thediplomat.com/2019/12/tao-indigenous-community-demands-removal-of-nuclear-waste-from-taiwans-orchid-island/">The Diplomat (2019): Tao community demands removal of nuclear waste</a></li>
+        <li><a href="https://www.taipeitimes.com/News/front/archives/2016/08/02/2003652278">Taipei Times (2016): Nuclear waste promise is empty</a></li>
+        <li><a href="https://taiwaninsight.org/2021/09/10/tao-peoples-fight-for-environmental-justice-and-subjectivity-on-orchid-island/">Taiwan Insight: the Tao fight for environmental justice</a></li>
+        <li><a href="https://www.taipeitimes.com/News/feat/archives/2025/11/06/2003846721">Taipei Times (2025): on Syaman Rapongan</a></li>
+        <li><a href="https://web.archive.org/web/20210830004820/https://indigenous-justice.president.gov.tw/doc/apology_text/Yami_Tao.pdf">Yami translation of the 2016 presidential apology</a></li>
+      </ul>
+      <h4>Images (Wikimedia Commons)</h4>
+      <ul id="credits"></ul>
+    </div>
+  </details>
+</section>
+
+</main>
+
+<nav class="controls">
+  <button id="prev" aria-label="Previous slide">‹</button>
+  <span id="counter">1 / 12</span>
+  <button id="next" aria-label="Next slide">›</button>
+  <button id="fs" aria-label="Fullscreen">⤢</button>
+</nav>
+<p class="hint">Use ← → to move. Press F for fullscreen.</p>
+
+<!-- Tao effects: leaping fish, cognate bridge, season wheel, fish sorter, boat builder, names, loanwords -->
+<script>
+(function () {
+  /* ---------- Background fish ---------- */
+  var fishes = document.querySelector("#sea .fishes");
+  for (var k = 0; k < 14; k++) {
+    var f = document.createElement("div");
+    f.className = "fish";
+    f.style.left = (14 + Math.random() * 78) + "%";
+    f.style.top = (18 + Math.random() * 42) + "%";
+    f.style.animationDelay = (-Math.random() * 9) + "s";
+    f.style.animationDuration = (7 + Math.random() * 6) + "s";
+    f.style.setProperty("--th", (k / 16).toFixed(3));
+    f.style.opacity = "0";
+    f.innerHTML = '<svg viewBox="0 0 120 50"><path d="M4 26 Q34 8 78 16 Q104 20 116 28 Q100 36 76 38 Q34 44 4 26 Z" fill="#cfd8e2"/>' +
+      '<path d="M40 22 Q30 2 8 0 Q22 14 30 26 Z" fill="rgba(207,216,226,.75)"/>' +
+      '<path d="M44 30 Q36 48 14 50 Q28 38 34 30 Z" fill="rgba(207,216,226,.55)"/>' +
+      '<circle cx="104" cy="26" r="3" fill="#081d30"/></svg>';
+    fishes.appendChild(f);
+  }
+  function tuneFish(t) {
+    fishes.querySelectorAll(".fish").forEach(function (f) {
+      var th = parseFloat(f.style.getPropertyValue("--th"));
+      f.style.opacity = Math.max(0, Math.min(1, (t - th) * 5));
+    });
+  }
+  document.addEventListener("slidechange", function (e) {
+    var t = e.detail.index / (e.detail.total - 1);
+    document.body.style.setProperty("--t", t);
+    tuneFish(t);
+  });
+  tuneFish(0);
+
+  function single(selector, callback) {
+    var grp = document.querySelectorAll(selector);
+    grp.forEach(function (b) {
+      b.addEventListener("click", function () {
+        grp.forEach(function (x) { x.classList.remove("on"); });
+        b.classList.add("on");
+        callback(b);
+      });
+    });
+  }
+
+  /* ---------- Cognate bridge ---------- */
+  var COG = [
+    ["person", "tao", "tao", "Tagalog", "The word for \"person\" is identical — and it is also what the Tao call themselves."],
+    ["house", "vahay", "bahay", "Tagalog", "Yami turns many b sounds into v. Once you know that rule, dozens of words line up."],
+    ["stone", "vato", "bato", "Tagalog", "Same rule again: bato becomes vato."],
+    ["five", "líma", "lima", "Tagalog", "Austronesian languages from Taiwan to Hawaiʻi count five the same way."],
+    ["offspring", "anak", "anak", "Ilokano", "Unchanged across thousands of kilometres of ocean."],
+    ["speech", "ciriciring", "chirichirin", "Itbayaten Ivatan", "This one is the clincher: the Batanes cousin, not a mainland Philippine language, is the closest match."],
+    ["they", "sira", "sila", "Tagalog", "Pronouns change slowly, which makes them good evidence of relatedness."],
+    ["eat", "kanen", "kanen", "Ilokano", "Identical to Ilokano, a language of northern Luzon."]
+  ];
+  var chipbox = document.getElementById("chips");
+  COG.forEach(function (c, i) {
+    var b = document.createElement("button");
+    b.className = "chip" + (i === 0 ? " on" : "");
+    b.textContent = c[0];
+    b.addEventListener("click", function () {
+      chipbox.querySelectorAll(".chip").forEach(function (x) { x.classList.remove("on"); });
+      b.classList.add("on");
+      showCog(i);
+    });
+    chipbox.appendChild(b);
+  });
+  function showCog(i) {
+    document.getElementById("wy").textContent = COG[i][1];
+    document.getElementById("wx").textContent = COG[i][2];
+    document.getElementById("lx").textContent = COG[i][3];
+    document.getElementById("bnote").textContent = COG[i][4];
+  }
+  showCog(0);
+
+  /* ---------- Season wheel ---------- */
+  var SEASONS = [
+    ["Rayon — the flying fish season", "Roughly the first four months of the Tao calendar. Boats launch, men fish at night by torchlight, women clean and dry the catch, and the strictest taboos of the year are in force: no cooking flying fish with other food, no women touching the boats, no catching reef and bottom fish at all."],
+    ["Teyteyka — the end of catching", "The middle four months. Flying fishing stops. The last of the dried fish is eaten, and the End-of-Season Ceremony closes the fishing year. Anything not eaten by the deadline must be thrown away."],
+    ["Amyan — waiting", "The final four months, the season when the flying fish will return. Work shifts to the land: taro and sweet potato fields, building and repairing boats and houses, preparing for the next arrival. The Tao year does not begin in January. It begins with waiting for a fish."]
+  ];
+  var wmsg = document.getElementById("wmsg");
+  function setSeason(i) {
+    document.querySelectorAll(".wheel .seg").forEach(function (s, k) { s.classList.toggle("on", k === i); });
+    wmsg.innerHTML = "<b>" + SEASONS[i][0] + "</b><br>" + SEASONS[i][1];
+  }
+  document.querySelectorAll(".wheel .seg").forEach(function (s, i) { s.addEventListener("click", function () { setSeason(i); }); });
+  setSeason(0);
+
+  /* ---------- Fish sorter ---------- */
+  var FISHEX = {
+    rahet: "rahet, \"bad fish\" — eaten by the men. Not actually bad: slow, easily caught species that can take the pressure of being the everyday catch.",
+    oyod: "oyod, \"good fish\" — reserved first for women and children. These are the shy, hard-to-catch reef species, which is exactly why limiting who eats them protects them.",
+    elder: "elders' fish — a handful of species are set aside for the oldest people in the village. Age, not just gender, is built into the system.",
+    fly: "flying fish — the gift at the centre of everything. Eaten only in season, cooked with dedicated utensils that never touch other food, and never mixed with other fish."
+  };
+  var fpick = null, fmsg = document.getElementById("fmsg");
+  document.querySelectorAll(".fcard").forEach(function (c) {
+    c.addEventListener("click", function () {
+      document.querySelectorAll(".fcard").forEach(function (x) { x.classList.remove("on"); });
+      c.classList.add("on"); fpick = c;
+      fmsg.textContent = "Now choose a category.";
+    });
+  });
+  document.querySelectorAll(".cat").forEach(function (b) {
+    b.addEventListener("click", function () {
+      if (!fpick) { fmsg.textContent = "Pick a fish first."; return; }
+      if (b.dataset.c === fpick.dataset.a) {
+        fpick.classList.add("solved"); fpick.classList.remove("on");
+        fmsg.style.color = "var(--taro)";
+        fmsg.textContent = "Correct. " + FISHEX[b.dataset.c];
+        if (document.querySelectorAll(".fcard.solved").length === 4) {
+          fmsg.textContent += " All four — and notice that the rules protect exactly the fish that are easiest to wipe out.";
+        }
+        fpick = null;
+      } else {
+        fmsg.style.color = "var(--red)";
+        fmsg.textContent = "Not that one. " + FISHEX[b.dataset.c] + " Try again.";
+      }
+    });
+  });
+
+  /* ---------- Boat builder ---------- */
+  var STAGES = [
+    [1, "The keel. One long piece, cut from a living tree the family has been growing for this purpose."],
+    [3, "Two bottom planks, pegged to the keel. No nails anywhere — wooden dowels and lashings only."],
+    [7, "Side strakes going on. Every plank is shaped to its neighbour by eye, until the joints are watertight."],
+    [13, "More strakes. A large cinedkeran can run to 27 pieces and take years to finish."],
+    [21, "Prow and stern posts raised. The hull is complete — and so far it is entirely undecorated."],
+    [21, "Painted in red, white and black. The patterns name the village and the family, and the eye on the prow watches for fish and turns away bad spirits. Now it can be launched."]
+  ];
+  var bi = 0, painted = false;
+  var pcount = document.getElementById("pcount"), bmsg = document.getElementById("bmsg");
+  function drawBoat() {
+    document.querySelectorAll("#boatbox g").forEach(function (g) {
+      var n = Number(g.dataset.b);
+      g.classList.toggle("on", n === 5 ? painted : (n <= bi && !painted));
+    });
+    pcount.textContent = STAGES[bi][0] + (STAGES[bi][0] === 1 ? " piece" : " pieces");
+    bmsg.textContent = painted ? STAGES[5][1] : STAGES[bi][1];
+  }
+  document.getElementById("addplank").addEventListener("click", function () {
+    if (painted) { bmsg.textContent = "This one is finished. Press ↺ to build another."; return; }
+    if (bi < 4) { bi++; drawBoat(); }
+    else { bmsg.textContent = "The hull is done — now press \"paint it\"."; }
+  });
+  document.getElementById("paintboat").addEventListener("click", function () {
+    if (bi < 4) { bmsg.textContent = "Not yet: an unfinished hull doesn't get painted. Add the rest of the pieces first."; return; }
+    painted = true; drawBoat();
+  });
+  document.getElementById("resetboat").addEventListener("click", function () { bi = 0; painted = false; drawBoat(); });
+  drawBoat();
+
+  /* ---------- Names ---------- */
+  var NAMES = [
+    { who: "a boy is born", name: "Si-Manowi", f: "Si-Vongayan", m: "Si-Maraw", g: "—",
+      t: "A child is given a name with the marker Si-. At this point his parents still carry their own names." },
+    { who: "Manowi grows up and marries", name: "Si-Manowi", f: "Syaman-Manowi", m: "Sinan-Manowi", g: "—",
+      t: "Wait — his parents' names already changed, back when he was born. From the day he was named, his father became \"father of Manowi\" and his mother \"mother of Manowi.\"" },
+    { who: "Manowi's first child is born", name: "Si-Lotem", f: "Syaman-Lotem", m: "Sinan-Lotem", g: "Syapen-Lotem",
+      t: "The baby is Si-Lotem. Manowi becomes Syaman-Lotem, father of Lotem. His wife becomes Sinan-Lotem. And his parents are renamed again — Syapen-Lotem, grandparents of Lotem." },
+    { who: "a great-grandchild arrives", name: "Si-Kotan", f: "Syaman-Kotan", m: "Sinan-Kotan", g: "Syapen-Kotan",
+      t: "The oldest generation shifts once more. Four generations of names all point at the youngest person in the family — which tells you exactly where a Tao family puts its centre of gravity." }
+  ];
+  var ni = 0, nbar = document.getElementById("nbar");
+  NAMES.forEach(function () { nbar.appendChild(document.createElement("i")); });
+  function setName(i) {
+    ni = (i + NAMES.length) % NAMES.length;
+    var N = NAMES[ni];
+    document.getElementById("nwho").textContent = N.who;
+    document.getElementById("nname").textContent = N.name;
+    document.getElementById("nf").textContent = N.f;
+    document.getElementById("nm2").textContent = N.m;
+    document.getElementById("ng").textContent = N.g;
+    document.getElementById("ntext").textContent = N.t;
+    nbar.querySelectorAll("i").forEach(function (x, k) { x.classList.toggle("on", k <= ni); });
+  }
+  document.getElementById("nprev").addEventListener("click", function () { setName(ni - 1); });
+  document.getElementById("nnext").addEventListener("click", function () { setName(ni + 1); });
+  setName(0);
+
+  /* ---------- Timeline ---------- */
+  var EVENTS = [
+    ["Arrival from the south", "Around 800 years ago, people from the Batanes Islands north of Luzon crossed to Orchid Island and settled. Oral history, the language and genetic studies all point the same way — which is unusual, and makes this one of the better-evidenced migration stories in the region."],
+    ["The trading voyages", "Large plank boats carried pigs, goats and millet south to Batanes and brought back gold, beads and iron. The two peoples intermarried and could understand each other's speech. The exchanges ended roughly three centuries ago after a fight in which most of a visiting Tao party was killed, and the sea route went quiet."],
+    ["Named by outsiders", "Under Japanese rule from 1895, the island was treated partly as a research preserve, and ethnologists gave the people the name \"Yami.\" Japanese words entered the language and stayed — school, teacher, key, police, motorcycle. The exonym stayed too: it is still the official term."],
+    ["School in Mandarin", "After 1945 the island became Lanyu Township of Taitung County. Schooling ran in Mandarin, and a new layer of borrowed words arrived. Around 30 percent of Tao people now live and work on Taiwan proper, where the language has almost no one to be spoken with."],
+    ["The barrels arrive", "The first shipment of low-level radioactive waste reached the island in May 1982, after a decision made in the 1970s without the islanders' knowledge. Protests began in 1988 and have never stopped."],
+    ["Written down at last", "A reference grammar and dictionary, an online dictionary, government-published teaching materials, a university documentation project with recordings, church services in Yami, and a body of literature by Tao writers. The language is endangered — but it is now among the best-documented small languages in the region."]
+  ];
+  var tlText = document.getElementById("tltext");
+  var evs = document.querySelectorAll("#tl .ev");
+  function setEvent(i) {
+    evs.forEach(function (e, k) { e.classList.toggle("on", k === i); });
+    tlText.innerHTML = '<strong style="color:var(--sun); font-size:1.2rem">' + EVENTS[i][0] + "</strong><br>" + EVENTS[i][1];
+  }
+  evs.forEach(function (e, i) { e.addEventListener("click", function () { setEvent(i); }); });
+  setEvent(0);
+
+  /* ---------- Barrels ---------- */
+  var bb = document.getElementById("barrels");
+  for (var n = 0; n < 200; n++) bb.appendChild(document.createElement("i"));
+
+  /* ---------- Loanword game ---------- */
+  var LOANS = [
+    ["sinsi", "teacher", "jp", "from Japanese sensei (先生). Fifty years of Japanese schooling left its mark."],
+    ["gako", "school", "jp", "from Japanese gakkō (学校)."],
+    ["otobay", "motorcycle", "jp", "from Japanese ōtobai — itself borrowed from English \"auto bike.\" A word that crossed three languages to get here."],
+    ["kisat", "police", "jp", "from Japanese keisatsu (警察). Notice which kinds of words a colonial government leaves behind."],
+    ["potaw cio", "wine", "zh", "from Mandarin pútáojiǔ (葡萄酒), a later layer from the post-1945 era."],
+    ["yi gong", "volunteer", "zh", "from Mandarin yìgōng (義工)."],
+    ["vahay", "house", "na", "Tao's own — and a word shared with Tagalog bahay and Ilokano balay. Thousands of years old."],
+    ["alibangbang", "flying fish", "na", "Tao's own, and the most important noun on the island."],
+    ["tao", "person", "na", "Tao's own, inherited from Proto-Austronesian — and the name the people call themselves."]
+  ];
+  var li = 0, lright = 0, ldone = 0, answered = false;
+  var lmsg = document.getElementById("lmsg");
+  function setLoan() {
+    answered = false;
+    document.getElementById("lw").textContent = LOANS[li][0];
+    document.getElementById("lg").textContent = "\u201c" + LOANS[li][1] + "\u201d";
+    lmsg.textContent = "Japanese, Mandarin, or inherited from the language's own ancestors?";
+    lmsg.style.color = "";
+  }
+  document.querySelectorAll("[data-o]").forEach(function (b) {
+    b.addEventListener("click", function () {
+      if (answered) { li = (li + 1) % LOANS.length; setLoan(); return; }
+      answered = true; ldone++;
+      var ok = b.dataset.o === LOANS[li][2];
+      if (ok) lright++;
+      lmsg.style.color = ok ? "var(--taro)" : "var(--red)";
+      lmsg.innerHTML = (ok ? "<strong>Yes — </strong>" : "<strong>No — </strong>") + LOANS[li][3] + "<br><span class='note'>Click again for the next word.</span>";
+      document.getElementById("lscore").textContent = lright + " of " + ldone + " right";
+    });
+  });
+  setLoan();
+})();
+</script>
+<script src="../assets/deck.js"></script>
+</body>
+</html>
