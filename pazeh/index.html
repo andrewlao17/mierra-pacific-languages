@@ -1,1 +1,756 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Pazeh: The Language That Counted in Fives</title>
+<link rel="stylesheet" href="../assets/deck.css">
+<style>
+@import url("https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,600;9..144,900&family=Outfit:wght@400;500;700;900&display=swap");
 
+/* ---------- Pazeh theme: the Puli basin, ringed by mountains, under lifting mist ---------- */
+:root {
+  --bg: #0b1711;
+  --ink: #f3f1e3;
+  --muted: #cbd8cb;
+  --line: rgba(243, 241, 227, .22);
+  --panel: rgba(12, 32, 24, .82);
+  --jade: #4fb286;
+  --paddy: #e8c35a;
+  --clay: #c4603f;
+  --river: #6fb7e0;
+  --plum: #b08cc9;
+  --bark: #6d4a32;
+  --rose: #c4603f;
+  --accent: var(--paddy);
+  --serif: "Fraunces", "Noto Serif TC", Georgia, serif;
+  --sans: "Outfit", "Noto Sans TC", system-ui, sans-serif;
+  --t: 0;
+  font-size: clamp(12px, 1.3vw, 28px);
+}
+h1 { font-size: 6.1rem; font-weight: 900; line-height: .98; }
+h2 { font-size: 2.85rem; font-weight: 900; line-height: 1.08; }
+.slide { padding: 7vh 4vw 8vh 6vw; }
+.text { max-width: 44vw; }
+.text.wide { max-width: 86vw; width: 86vw; }
+.stage {
+  right: 5vw; top: 6vh; bottom: 10vh; width: 39vw;
+  display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 1.2rem;
+}
+ul.dots li { font-size: 1.04rem; }
+.speak .line, .card .word { font-family: var(--sans); font-weight: 900; }
+.card.revealed .meaning { max-height: 13rem; }
+.btn { background: var(--paddy); color: #23200c; }
+.syl.on { background: var(--paddy); color: #23200c; }
+.loc .disc { border-color: var(--paddy); box-shadow: 0 0 0 .55rem rgba(232,195,90,.16), 0 22px 40px rgba(0,0,0,.55); }
+.loc .tint { background: #cfe0bb; }
+.loc .sea { background: #16405e; }
+.loc .tag { background: #0d2419; border-color: var(--paddy); }
+.note { font-size: .82rem; color: var(--muted); }
+.han { font-family: var(--serif); }
+.quote { font-family: var(--serif); font-size: 1.75rem; font-weight: 900; line-height: 1.28; color: var(--paddy); }
+
+/* ---------- Background: the basin, and the mist that lifts ---------- */
+#basin { position: fixed; inset: 0; z-index: 0; overflow: hidden; pointer-events: none;
+  background: linear-gradient(180deg, #0a1a24 0%, #15302c 46%, #1d3a28 100%); }
+#basin .dawn { position: absolute; inset: 0;
+  background: radial-gradient(60% 46% at 72% 24%, rgba(232,195,90,.26), rgba(232,195,90,0) 70%);
+  opacity: calc(var(--t) * 1.1); transition: opacity 1.5s ease; }
+#basin .ridge { position: absolute; left: 0; right: 0; bottom: 0; transition: opacity 1.5s ease; }
+#basin .ridge svg { width: 100%; height: 100%; display: block; }
+#basin .r1 { height: 52vh; opacity: calc(.15 + var(--t) * .85); }
+#basin .r2 { height: 42vh; opacity: calc(.2 + var(--t) * .8); }
+#basin .r3 { height: 32vh; opacity: calc(.4 + var(--t) * .6); }
+#basin .r4 { height: 20vh; opacity: 1; }
+#basin .paddies { position: absolute; left: 0; right: 0; bottom: 0; height: 13vh;
+  background: repeating-linear-gradient(180deg, rgba(232,195,90,.1) 0 2px, transparent 2px 13px), #142a1c; }
+#basin .fog { position: absolute; left: -10%; right: -10%; height: 16vh;
+  background: linear-gradient(180deg, rgba(226,236,232,0), rgba(226,236,232,.5), rgba(226,236,232,0));
+  filter: blur(6px); animation: slide 26s linear infinite; }
+#basin .fog.f1 { bottom: 24vh; animation-duration: 34s; }
+#basin .fog.f2 { bottom: 38vh; animation-duration: 46s; animation-direction: reverse; }
+#basin .fog.f3 { bottom: 52vh; animation-duration: 58s; }
+#basin .fogwrap { position: absolute; inset: 0; opacity: calc(1 - var(--t) * .88); transition: opacity 1.6s ease; }
+@keyframes slide { to { transform: translateX(14%); } }
+#basin .shade { position: absolute; inset: 0;
+  background: linear-gradient(90deg, rgba(6,16,12,.93) 0%, rgba(6,16,12,.74) 50%, rgba(6,16,12,.22) 100%); }
+
+/* ---------- Photos as field-notebook plates ---------- */
+.board { position: relative; margin: 0; width: var(--w, 19vw); padding: .7rem .7rem .55rem;
+  background: #efe7d2; border-radius: .25rem;
+  box-shadow: 0 18px 34px rgba(0,0,0,.55); transform: rotate(var(--r, 0deg));
+  transition: transform .9s cubic-bezier(.2,.8,.2,1), opacity .7s ease; }
+.board::after { content: ""; position: absolute; left: .7rem; right: .7rem; bottom: .3rem; height: 1px; background: rgba(0,0,0,.25); }
+.slide:not(.active) .board { opacity: 0; transform: translateY(46px) rotate(var(--r, 0deg)); }
+.slide.active .board { transition-delay: calc(.4s + var(--d, 0) * .16s); }
+.slide.active .board:hover { transform: rotate(0deg) scale(1.04); transition-delay: 0s; }
+.board img { display: block; width: 100%; aspect-ratio: var(--ar, 4 / 3); object-fit: cover; background: #cdbfa2; }
+.board figcaption { color: #2a2418; font-size: .74rem; font-weight: 700; line-height: 1.25; margin: .4rem .1rem 0; font-family: var(--serif); }
+
+/* ---------- Shared controls ---------- */
+.switch { display: flex; gap: .4rem; margin: .4rem 0 .6rem; flex-wrap: wrap; }
+.sbtn { font: inherit; font-weight: 700; font-size: .92rem; color: var(--ink); background: var(--panel);
+  border: 2px solid var(--line); border-radius: 999px; padding: .25em .95em; cursor: pointer; transition: transform .2s; }
+.sbtn:hover { transform: translateY(-2px); }
+.sbtn.on { background: var(--paddy); border-color: var(--paddy); color: #23200c; }
+.out { min-height: 3.2em; margin-top: .5rem; }
+
+/* ---------- Austronesian cognate explorer ---------- */
+.fan { position: relative; width: 100%; height: 13rem; }
+.node { position: absolute; transform: translate(-50%, -50%); font: inherit; font-weight: 700; font-size: .82rem;
+  color: var(--ink); background: var(--panel); border: 2px solid var(--line); border-radius: 999px;
+  padding: .2em .7em; cursor: pointer; white-space: nowrap; transition: transform .25s, border-color .25s; }
+.node:hover { transform: translate(-50%, -50%) scale(1.08); }
+.node.on { border-color: var(--paddy); background: rgba(232,195,90,.2); }
+.node.home { border-color: var(--clay); background: rgba(196,96,63,.25); }
+.fan svg { position: absolute; inset: 0; width: 100%; height: 100%; }
+.fan .spoke { stroke: rgba(243,241,227,.3); stroke-width: 1.5; stroke-dasharray: 4 5; }
+.cogword { font-family: var(--sans); font-weight: 900; font-size: 2.1rem; color: var(--paddy); text-align: center; }
+#coginfo { min-height: 4.2em; }
+
+/* ---------- Number builder ---------- */
+.numpad { display: grid; grid-template-columns: repeat(5, 1fr); gap: .35rem; }
+.numpad button { font: inherit; font-family: var(--serif); font-weight: 900; font-size: 1.3rem; color: var(--ink);
+  background: var(--panel); border: 2px solid var(--line); border-radius: .5rem; padding: .3em 0; cursor: pointer; }
+.numpad button.on { background: var(--paddy); border-color: var(--paddy); color: #23200c; }
+.sum { display: flex; align-items: center; justify-content: center; gap: .3rem; flex-wrap: wrap; min-height: 5rem; margin-top: .6rem; }
+.sum .part { font: 900 2.1rem/1 var(--sans); padding: .25em .4em; border-radius: .45rem; background: rgba(255,255,255,.08); animation: rise .45s ease; }
+.sum .part.five { background: var(--clay); color: #fff; }
+.sum .part.plus { background: none; font-size: 1.4rem; color: var(--muted); }
+.sum .part.add { background: var(--jade); color: #09271a; }
+@keyframes rise { from { transform: translateY(14px); opacity: 0; } }
+.eq { text-align: center; font-family: var(--sans); font-weight: 900; font-size: 1.5rem; color: var(--paddy); min-height: 1.6em; }
+.count5 { display: flex; gap: .5rem; justify-content: center; margin: .4rem 0; flex-wrap: wrap; }
+.count5 .c { min-width: 5.6rem; background: var(--panel); border: 1px solid var(--line); border-radius: .6rem; padding: .4rem .5rem; text-align: center; }
+.count5 .c b { display: block; font-family: var(--serif); color: var(--paddy); font-size: 1.4rem; line-height: 1; }
+.count5 .c .line { font-size: 1.35rem; margin-top: .2rem; }
+
+/* ---------- Negator matcher ---------- */
+.sentlist { display: grid; gap: .35rem; }
+.sbit { font: inherit; text-align: left; font-weight: 600; font-size: .92rem; color: var(--ink); background: var(--panel);
+  border: 2px solid var(--line); border-radius: .45rem; padding: .35em .7em; cursor: pointer; }
+.sbit:hover { border-color: var(--paddy); }
+.sbit.on { background: rgba(232,195,90,.18); border-color: var(--paddy); }
+.sbit.solved { border-color: var(--jade); opacity: .72; }
+.sbit.solved::after { content: " ✓"; color: var(--jade); font-weight: 900; }
+.negs { display: flex; gap: .35rem; flex-wrap: wrap; justify-content: center; margin-top: .55rem; }
+.neg { font: inherit; font-family: var(--sans); font-weight: 900; font-size: 1.05rem; color: var(--ink);
+  background: rgba(111,183,224,.14); border: 2px solid var(--line); border-radius: .45rem; padding: .25em .8em; cursor: pointer; }
+.neg:hover { border-color: var(--river); }
+#nmsg { min-height: 3.2em; margin-top: .4rem; font-weight: 600; }
+
+/* ---------- Pronoun scene ---------- */
+.scene { position: relative; width: 100%; aspect-ratio: 16 / 9; background: linear-gradient(180deg, #16303f, #1d3a28 62%, #142a1c);
+  border-radius: .6rem; overflow: hidden; cursor: default; }
+.scene .hill { position: absolute; bottom: 0; background: #0f2419; border-radius: 50% 50% 0 0; }
+.figure { position: absolute; border: 0; background: none; padding: 0; cursor: pointer; transition: transform .2s; }
+.figure:hover { transform: scale(1.1); }
+.figure svg { display: block; }
+.figure.sel svg { filter: drop-shadow(0 0 7px var(--paddy)); }
+.figure .lbl { display: block; font-size: .66rem; font-weight: 700; color: var(--ink); text-align: center; margin-top: .1rem; }
+#pmsg { min-height: 4.4em; margin-top: .45rem; }
+#pmsg b { font-family: var(--sans); font-size: 1.3rem; color: var(--paddy); }
+.weline { display: flex; gap: .4rem; justify-content: center; margin-top: .4rem; }
+
+/* ---------- Timeline ---------- */
+.tl { display: grid; grid-template-columns: repeat(6, 1fr); gap: .55rem; margin-top: 1rem; position: relative; padding-bottom: 1.4rem; }
+.tl::after { content: ""; position: absolute; left: 0; right: 0; bottom: .45rem; height: 3px; border-radius: 3px;
+  background: linear-gradient(90deg, var(--bark), var(--clay), var(--jade)); }
+.ev { font: inherit; text-align: left; color: #1a2014; background: var(--ec); border: 0; border-radius: .5rem;
+  padding: .65rem .75rem; cursor: pointer; transition: transform .25s, box-shadow .25s; }
+.ev:hover { transform: translateY(-4px); }
+.ev.on { box-shadow: 0 0 0 3px #fff, 0 10px 24px rgba(0,0,0,.4); transform: translateY(-6px); }
+.ev .yr { font-family: var(--serif); font-weight: 900; font-size: 1.45rem; line-height: 1; display: block; }
+.ev small { display: block; font-weight: 700; font-size: .78rem; margin-top: .3rem; }
+#tltext { min-height: 5.4rem; margin-top: .4rem; }
+
+/* ---------- Archive shelf ---------- */
+.shelf { display: grid; grid-template-columns: repeat(5, 1fr); gap: .5rem; margin: .5rem 0; }
+.vol { font: inherit; color: var(--ink); background: var(--panel); border: 2px solid var(--line); border-radius: .4rem;
+  padding: .55rem .25rem; cursor: pointer; text-align: center; }
+.vol .ic { display: block; font-size: 1.7rem; line-height: 1.15; }
+.vol small { display: block; font-size: .72rem; font-weight: 700; }
+.vol.on { border-color: var(--paddy); background: rgba(232,195,90,.16); }
+#vmsg { min-height: 5.4em; }
+
+/* ---------- Quiz tint ---------- */
+.opt.right { background: var(--jade); }
+.opt.wrong { background: var(--clay); }
+
+@media (max-width: 820px) {
+  .slide { padding: 6vh 6vw 12vh; }
+  h1 { font-size: 3.6rem; }
+  .text, .text.wide { max-width: none; width: auto; }
+  .stage { position: relative; inset: auto; width: 100%; margin-top: 1.5rem; }
+  .board { width: 74vw; }
+  .stage .panel, .stage .speak { width: 100% !important; max-width: none !important; }
+  .tl { grid-template-columns: repeat(2, 1fr); }
+  .shelf { grid-template-columns: repeat(3, 1fr); }
+  .fan { height: 15rem; }
+}
+</style>
+</head>
+<body data-map="BlankMap-Equirectangular.svg">
+
+<div id="basin" aria-hidden="true">
+  <div class="dawn"></div>
+  <div class="ridge r1"><svg viewBox="0 0 1600 300" preserveAspectRatio="none"><path d="M0 300 V150 L140 96 L280 140 L420 70 L560 120 L700 54 L860 110 L1000 62 L1160 128 L1320 84 L1460 136 L1600 104 V300 Z" fill="#20414a"/></svg></div>
+  <div class="ridge r2"><svg viewBox="0 0 1600 300" preserveAspectRatio="none"><path d="M0 300 V180 L160 128 L320 176 L470 108 L640 164 L800 104 L960 170 L1120 120 L1300 178 L1460 134 L1600 170 V300 Z" fill="#20453a"/></svg></div>
+  <div class="ridge r3"><svg viewBox="0 0 1600 300" preserveAspectRatio="none"><path d="M0 300 V210 L180 168 L360 212 L540 158 L720 206 L900 156 L1080 208 L1280 166 L1460 206 L1600 182 V300 Z" fill="#1c3b2a"/></svg></div>
+  <div class="ridge r4"><svg viewBox="0 0 1600 300" preserveAspectRatio="none"><path d="M0 300 V236 L200 214 L420 244 L640 210 L880 242 L1120 212 L1360 244 L1600 220 V300 Z" fill="#16301f"/></svg></div>
+  <div class="paddies"></div>
+  <div class="fogwrap"><div class="fog f1"></div><div class="fog f2"></div><div class="fog f3"></div></div>
+  <div class="shade"></div>
+</div>
+<div class="progress"></div>
+
+<main>
+
+<!-- 1. Title -->
+<section class="slide" style="--accent: var(--paddy)">
+  <div class="text">
+    <p class="kicker in">Rare Languages of the Asia-Pacific · Module 19</p>
+    <h1 class="in" style="--d:1">Pazeh</h1>
+    <p class="in han" style="--d:2; font-size:1.5rem; font-weight:900; color:var(--paddy)">Pazih · 巴宰語 · central Taiwan</p>
+    <div class="bar in" style="--d:3"></div>
+    <p class="lead in" style="--d:4">The only language in Taiwan that counted six as "five-and-one" — and the one whose last native speaker we can still watch on video</p>
+    <p class="muted in" style="--d:5">Watch the mountains: the mist over the Puli basin lifts a little with every slide.</p>
+  </div>
+  <div class="stage">
+    <figure class="board" style="--w:25vw; --r:-1.5deg; --d:0">
+      <img data-wiki="Puli, Nantou" data-width="1200" alt="Puli, the basin town in central Taiwan where Pazeh speakers settled">
+      <figcaption>Puli, in the mountain basin at the geographic centre of Taiwan</figcaption>
+    </figure>
+  </div>
+</section>
+
+<!-- 2. Where and who -->
+<section class="slide" data-tr="left" style="--accent: var(--jade)">
+  <div class="text">
+    <p class="kicker in">Where and who</p>
+    <h2 class="in" style="--d:1">A people the maps forgot</h2>
+    <div class="bar in" style="--d:2"></div>
+    <ul class="dots">
+      <li class="in" style="--d:3">The Pazeh lived on the fertile plains of what is now <strong>Taichung and Miaoli</strong>, in western Taiwan — good farmland, which is exactly why they lost it.</li>
+      <li class="in" style="--d:4">Around <strong>1823</strong> the Pazeh and several neighbouring peoples left those plains and resettled in the <strong>Puli basin</strong>, ringed by mountains in the centre of the island. Most Pazeh today live in the <span class="hl">Ailan</span> district of Puli.</li>
+      <li class="in" style="--d:5">They are a <strong>Pingpu</strong> or "plains" people. Taiwan officially recognises 16 indigenous peoples — and the Pazeh are <strong>not one of them</strong>. They have been applying since 2024.</li>
+      <li class="in" style="--d:6">The last native speaker of Pazeh died in 2010. About <strong>12 speakers</strong> of the closely related <strong>Kaxabu</strong> variety were counted in 2013.</li>
+    </ul>
+    <p class="note in" style="--d:7">Being unrecognised is not a detail: it decides who gets language funding, school programmes and a seat at the table.</p>
+  </div>
+  <div class="stage">
+    <div class="loc" data-lat="23.97" data-lon="120.97" data-zoom="8" style="--s:14vw; --d:0">
+      <div class="disc"><div class="lmap"></div><div class="tint"></div><div class="sea"></div><span class="pinpt"></span></div>
+      <span class="tag">Puli, Nantou County, Taiwan</span>
+    </div>
+    <div class="panel in" style="--d:4; width:35vw">
+      <strong>Why did everyone end up in Puli?</strong>
+      <p class="note" style="margin:.3rem 0 0">In the 1800s, settlers from China took over the western plains through debt, lease and force. In 1823 around a dozen plains peoples — Pazeh, Kaxabu, Taokas, Papora, Babuza and others — made a mass migration into the Puli basin. In December 2023 their descendants gathered in Puli to mark <strong>200 years</strong> since that move.</p>
+      <p class="note" style="margin:.4rem 0 0">Puli is now a patchwork: several different indigenous peoples, several different languages, several different New Years, all inside one small valley.</p>
+    </div>
+  </div>
+</section>
+
+<!-- 3. Out of Taiwan -->
+<section class="slide" data-tr="zoom" style="--accent: var(--river)">
+  <div class="text wide center">
+    <p class="kicker in">The big picture</p>
+    <h2 class="in" style="--d:1">Taiwan is where it all started</h2>
+    <div class="bar in" style="--d:2"></div>
+    <p class="in" style="--d:3; max-width:70vw; margin:0 auto">Austronesian is one of the largest language families on earth — from <strong>Madagascar</strong> off Africa to <strong>Rapa Nui</strong> in the eastern Pacific, taking in the Philippines, Indonesia, Hawaiʻi and New Zealand. Most linguists trace the whole family back to <strong>Taiwan</strong>, and the deepest branches are still spoken there. Pazeh was one of them. Click a language to compare words.</p>
+    <div class="panel in" style="--d:4; max-width:62vw; margin:.8rem auto 0">
+      <div class="switch" id="cogword" style="justify-content:center">
+        <button class="sbtn on" data-w="two">the word for "two"</button>
+        <button class="sbtn" data-w="five">the word for "five"</button>
+      </div>
+      <div class="fan" id="fan"></div>
+      <div class="cogword" id="cogmain">dusa</div>
+      <p id="coginfo" aria-live="polite"></p>
+    </div>
+    <p class="note in" style="--d:6; margin-top:.5rem">Languages that share a family are like cousins: you can see the resemblance even when they live ten thousand kilometres apart.</p>
+  </div>
+</section>
+
+<!-- 4. Counting in fives -->
+<section class="slide" style="--accent: var(--clay)">
+  <div class="text">
+    <p class="kicker in">Language lab</p>
+    <h2 class="in" style="--d:1">Six is just five-and-one</h2>
+    <div class="bar in" style="--d:2"></div>
+    <p class="in" style="--d:3">Count to five out loud, then build the higher numbers yourself.</p>
+    <div class="speak panel compact in" data-tempo="540" style="--d:4; padding:.8rem 1rem">
+      <div class="count5">
+        <div class="c"><b>1</b><span class="line" data-syl="i·da"></span></div>
+        <div class="c"><b>2</b><span class="line" data-syl="du·sa"></span></div>
+        <div class="c"><b>3</b><span class="line" data-syl="tu·ru"></span></div>
+        <div class="c"><b>4</b><span class="line" data-syl="su·pat"></span></div>
+        <div class="c"><b>5</b><span class="line" data-syl="xa·sep"></span></div>
+      </div>
+      <button class="btn play">▶ Count along</button>
+      <p class="note" style="margin-top:.5rem">The <em>x</em> is a scrapey sound made at the back of the mouth, a bit like the <em>ch</em> in Scottish <em>loch</em>.</p>
+    </div>
+    <p class="in" style="--d:5; margin-top:.5rem">Pazeh is the <strong>only Formosan language</strong> that builds every number from six to nine by adding. Its neighbours mostly multiply (8 as 2 × 4) or subtract (9 as 10 − 1).</p>
+    <p class="note in" style="--d:6">One more oddity: <em>xasep</em> "five" doesn't look like the Austronesian word for five, <em>lima</em>, at all. Linguists are still arguing about where it came from.</p>
+  </div>
+  <div class="stage">
+    <div class="panel in" style="--d:3; width:35vw">
+      <strong>The adding machine:</strong> pick a number.
+      <div class="numpad" id="numpad" style="margin-top:.5rem">
+        <button data-n="1">1</button><button data-n="2">2</button><button data-n="3">3</button><button data-n="4">4</button><button data-n="5">5</button>
+        <button data-n="6">6</button><button data-n="7">7</button><button data-n="8">8</button><button data-n="9">9</button><button data-n="0">?</button>
+      </div>
+      <div class="sum" id="sum" aria-live="polite"></div>
+      <div class="eq" id="eq"></div>
+      <p class="note" id="nnote" style="margin:.3rem 0 0">Numbers 1–5 are single words. From 6 up, watch them get built.</p>
+    </div>
+  </div>
+</section>
+
+<!-- 5. Six ways to say no -->
+<section class="slide" data-tr="left" style="--accent: var(--river)">
+  <div class="text">
+    <p class="kicker in">Grammar you can feel</p>
+    <h2 class="in" style="--d:1">Six different ways to say "no"</h2>
+    <div class="bar in" style="--d:2"></div>
+    <p class="in" style="--d:3">English pushes nearly all its negatives through one word: <em>not</em>. "I'm not going," "that's not a dog," "there's no water," "don't touch." Pazeh splits that job between <strong>six separate words</strong>, and picking the wrong one is like using the wrong tool.</p>
+    <ul class="dots">
+      <li class="in" style="--d:4"><span class="hl">ini</span> plain "not" · <span class="hl">uzay</span> "it isn't that one" · <span class="hl">kuang</span> "there is none"</li>
+      <li class="in" style="--d:5"><span class="hl">mayaw</span> "not yet" · <span class="hl">nah</span> "don't want to" · <span class="hl">ana</span> "don't!"</li>
+    </ul>
+    <p class="note in" style="--d:6">Negator list from Paul Jen-kuei Li's Pazih dictionary. The English equivalents are rough: no two languages cut up meaning the same way.</p>
+  </div>
+  <div class="stage">
+    <div class="panel in" style="--d:3; width:36vw">
+      <strong>Match the sentence to its "no":</strong> click a sentence, then a word.
+      <div class="sentlist" id="sentlist" style="margin-top:.5rem">
+        <button class="sbit" data-ans="ini">She didn't come to the field today.</button>
+        <button class="sbit" data-ans="uzay">That's not my hat — it's yours.</button>
+        <button class="sbit" data-ans="kuang">There's no rice left in the house.</button>
+        <button class="sbit" data-ans="mayaw">The millet isn't ripe yet.</button>
+        <button class="sbit" data-ans="nah">I don't want to go.</button>
+        <button class="sbit" data-ans="ana">Don't touch that!</button>
+      </div>
+      <div class="negs" id="negs">
+        <button class="neg" data-n="ini">ini</button><button class="neg" data-n="uzay">uzay</button><button class="neg" data-n="kuang">kuang</button>
+        <button class="neg" data-n="mayaw">mayaw</button><button class="neg" data-n="nah">nah</button><button class="neg" data-n="ana">ana</button>
+      </div>
+      <p id="nmsg" aria-live="polite">Six sentences, six words, one each.</p>
+    </div>
+  </div>
+</section>
+
+<!-- 6. Pronouns -->
+<section class="slide" style="--accent: var(--plum)">
+  <div class="text">
+    <p class="kicker in">Grammar you can see</p>
+    <h2 class="in" style="--d:1">Three words for "he" and "she"</h2>
+    <div class="bar in" style="--d:2"></div>
+    <p class="in" style="--d:3">English has one word for a person you're talking about: <em>she</em>. It doesn't matter whether she's standing next to you or living in another country. Pazeh cares, and has three words — the choice depends on <strong>where the person is and whether you can see them</strong>.</p>
+    <ul class="dots">
+      <li class="in" style="--d:4"><span class="hl">imini</span> — this one, right here</li>
+      <li class="in" style="--d:5"><span class="hl">imisiw</span> — that one over there, in sight</li>
+      <li class="in" style="--d:6"><span class="hl">isia</span> — that one, not in sight</li>
+    </ul>
+    <p class="note in" style="--d:7">Pazeh also splits "we" in two: <em>ita</em> means "we, including you," and <em>yami</em> means "we, not including you." Imagine the arguments English could avoid.</p>
+  </div>
+  <div class="stage">
+    <div class="panel in" style="--d:3; width:36vw">
+      <strong>Who do you mean?</strong> Click a person in the scene.
+      <div class="scene" id="scene" style="margin-top:.5rem">
+        <div class="hill" style="left:52%; width:60%; height:46%"></div>
+        <div class="hill" style="left:-10%; width:46%; height:30%; background:#102a1c"></div>
+        <button class="figure" data-p="near" style="left:14%; bottom:8%" aria-label="A person standing right next to you">
+          <svg viewBox="0 0 30 60" width="36" height="72"><circle cx="15" cy="10" r="8" fill="#e8c35a"/><path d="M15 19 q-10 4 -10 20 v18 h20 v-18 q0 -16 -10 -20z" fill="#e8c35a"/></svg>
+          <span class="lbl">right here</span>
+        </button>
+        <button class="figure" data-p="far" style="left:46%; bottom:22%" aria-label="A person far away but visible">
+          <svg viewBox="0 0 30 60" width="22" height="44"><circle cx="15" cy="10" r="8" fill="#7fd6ab"/><path d="M15 19 q-10 4 -10 20 v18 h20 v-18 q0 -16 -10 -20z" fill="#7fd6ab"/></svg>
+          <span class="lbl">across the field</span>
+        </button>
+        <button class="figure" data-p="hidden" style="left:76%; bottom:34%" aria-label="A person hidden behind the hill">
+          <svg viewBox="0 0 30 60" width="20" height="40"><circle cx="15" cy="10" r="8" fill="none" stroke="#b08cc9" stroke-width="2" stroke-dasharray="3 3"/><path d="M15 19 q-10 4 -10 20 v18 h20 v-18 q0 -16 -10 -20z" fill="none" stroke="#b08cc9" stroke-width="2" stroke-dasharray="3 3"/></svg>
+          <span class="lbl">behind the hill</span>
+        </button>
+      </div>
+      <p id="pmsg" aria-live="polite">Three people, three different words. Pick one.</p>
+      <div class="weline">
+        <button class="sbtn" data-we="in">"we" with you</button>
+        <button class="sbtn" data-we="ex">"we" without you</button>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- 7. Ayan -->
+<section class="slide" data-tr="zoom" style="--accent: var(--paddy)">
+  <div class="text">
+    <p class="kicker in">Cultural significance</p>
+    <h2 class="in" style="--d:1">Ayan: songs that call the ancestors</h2>
+    <div class="bar in" style="--d:2"></div>
+    <ul class="dots">
+      <li class="in" style="--d:3">Pazeh and Kaxabu ancestral songs are called <span class="hl">ayan</span>, after the word they begin by calling out. Each verse addresses the ancestors directly, then carries a piece of history: where the people came from, who led them, what was lost.</li>
+      <li class="in" style="--d:4">That matters enormously for a people with almost no written records. For generations, <strong>the song was the archive</strong> — the land claim, the family tree and the history book all at once.</li>
+      <li class="in" style="--d:5">The <strong>Pazeh New Year</strong> falls on the 15th day of the 11th lunar month, when families gather and serve <em>umu</em>, a pounded rice dish made for the occasion.</li>
+      <li class="in" style="--d:6">Christian missionaries reached the area in 1865 and most Pazeh had converted by 1871. Many old rituals faded — but the missionaries' <strong>romanised alphabet</strong> became the way Pazeh got written down, and the church is now the centre of the language revival.</li>
+    </ul>
+  </div>
+  <div class="stage">
+    <div class="cards in" style="--d:3; grid-template-columns:1fr; width:34vw">
+      <div class="card" style="--cardc: var(--paddy)"><div class="word">Why sing it?</div><div class="meaning">An ayan verse is easy to carry and hard to confiscate. Songs survived two colonial governments, a mass migration and a century of official erasure.</div><div class="tap">click to reveal</div></div>
+      <div class="card" style="--cardc: var(--jade)"><div class="word">Who recorded it?</div><div class="meaning">Pan Jin-yu was filmed singing ayan in her nineties. Linguists published a volume of Pazeh texts and songs in 2002, and researchers are still collecting Kaxabu ayan today.</div><div class="tap">click to reveal</div></div>
+      <div class="card" style="--cardc: var(--river)"><div class="word">Does it still happen?</div><div class="meaning">Yes. Ayan are sung at Pazeh and Kaxabu gatherings in Puli — sometimes by people who learned the words before they understood them, and learned the language afterwards.</div><div class="tap">click to reveal</div></div>
+    </div>
+    <div class="panel in" style="--d:5; width:34vw">
+      <strong>Think about it:</strong> if your community had no books and no internet, which three things would you put into a song so they'd survive a hundred years?
+    </div>
+  </div>
+</section>
+
+<!-- 8. Timeline -->
+<section class="slide" data-tr="zoom" style="--accent: var(--clay)">
+  <div class="text wide">
+    <p class="kicker in">How a language goes quiet</p>
+    <h2 class="in" style="--d:1">Two hundred years in six steps</h2>
+    <div class="bar in" style="--d:2"></div>
+    <p class="in" style="--d:3">Click each moment to explore it.</p>
+    <div class="tl in" id="tl" style="--d:4">
+      <button class="ev" style="--ec: var(--paddy)"><span class="yr">1823</span><small>The migration</small></button>
+      <button class="ev" style="--ec: #e8d3a0"><span class="yr">1871</span><small>The alphabet</small></button>
+      <button class="ev" style="--ec: var(--clay)"><span class="yr">1900s</span><small>The shame</small></button>
+      <button class="ev" style="--ec: #d9a2b5"><span class="yr">2010</span><small>The last speaker</small></button>
+      <button class="ev" style="--ec: var(--plum)"><span class="yr">2022</span><small>The court ruling</small></button>
+      <button class="ev" style="--ec: var(--jade)"><span class="yr">2026</span><small>Still waiting</small></button>
+    </div>
+    <div class="panel in" id="tltext" style="--d:5" aria-live="polite"></div>
+  </div>
+</section>
+
+<!-- 9. The last speaker -->
+<section class="slide" style="--accent: var(--plum)">
+  <div class="text">
+    <p class="kicker in">One person</p>
+    <h2 class="in" style="--d:1">Pan Jin-yu, 1914–2010</h2>
+    <div class="bar in" style="--d:2"></div>
+    <ul class="dots">
+      <li class="in" style="--d:3">She was born in Puli in 1914 to Kaxabu parents and raised by Pazeh-speaking adoptive parents in Ailan. She trained as a nurse. For most of her life the language she actually used day to day was <strong>Taiwanese Hokkien</strong> — Pazeh had no one left to speak it with.</li>
+      <li class="in" style="--d:4">In her eighties and nineties she became her people's teacher, running Pazeh classes for about <strong>200 regular students</strong> in Puli, plus smaller groups in Miaoli and Taichung.</li>
+      <li class="in" style="--d:5">Two of her students, both in their sixties and seventies, won national awards for <strong>poetry written in Pazeh</strong> — five years after their first lesson.</li>
+      <li class="in" style="--d:6">She died on <strong>24 October 2010</strong>, aged 96. The last conversation she recorded with a linguist was published as a paper titled "The Last Text of the Last Pazih Speaker."</li>
+    </ul>
+  </div>
+  <div class="stage">
+    <div class="panel in" style="--d:3; width:35vw">
+      <strong>What one person left behind:</strong> click an item.
+      <div class="shelf" id="shelf">
+        <button class="vol" data-v="0"><span class="ic">📖</span><small>Dictionary</small></button>
+        <button class="vol" data-v="1"><span class="ic">🎵</span><small>Songs</small></button>
+        <button class="vol" data-v="2"><span class="ic">🔤</span><small>Grammar</small></button>
+        <button class="vol" data-v="3"><span class="ic">🎥</span><small>Video</small></button>
+        <button class="vol" data-v="4"><span class="ic">🧑‍🏫</span><small>Students</small></button>
+      </div>
+      <p id="vmsg" aria-live="polite">A language doesn't vanish all at once. What survives depends entirely on what got written, recorded and taught while someone still knew it.</p>
+      <p class="note" style="margin:.3rem 0 0">Pazeh is usually listed as extinct from 2010. Some community members say a few fluent speakers of the related Kaxabu variety remain.</p>
+    </div>
+  </div>
+</section>
+
+<!-- 10. Now -->
+<section class="slide" data-tr="left" style="--accent: var(--jade)">
+  <div class="text">
+    <p class="kicker in">Why it matters now</p>
+    <h2 class="in" style="--d:1">Can a language come back?</h2>
+    <div class="bar in" style="--d:2"></div>
+    <ul class="dots">
+      <li class="in" style="--d:3">This is the hard version of the question. With Yonaguni or Yaeyama there are still elders to learn from. With Pazeh, the teachers are <strong>a dictionary, a song collection and a set of recordings</strong>.</li>
+      <li class="in" style="--d:4">It isn't hopeless. Hebrew, Cornish and Wampanoag were all revived from written records by people determined enough — but all of them took decades, and they needed the records to exist first.</li>
+      <li class="in" style="--d:5">In Puli, the Ailan Presbyterian Church runs weekend classes, a Pazeh cultural association was founded in 2003, and community members keep writing new poems in the language.</li>
+    </ul>
+    <div class="cards compact in" style="--d:6; grid-template-columns: repeat(3, 1fr); margin-top:.7rem">
+      <div class="card" style="--cardc: var(--paddy)"><div class="word">2008 &amp; 2014</div><div class="meaning">Pazeh writers win Ministry of Education awards for literature in romanised Pazeh — in 2013 they weren't even allowed to enter, because the government didn't recognise the language.</div><div class="tap">click</div></div>
+      <div class="card" style="--cardc: var(--plum)"><div class="word">2022</div><div class="meaning">Taiwan's Constitutional Court rules that plains indigenous peoples must be legally recognised, and gives the government three years to do it.</div><div class="tap">click</div></div>
+      <div class="card" style="--cardc: var(--jade)"><div class="word">2024 →</div><div class="meaning">The Pazeh formally apply for recognition. As of 2026 ten plains peoples, Pazeh and Kaxabu among them, are still in the process.</div><div class="tap">click</div></div>
+    </div>
+  </div>
+  <div class="stage">
+    <div class="panel in" style="--d:3; width:34vw">
+      <strong>The arithmetic of a last speaker</strong>
+      <div class="dotgrid" data-total="100" data-on="1" style="margin-top:.6rem; grid-template-columns: repeat(10, 1fr)"></div>
+      <div class="legend"><span style="--c: var(--rose)">1 fluent speaker, 2009</span><span style="--c: rgba(255,255,255,.3)">99 learners, relatives, researchers</span></div>
+      <p class="note" style="margin:.4rem 0 0">For roughly a decade, every single thing anyone could learn about spoken Pazeh had to come through one woman in her nineties.</p>
+    </div>
+    <div class="panel in" style="--d:5; width:34vw">
+      <strong>Your turn:</strong> you have one hour with the last speaker of a language, and a recorder. What do you ask them to say? Write down your first five requests — and be ready to defend the order.
+    </div>
+  </div>
+</section>
+
+<!-- 11. Quiz -->
+<section class="slide" style="--accent: var(--paddy)">
+  <div class="text wide center">
+    <p class="kicker in">Review in the basin</p>
+    <h2 class="in" style="--d:1">Quick quiz!</h2>
+    <div class="bar in" style="--d:2"></div>
+    <div class="quizgrid">
+      <div class="quiz panel in" style="--d:3" data-right="Yes — xaseb-i-dusa, literally five-and-two." data-wrong="Hint: look at how the word is built, not what it means.">
+        <div class="q">In Pazeh, the number 7 is built as…</div>
+        <div class="options"><button class="opt">10 − 3</button><button class="opt" data-correct>5 + 2</button><button class="opt">2 × 4</button></div>
+        <div class="feedback"></div>
+      </div>
+      <div class="quiz panel in" style="--d:4" data-right="Right. Near, visible, or out of sight — three different words." data-wrong="Hint: think about the scene with the hill.">
+        <div class="q">Pazeh has three words for "he" or "she." What decides which one you use?</div>
+        <div class="options"><button class="opt">Age</button><button class="opt">Politeness</button><button class="opt" data-correct>Where the person is</button></div>
+        <div class="feedback"></div>
+      </div>
+      <div class="quiz panel in" style="--d:5" data-right="Correct — and she taught about 200 students before she died in 2010." data-wrong="Hint: she was 96, and she ran classes in Puli.">
+        <div class="q">Who was Pan Jin-yu?</div>
+        <div class="options"><button class="opt">A missionary</button><button class="opt" data-correct>The last native speaker</button><button class="opt">A government minister</button></div>
+        <div class="feedback"></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- 12. Closing -->
+<section class="slide end" style="--accent: var(--paddy)">
+  <div class="text">
+    <h1 class="in" style="font-size:5.2rem">Ayan</h1>
+    <p class="lead in" style="--d:1; margin-top:.8rem">Thank you! Questions?</p>
+    <p class="quote in" style="--d:2">Every ayan begins by calling the ancestors by name. Somebody has to be left to do the calling — and somebody has to write down what was called.</p>
+  </div>
+  <details class="fine in" style="--d:3">
+    <summary>Sources &amp; image credits</summary>
+    <div class="box">
+      <h4>Sources</h4>
+      <ul>
+        <li><a href="https://en.wikipedia.org/wiki/Pazeh_language">Pazeh–Kaxabu language (Wikipedia)</a> — numerals, negators, pronouns, focus system</li>
+        <li><a href="https://en.wikipedia.org/wiki/Pan_Jin-yu">Pan Jin-yu (Wikipedia)</a></li>
+        <li><a href="https://en.wikipedia.org/wiki/Pazeh_people">Pazeh people (Wikipedia)</a> — Ailan, 1865–1871 conversion</li>
+        <li><a href="https://en.wikipedia.org/wiki/List_of_Indigenous_peoples_of_Taiwan">List of Indigenous peoples of Taiwan (Wikipedia)</a> — 16 recognised, 10 applying</li>
+        <li><a href="https://en.wikipedia.org/wiki/Nantou_County">Nantou County (Wikipedia)</a> — the 1823 migration, plains peoples' ceremonies</li>
+        <li><a href="https://www.omniglot.com/writing/pazeh.htm">Omniglot: Pazeh</a></li>
+        <li><a href="https://endangeredlanguages.com/lang/9629">Endangered Languages Project: Pazeh</a></li>
+        <li><a href="https://web.archive.org/web/20210614110609/http://www.ling.sinica.edu.tw/Files/LL/UploadFiles/MonoFullText/Pazih%20Dictionary.pdf">Li &amp; Tsuchida, <em>Pazih Dictionary</em> (Academia Sinica, 2001)</a></li>
+        <li><a href="https://web.archive.org/web/20210921134258/http://www.ling.sinica.edu.tw/Files/LL/UploadFiles/MonoFullText/Pazih%20Texts%20and%20Songs.pdf">Li &amp; Tsuchida, <em>Pazih Texts and Songs</em> (2002)</a></li>
+        <li><a href="http://www.ling.sinica.edu.tw/Files/LL/Docments/Monographs/Breaking%20Down%20the%20Barriers/Volume%202/53-Li.pdf">Li, "The Last Text of the Last Pazih Speaker" (2013)</a></li>
+        <li><a href="https://doi.org/10.1353/ol.1999.0002">Blust, "Notes on Pazeh Phonology and Morphology," <em>Oceanic Linguistics</em> (1999)</a></li>
+        <li><a href="https://doi.org/10.1353/ol.2006.0014">Li, "Numerals in Formosan Languages," <em>Oceanic Linguistics</em> (2006)</a></li>
+        <li><a href="https://www.taipeitimes.com/News/taiwan/archives/2008/06/26/2003415773">Taipei Times (2008): Pazeh poets honored at ceremony</a></li>
+        <li><a href="https://www.taipeitimes.com/News/taiwan/archives/2014/06/15/2003592824">Taipei Times (2014): Pazeh writers get awards for preserving language</a></li>
+        <li><a href="https://www.taipeitimes.com/News/taiwan/archives/2024/05/11/2003817699">Taipei Times (2024): Pazeh people apply for indigenous recognition</a></li>
+        <li><a href="https://www.iwgia.org/en/news/iw-2024-taiwan">IWGIA, <em>The Indigenous World 2024</em>: Taiwan</a> — the 200-year Puli commemoration</li>
+        <li><a href="https://insight.ipcf.org.tw/en-US/article/703">Indigenous Sight: The Pazeh in Ailan, Puli, all pitching in to revitalize their language</a></li>
+        <li><a href="https://insight.ipcf.org.tw/en-US/article/708">Indigenous Sight: We are still here! Living out the stories of the Pazeh</a> — Pazeh New Year, <em>umu</em></li>
+        <li><a href="https://icmagazine.org/from-erasure-to-recognition-taiwans-pingpu-indigenous-identity-act/">Intercontinental Cry: From erasure to recognition — Taiwan's Pingpu identity</a></li>
+      </ul>
+      <h4>Images (Wikimedia Commons)</h4>
+      <ul id="credits"></ul>
+    </div>
+  </details>
+</section>
+
+</main>
+
+<nav class="controls">
+  <button id="prev" aria-label="Previous slide">‹</button>
+  <span id="counter">1 / 12</span>
+  <button id="next" aria-label="Next slide">›</button>
+  <button id="fs" aria-label="Fullscreen">⤢</button>
+</nav>
+<p class="hint">Use ← → to move. Press F for fullscreen.</p>
+
+<!-- Pazeh effects: lifting mist, cognate fan, five-plus counter, negator match, pronoun scene, timeline, archive shelf -->
+<script>
+(function () {
+  document.addEventListener("slidechange", function (e) {
+    document.body.style.setProperty("--t", e.detail.index / (e.detail.total - 1));
+  });
+
+  function single(selector, callback) {
+    var grp = document.querySelectorAll(selector);
+    grp.forEach(function (b) {
+      b.addEventListener("click", function () {
+        grp.forEach(function (x) { x.classList.remove("on"); });
+        b.classList.add("on");
+        callback(b);
+      });
+    });
+  }
+
+  /* ---------- Austronesian cognate fan ---------- */
+  var LANGS = [
+    { n: "Pazeh", p: "Taiwan", x: 50, y: 50, home: true, two: "dusa", five: "xasep",
+      note2: "Pazeh sits on one of the oldest branches of the family. Its word for two is close to the reconstructed ancestor form.",
+      note5: "Here Pazeh breaks the pattern: its word for five looks nothing like the family's. Some of its Taiwanese neighbours say something similar, so it may be a borrowing — or a very old survival. Linguists disagree." },
+    { n: "Tagalog", p: "Philippines", x: 20, y: 24, two: "dalawa", five: "lima",
+      note2: "Filipino languages are the first stop on the way out of Taiwan.", note5: "Straightforwardly the family word for five." },
+    { n: "Malay", p: "Malaysia / Indonesia", x: 14, y: 72, two: "dua", five: "lima",
+      note2: "Spoken by hundreds of millions — and still recognisably a cousin of a language from a Taiwanese valley.", note5: "Same word again, 3,000 km south." },
+    { n: "Malagasy", p: "Madagascar", x: 80, y: 20, two: "roa", five: "dimy",
+      note2: "Madagascar is off the coast of Africa. Its language came by sea from Borneo, more than 6,000 km away.", note5: "Changed in sound, but it descends from the same word." },
+    { n: "Māori", p: "Aotearoa / New Zealand", x: 86, y: 74, two: "rua", five: "rima",
+      note2: "The d of dusa became an r on the long voyage into the Pacific.", note5: "Lima became rima: the family's oldest numbers are still visible." },
+    { n: "Hawaiian", p: "Hawaiʻi", x: 52, y: 90, two: "ʻelua", five: "ʻelima",
+      note2: "Hawaiʻi is about 9,000 km from Taiwan, and the word is still there under the prefix.", note5: "Strip the ʻe- and you have lima all over again." }
+  ];
+  var fan = document.getElementById("fan"), mode = "two", picked = 0;
+  var svgNS = "http://www.w3.org/2000/svg";
+  var svg = document.createElementNS(svgNS, "svg");
+  svg.setAttribute("preserveAspectRatio", "none");
+  svg.setAttribute("viewBox", "0 0 100 100");
+  LANGS.forEach(function (L, i) {
+    if (i === 0) return;
+    var ln = document.createElementNS(svgNS, "line");
+    ln.setAttribute("x1", 50); ln.setAttribute("y1", 50);
+    ln.setAttribute("x2", L.x); ln.setAttribute("y2", L.y);
+    ln.setAttribute("class", "spoke");
+    svg.appendChild(ln);
+  });
+  fan.appendChild(svg);
+  LANGS.forEach(function (L, i) {
+    var b = document.createElement("button");
+    b.className = "node" + (L.home ? " home" : "") + (i === 0 ? " on" : "");
+    b.style.left = L.x + "%"; b.style.top = L.y + "%";
+    b.textContent = L.n;
+    b.addEventListener("click", function () {
+      fan.querySelectorAll(".node").forEach(function (x) { x.classList.remove("on"); });
+      b.classList.add("on");
+      picked = i; render();
+    });
+    fan.appendChild(b);
+  });
+  function render() {
+    var L = LANGS[picked];
+    document.getElementById("cogmain").textContent = L[mode];
+    document.getElementById("coginfo").innerHTML =
+      "<strong>" + L.n + "</strong> <span class='note'>(" + L.p + ")</span><br>" + L["note" + (mode === "two" ? "2" : "5")];
+  }
+  single("#cogword .sbtn", function (b) { mode = b.dataset.w; render(); });
+  render();
+
+  /* ---------- The five-plus adding machine ---------- */
+  var NUM = {
+    1: [["ida", "plain"]], 2: [["dusa", "plain"]], 3: [["turu", "plain"]], 4: [["supat", "plain"]], 5: [["xasep", "five"]],
+    6: [["xaseb", "five"], ["-", "plus"], ["uza", "add"]],
+    7: [["xaseb", "five"], ["-i-", "plus"], ["dusa", "add"]],
+    8: [["xaseb", "five"], ["-i-", "plus"], ["turu", "add"]],
+    9: [["xaseb", "five"], ["-i-", "plus"], ["supat", "add"]]
+  };
+  var WHOLE = { 1: "ida", 2: "dusa", 3: "turu", 4: "supat", 5: "xasep", 6: "xaseb-uza", 7: "xaseb-i-dusa", 8: "xaseb-i-turu", 9: "xaseb-i-supat" };
+  var sumEl = document.getElementById("sum"), eqEl = document.getElementById("eq"), nnote = document.getElementById("nnote");
+  single("#numpad button", function (b) {
+    var n = Number(b.dataset.n);
+    sumEl.innerHTML = ""; 
+    if (!n) {
+      eqEl.textContent = "";
+      nnote.innerHTML = "Ten and beyond aren't shown here. Many of Pazeh's higher numbers were only partly recorded before the language fell silent — another thing we will never fully know.";
+      return;
+    }
+    NUM[n].forEach(function (p, i) {
+      setTimeout(function () {
+        var s = document.createElement("span");
+        s.className = "part " + p[1];
+        s.textContent = p[0];
+        sumEl.appendChild(s);
+      }, i * 260);
+    });
+    setTimeout(function () {
+      eqEl.textContent = n + " = " + WHOLE[n];
+      nnote.innerHTML = n < 6
+        ? "One word, no arithmetic. These five are the building blocks."
+        : "<strong>xasep</strong> (five) + <strong>" + NUM[n][2][0] + "</strong> (" + (n - 5) + "). Notice the p softens to b before the vowel.";
+    }, NUM[n].length * 260 + 120);
+  });
+
+  /* ---------- Negator matcher ---------- */
+  var EXPL = {
+    ini: "ini is the plain all-purpose 'not' — it simply denies that something happened.",
+    uzay: "uzay denies identity: not that one, a different one.",
+    kuang: "kuang (also kuah) means 'there isn't any' — it denies that a thing exists at all.",
+    mayaw: "mayaw means 'not yet': true for now, but expected to change.",
+    nah: "nah is about willingness — not unable, just unwilling.",
+    ana: "ana is a command: don't do that."
+  };
+  var pick = null, nmsg = document.getElementById("nmsg");
+  document.querySelectorAll(".sbit").forEach(function (s) {
+    s.addEventListener("click", function () {
+      document.querySelectorAll(".sbit").forEach(function (x) { x.classList.remove("on"); });
+      s.classList.add("on"); pick = s;
+      nmsg.textContent = "Now choose the word Pazeh would use here.";
+    });
+  });
+  document.querySelectorAll(".neg").forEach(function (b) {
+    b.addEventListener("click", function () {
+      if (!pick) { nmsg.textContent = "Pick a sentence first."; return; }
+      if (b.dataset.n === pick.dataset.ans) {
+        pick.classList.add("solved"); pick.classList.remove("on");
+        nmsg.style.color = "var(--jade)";
+        nmsg.textContent = "Correct. " + EXPL[b.dataset.n];
+        if (document.querySelectorAll(".sbit.solved").length === 6) {
+          nmsg.textContent += " All six matched — and English used the word 'not' for nearly all of them.";
+        }
+        pick = null;
+      } else {
+        nmsg.style.color = "var(--clay)";
+        nmsg.textContent = "Not that one. " + EXPL[b.dataset.n] + " Try again.";
+      }
+    });
+  });
+
+  /* ---------- Pronoun scene ---------- */
+  var PRO = {
+    near: ["imini", "The person is right here beside you — close enough to touch. Pazeh uses the near form."],
+    far: ["imisiw", "You can see them across the field, but they're not close. Pazeh has a separate word just for that."],
+    hidden: ["isia", "They're behind the hill. You know who you mean, but you can't see them — and Pazeh marks that too."]
+  };
+  var pmsg = document.getElementById("pmsg");
+  document.querySelectorAll(".figure").forEach(function (f) {
+    f.addEventListener("click", function () {
+      document.querySelectorAll(".figure").forEach(function (x) { x.classList.remove("sel"); });
+      f.classList.add("sel");
+      var p = PRO[f.dataset.p];
+      pmsg.innerHTML = "<b>" + p[0] + "</b><br>" + p[1];
+    });
+  });
+  document.querySelectorAll("[data-we]").forEach(function (b) {
+    b.addEventListener("click", function () {
+      document.querySelectorAll("[data-we]").forEach(function (x) { x.classList.remove("on"); });
+      b.classList.add("on");
+      pmsg.innerHTML = b.dataset.we === "in"
+        ? "<b>ita</b><br>\"We\" including the person you're talking to. <em>Ita</em> means come along — you're part of this."
+        : "<b>yami</b><br>\"We\" <em>not</em> including the person you're talking to. <em>Yami</em> means us, not you. English makes you guess which one is meant.";
+    });
+  });
+
+  /* ---------- Timeline ---------- */
+  var EVENTS = [
+    ["The migration to Puli", "Pazeh homelands on the western plains were steadily taken over by settlers from China through leases, debts and pressure. Around 1823 the Pazeh joined a mass migration of plains peoples into the Puli basin, invited by the Thao who already lived there. In December 2023 their descendants gathered in Puli to mark the 200th anniversary."],
+    ["The alphabet arrives", "Christian missionaries reached the area in 1865, and by 1871 most Pazeh had converted. Old ceremonies faded — but the missionaries brought a romanised alphabet, and that alphabet is the reason Pazeh can be written at all today. Pazeh poets still use it."],
+    ["The shame", "Under Japanese rule and then the Republic of China, plains peoples were classified, reclassified and eventually treated as simply assimilated. Speakers describe being looked down on for being Pingpu, so families switched to Hoklo Taiwanese and later Mandarin. Children stopped learning Pazeh — not because it was hard, but because it was made embarrassing."],
+    ["The last speaker", "Pan Jin-yu died on 24 October 2010 at the age of 96. She had spent her last years teaching the language to about 200 students, and sitting with linguists who recorded everything they could. With her death, Pazeh lost its last native speaker."],
+    ["The court ruling", "In October 2022 Taiwan's Constitutional Court ruled that plains indigenous peoples must be legally recognised, giving the government three years to make it happen. For the Pazeh, recognition means funding, school programmes and an official existence."],
+    ["Still waiting", "The Pazeh formally applied for recognition in May 2024. As of 2026 ten plains peoples, Pazeh and Kaxabu among them, are still working through the process — while classes, poems and ayan singing continue in Puli regardless."]
+  ];
+  var tlText = document.getElementById("tltext");
+  var evs = document.querySelectorAll("#tl .ev");
+  function setEvent(i) {
+    evs.forEach(function (e, k) { e.classList.toggle("on", k === i); });
+    tlText.innerHTML = '<strong style="color:var(--paddy); font-size:1.2rem">' + EVENTS[i][0] + "</strong><br>" + EVENTS[i][1];
+  }
+  evs.forEach(function (e, i) { e.addEventListener("click", function () { setEvent(i); }); });
+  setEvent(0);
+
+  /* ---------- Archive shelf ---------- */
+  var VOLS = [
+    "<b>A dictionary.</b> Paul Jen-kuei Li and Shigeru Tsuchida published the <em>Pazih Dictionary</em> in 2001 through Academia Sinica. It is free to download, and it is now the single largest store of Pazeh words in existence.",
+    "<b>A song collection.</b> The same two scholars published <em>Pazih Texts and Songs</em> in 2002 — ayan verses, stories and sayings, written down with translations.",
+    "<b>A grammar.</b> Robert Blust's 1999 study of Pazeh sounds and word-building means a learner today can work out how to pronounce and build words that no one is alive to model.",
+    "<b>Video and audio.</b> Pan Jin-yu was filmed speaking and singing. A person learning Pazeh in 2026 can still hear the rhythm of the language from a native speaker — something earlier lost languages never left behind.",
+    "<b>Students.</b> The most important archive is not paper. About 200 people took her classes; several now teach, and two won national poetry prizes. A language survives in people before it survives in books."
+  ];
+  var vmsg = document.getElementById("vmsg");
+  single("#shelf .vol", function (b) { vmsg.innerHTML = VOLS[Number(b.dataset.v)]; });
+})();
+</script>
+<script src="../assets/deck.js"></script>
+</body>
+</html>
