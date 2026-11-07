@@ -1,0 +1,664 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Uilta: The Reindeer People of Sakhalin</title>
+<link rel="stylesheet" href="../assets/deck.css">
+<style>
+@import url("https://fonts.googleapis.com/css2?family=Alegreya:wght@700;800&family=Source+Sans+3:wght@400;600;700;900&display=swap");
+
+/* ---------- Uilta theme: Sakhalin snow, larch, reindeer, a border line ---------- */
+:root {
+  --bg: #09131c;
+  --ink: #eef4f8;
+  --muted: #bccfda;
+  --line: rgba(238, 244, 248, .22);
+  --panel: rgba(9, 28, 40, .85);
+  --snow: #dce9f0;
+  --larch: #c0763a;
+  --lichen: #8fa89a;
+  --deer: #8a6a4e;
+  --amber: #e2a33c;
+  --red: #cf4b3a;
+  --rose: #cf4b3a;
+  --accent: var(--snow);
+  --serif: "Alegreya", Georgia, serif;
+  --sans: "Source Sans 3", system-ui, sans-serif;
+  --t: 0;
+  font-size: clamp(12px, 1.3vw, 28px);
+}
+h1 { font-family: var(--serif); font-size: 5.5rem; font-weight: 800; line-height: 1.02; }
+h2 { font-family: var(--serif); font-size: 2.6rem; font-weight: 800; line-height: 1.12; }
+.slide { padding: 7vh 4vw 8vh 6vw; }
+.text { max-width: 44vw; }
+.text.wide { max-width: 86vw; width: 86vw; }
+.stage {
+  right: 5vw; top: 6vh; bottom: 10vh; width: 38vw;
+  display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 1.1rem;
+}
+ul.dots li { font-size: 1.04rem; }
+.speak .line, .card .word { font-family: var(--sans); font-weight: 900; }
+.card.revealed .meaning { max-height: 15rem; }
+.btn { background: var(--snow); color: #0d2432; }
+.syl.on { background: var(--snow); color: #0d2432; }
+.loc .disc { border-color: var(--snow); box-shadow: 0 0 0 .55rem rgba(220,233,240,.14), 0 22px 40px rgba(0,0,0,.55); }
+.loc .tint { background: #cfe0d2; }
+.loc .sea { background: #10394c; }
+.loc .tag { background: #0a2231; border-color: var(--snow); }
+.note { font-size: .82rem; color: var(--muted); }
+.quote { font-family: var(--serif); font-size: 1.65rem; font-weight: 700; line-height: 1.34; color: var(--snow); }
+.cyr { font-family: var(--serif); }
+
+/* ---------- Background: taiga, snow, a caravan, the 50th parallel ---------- */
+#taiga { position: fixed; inset: 0; z-index: 0; overflow: hidden; pointer-events: none;
+  background: linear-gradient(180deg, #060f18 0%, #0e2838 46%, #16415a 72%, #0c2130 100%); }
+#taiga .dawn { position: absolute; inset: 0;
+  background: linear-gradient(180deg, rgba(226,163,60,.16), rgba(226,163,60,0) 48%);
+  opacity: calc(var(--t) * 1.1); transition: opacity 1.6s ease; }
+#taiga .larches { position: absolute; left: 0; right: 0; bottom: 20vh; height: 34vh; }
+#taiga .larches svg, #taiga .caravan svg { width: 100%; height: 100%; display: block; }
+#taiga .snowfield { position: absolute; left: 0; right: 0; bottom: 0; height: 24vh;
+  background: linear-gradient(180deg, #b9ccd8 0%, #8ea7b8 60%, #6d8798 100%); opacity: .9; }
+#taiga .snowfield::before { content: ""; position: absolute; inset: 0;
+  background: repeating-linear-gradient(180deg, rgba(255,255,255,.35) 0 2px, transparent 2px 18px); }
+#taiga .caravan { position: absolute; bottom: 17vh; width: 34vw; height: 10vh;
+  left: calc(-32vw + var(--t) * 92vw); transition: left 1.7s cubic-bezier(.35,.1,.4,1); }
+#taiga .border { position: absolute; left: 0; right: 0; bottom: 22vh; height: 0;
+  border-top: 3px dashed var(--amber); opacity: calc((var(--t) - .18) * 2.2); transition: opacity 1.6s ease; }
+#taiga .border span { position: absolute; right: 4vw; top: -1.6rem; font: 700 .72rem "Source Sans 3", sans-serif;
+  color: var(--amber); letter-spacing: .08em; }
+#taiga .snow i { position: absolute; width: 3px; height: 3px; border-radius: 50%; background: #fff; opacity: .75;
+  animation: fall linear infinite; }
+@keyframes fall { from { transform: translate(0, -12vh); } to { transform: translate(-5vw, 104vh); } }
+#taiga .shade { position: absolute; inset: 0;
+  background: linear-gradient(90deg, rgba(3,9,14,.95) 0%, rgba(3,9,14,.78) 50%, rgba(3,9,14,.28) 100%); }
+
+/* ---------- Photos ---------- */
+.board { position: relative; margin: 0; width: var(--w, 19vw); padding: .6rem .6rem .5rem;
+  background: #e9eef1; border-radius: .2rem; box-shadow: 0 18px 34px rgba(0,0,0,.6);
+  transform: rotate(var(--r, 0deg)); transition: transform .9s cubic-bezier(.2,.8,.2,1), opacity .7s ease; }
+.slide:not(.active) .board { opacity: 0; transform: translateY(46px) rotate(var(--r, 0deg)); }
+.slide.active .board { transition-delay: calc(.4s + var(--d, 0) * .16s); }
+.board img { display: block; width: 100%; aspect-ratio: var(--ar, 4 / 3); object-fit: cover; background: #c3cdd4; }
+.board figcaption { color: #1c262c; font-size: .73rem; font-weight: 700; line-height: 1.25; margin: .4rem .1rem 0; font-family: var(--serif); }
+
+/* ---------- Shared controls ---------- */
+.switch { display: flex; gap: .4rem; margin: .4rem 0 .6rem; flex-wrap: wrap; }
+.sbtn { font: inherit; font-weight: 600; font-size: .92rem; color: var(--ink); background: var(--panel);
+  border: 2px solid var(--line); border-radius: .3rem; padding: .25em .9em; cursor: pointer; transition: transform .2s; }
+.sbtn:hover { transform: translateY(-2px); }
+.sbtn.on { background: var(--snow); border-color: var(--snow); color: #0d2432; }
+.out { min-height: 3.2em; margin-top: .5rem; }
+
+/* ---------- Reindeer diagram ---------- */
+.deerbox { position: relative; width: 100%; max-width: 20rem; margin: .3rem auto; }
+.deerbox svg { width: 100%; display: block; }
+.hot { position: absolute; transform: translate(-50%, -50%); width: 1.5rem; height: 1.5rem; border-radius: 50%;
+  border: 2px solid var(--amber); background: rgba(226,163,60,.25); color: var(--ink); cursor: pointer;
+  font: 800 .7rem "Source Sans 3", sans-serif; }
+.hot:hover { transform: translate(-50%, -50%) scale(1.18); }
+.hot.on { background: var(--amber); color: #2a1c05; }
+#dmsg { min-height: 5.4em; margin-top: .4rem; }
+
+/* ---------- The 1945 doors ---------- */
+.doors { display: grid; gap: .4rem; }
+.door { font: inherit; text-align: left; font-weight: 700; font-size: .88rem; color: var(--ink); background: var(--panel);
+  border: 2px solid var(--line); border-radius: .3rem; padding: .5em .75em; cursor: pointer; }
+.door:hover { border-color: var(--amber); }
+.door.on { border-color: var(--amber); background: rgba(226,163,60,.14); }
+.door small { display: block; font-weight: 400; font-size: .74rem; color: var(--muted); }
+.outcome { margin-top: .5rem; padding: .55rem .7rem; border-radius: .3rem; border-left: 6px solid var(--out, var(--line));
+  background: rgba(255,255,255,.05); min-height: 5em; }
+.outcome b { display: block; font-family: var(--serif); font-size: 1.05rem; margin-bottom: .2rem; }
+
+/* ---------- Life stepper ---------- */
+.stepbar { display: flex; gap: .25rem; margin: .5rem 0 .4rem; }
+.stepbar i { flex: 1; height: .35rem; border-radius: 999px; background: rgba(255,255,255,.14); transition: background .4s; }
+.stepbar i.on { background: var(--larch); }
+.steprow { display: flex; align-items: center; justify-content: space-between; gap: .5rem; }
+.arrow { font: inherit; font-weight: 700; font-size: 1.3rem; color: var(--ink); background: var(--panel);
+  border: 2px solid var(--line); border-radius: 50%; width: 2.3rem; height: 2.3rem; cursor: pointer; }
+.arrow:hover { border-color: var(--larch); }
+.stepbody { flex: 1; text-align: center; }
+.stepbody h4 { margin: 0; font-family: var(--serif); font-size: 1.15rem; color: var(--larch); }
+.stepbody p { margin: .25rem 0 0; min-height: 6em; font-size: .92rem; }
+
+/* ---------- Vowel harmony ---------- */
+.vowels { display: flex; gap: .35rem; justify-content: center; flex-wrap: wrap; margin: .5rem 0; }
+.vw { font: 800 1.3rem "Source Sans 3", sans-serif; color: var(--ink); background: var(--panel);
+  border: 2px solid var(--line); border-radius: .3rem; width: 2.6rem; height: 2.6rem; cursor: pointer; }
+.vw.hard { border-color: var(--larch); background: rgba(192,118,58,.2); }
+.vw.soft { border-color: var(--lichen); background: rgba(143,168,154,.2); }
+.teams { display: grid; grid-template-columns: 1fr 1fr; gap: .4rem; margin-top: .3rem; }
+.team { background: var(--panel); border: 2px solid var(--line); border-radius: .3rem; padding: .4rem; min-height: 3.4rem; }
+.team h5 { margin: 0 0 .2rem; font-size: .76rem; letter-spacing: .06em; text-transform: uppercase; }
+.team.h h5 { color: var(--larch); } .team.s h5 { color: var(--lichen); }
+.team span { display: inline-block; font-weight: 800; margin-right: .3rem; font-size: 1.1rem; }
+#vhmsg { min-height: 4.6em; margin-top: .4rem; }
+
+/* ---------- Census picker ---------- */
+.nums { display: grid; grid-template-columns: repeat(2, 1fr); gap: .4rem; }
+.numb { font: inherit; text-align: left; color: var(--ink); background: var(--panel);
+  border: 2px solid var(--line); border-radius: .3rem; padding: .45em .7em; cursor: pointer; }
+.numb b { font-family: var(--serif); font-size: 1.5rem; display: block; }
+.numb small { display: block; font-size: .74rem; color: var(--muted); }
+.numb.on { border-color: var(--snow); background: rgba(220,233,240,.12); }
+#numsg { min-height: 5.4em; margin-top: .4rem; }
+
+/* ---------- Timeline ---------- */
+.tl { display: grid; grid-template-columns: repeat(6, 1fr); gap: .55rem; margin-top: 1rem; position: relative; padding-bottom: 1.4rem; }
+.tl::after { content: ""; position: absolute; left: 0; right: 0; bottom: .45rem; height: 3px; border-radius: 3px;
+  background: linear-gradient(90deg, var(--lichen), var(--amber), var(--red)); }
+.ev { font: inherit; text-align: left; color: #12212b; background: var(--ec); border: 0; border-radius: .3rem;
+  padding: .65rem .75rem; cursor: pointer; transition: transform .25s, box-shadow .25s; }
+.ev:hover { transform: translateY(-4px); }
+.ev.on { box-shadow: 0 0 0 3px #fff, 0 10px 24px rgba(0,0,0,.4); transform: translateY(-6px); }
+.ev .yr { font-family: var(--serif); font-weight: 800; font-size: 1.25rem; line-height: 1; display: block; }
+.ev small { display: block; font-weight: 700; font-size: .76rem; margin-top: .3rem; }
+#tltext { min-height: 5.4rem; margin-top: .4rem; }
+
+/* ---------- Quiz tint ---------- */
+.opt.right { background: #4e8f6e; }
+.opt.wrong { background: var(--red); }
+
+@media (max-width: 820px) {
+  .slide { padding: 6vh 6vw 12vh; }
+  h1 { font-size: 3.2rem; }
+  .text, .text.wide { max-width: none; width: auto; }
+  .stage { position: relative; inset: auto; width: 100%; margin-top: 1.5rem; }
+  .board { width: 74vw; }
+  .stage .panel, .stage .speak { width: 100% !important; max-width: none !important; }
+  .tl { grid-template-columns: repeat(2, 1fr); }
+  .nums { grid-template-columns: 1fr; }
+  #taiga .caravan { width: 70vw; }
+}
+</style>
+</head>
+<body data-map="BlankMap-Equirectangular.svg">
+
+<div id="taiga" aria-hidden="true">
+  <div class="dawn"></div>
+  <div class="larches">
+    <svg viewBox="0 0 1600 340" preserveAspectRatio="none">
+      <g fill="#122a2c">
+        <path d="M80 340 L110 60 L140 340 Z"/><path d="M230 340 L256 110 L282 340 Z"/><path d="M380 340 L412 40 L444 340 Z"/>
+        <path d="M540 340 L566 130 L592 340 Z"/><path d="M690 340 L722 70 L754 340 Z"/><path d="M860 340 L886 120 L912 340 Z"/>
+        <path d="M1020 340 L1052 50 L1084 340 Z"/><path d="M1190 340 L1216 126 L1242 340 Z"/><path d="M1350 340 L1382 66 L1414 340 Z"/>
+        <path d="M1500 340 L1526 130 L1552 340 Z"/>
+      </g>
+    </svg>
+  </div>
+  <div class="snowfield"></div>
+  <div class="border"><span>50° N — the border, 1905–1945</span></div>
+  <div class="caravan">
+    <svg viewBox="0 0 900 180">
+      <g fill="#6b5340">
+        <g transform="translate(0,0)"><path d="M60 140 h86 v-26 h-86 z"/><path d="M62 140 v26 M86 140 v26 M120 140 v26 M144 140 v26" stroke="#6b5340" stroke-width="7"/><path d="M146 114 q26 -8 34 -26 l10 6 q-6 24 -30 34 z"/><path d="M174 84 l-12 -30 l10 -4 l12 30 z M186 82 l14 -28 l10 6 l-16 26 z"/></g>
+        <g transform="translate(210,6)"><path d="M60 140 h86 v-26 h-86 z"/><path d="M62 140 v26 M86 140 v26 M120 140 v26 M144 140 v26" stroke="#6b5340" stroke-width="7"/><path d="M146 114 q26 -8 34 -26 l10 6 q-6 24 -30 34 z"/><path d="M174 84 l-12 -30 l10 -4 l12 30 z M186 82 l14 -28 l10 6 l-16 26 z"/></g>
+        <g transform="translate(420,-4)"><path d="M60 140 h86 v-26 h-86 z"/><path d="M62 140 v26 M86 140 v26 M120 140 v26 M144 140 v26" stroke="#6b5340" stroke-width="7"/><path d="M146 114 q26 -8 34 -26 l10 6 q-6 24 -30 34 z"/><path d="M174 84 l-12 -30 l10 -4 l12 30 z M186 82 l14 -28 l10 6 l-16 26 z"/></g>
+      </g>
+    </svg>
+  </div>
+  <div class="snow"></div>
+  <div class="shade"></div>
+</div>
+<div class="progress"></div>
+
+<main>
+
+<!-- 1. Title -->
+<section class="slide" style="--accent: var(--snow)">
+  <div class="text">
+    <p class="kicker in">Rare Languages of the Asia-Pacific · Module 28</p>
+    <h1 class="in" style="--d:1">Uilta</h1>
+    <p class="in cyr" style="--d:2; font-size:1.35rem; font-weight:700; color:var(--snow)">ульта · Orok · Sakhalin Island, Russia</p>
+    <div class="bar in" style="--d:3"></div>
+    <p class="lead in" style="--d:4">About three hundred people, fewer than a dozen fluent speakers, and a twentieth century so strange that it has to be explained twice before it makes sense</p>
+    <p class="muted in" style="--d:5">Watch the snowfield: a reindeer caravan is crossing, and a border is about to appear across its path.</p>
+  </div>
+  <div class="stage">
+    <figure class="board" style="--w:24vw; --r:-1.5deg; --d:0">
+      <img data-wiki="Sakhalin" data-width="1200" alt="Sakhalin Island, Russia">
+      <figcaption>Sakhalin — 950 km long, divided in half by an international border for forty years</figcaption>
+    </figure>
+  </div>
+</section>
+
+<!-- 2. Where and who -->
+<section class="slide" data-tr="left" style="--accent: var(--lichen)">
+  <div class="text">
+    <p class="kicker in">Where and who</p>
+    <h2 class="in" style="--d:1">The only herders on the island</h2>
+    <div class="bar in" style="--d:2"></div>
+    <ul class="dots">
+      <li class="in" style="--d:3">The Uilta live on <strong>Sakhalin</strong>, a long island off the Russian Far East — the same island as the Nivkh, and once also the Sakhalin Ainu. Three unrelated peoples, three unrelated languages, one island.</li>
+      <li class="in" style="--d:4">They split into two groups: the <strong>northern</strong> Uilta along the Tym river and around the village of Val, who herd reindeer, and the <strong>southern</strong> Uilta near Poronaysk, who fished.</li>
+      <li class="in" style="--d:5">Their language is <strong>Tungusic</strong> — the family of Evenki, Nanai and historical Manchu — and within it, a close relative of Nanai and Ulch.</li>
+      <li class="in" style="--d:6">The 2010 census counted <strong>295</strong> Uilta in Russia. Speaker counts are a whole slide of their own later, but the researchers' figure is now in <strong>single digits</strong>.</li>
+    </ul>
+    <p class="note in" style="--d:7">Their own name, Ul'ta or Uilta, is usually derived from <em>ula</em>, "domestic reindeer" — though at least one linguist argues that etymology is unlikely and the name comes from somewhere else entirely.</p>
+  </div>
+  <div class="stage">
+    <div class="loc" data-lat="51.9" data-lon="143.2" data-zoom="5" style="--s:13vw; --d:0">
+      <div class="disc"><div class="lmap"></div><div class="tint"></div><div class="sea"></div><span class="pinpt"></span></div>
+      <span class="tag">Nogliki &amp; Poronaysk districts, Sakhalin Oblast, Russia</span>
+    </div>
+    <div class="panel in" style="--d:4; width:34vw">
+      <strong>What made them different</strong>
+      <p class="note" style="margin:.3rem 0 0">Every other indigenous people of Sakhalin and the lower Amur lived by fishing, hunting and dog teams. The Uilta were the ones with <strong>reindeer</strong> — used under pack and saddle and harnessed to sleds. One animal gave them a range of movement nobody else on the island had.</p>
+      <p class="note" style="margin:.4rem 0 0">In 1925 a count found just over a thousand reindeer among forty-six families. This was never herding on the Siberian scale. It was a small, precise way of living in a hard place.</p>
+    </div>
+  </div>
+</section>
+
+<!-- 3. The reindeer -->
+<section class="slide" data-tr="zoom" style="--accent: var(--deer)">
+  <div class="text">
+    <p class="kicker in">Cultural significance</p>
+    <h2 class="in" style="--d:1">One animal, an entire economy</h2>
+    <div class="bar in" style="--d:2"></div>
+    <p class="in" style="--d:3">For the northern Uilta, the reindeer was transport, food, clothing and capital all at once. Herds were small and mobile, moving between summer and winter pastures through taiga and bog — country that is almost impassable by any other means.</p>
+    <p class="in" style="--d:4">The language records that life in detail: a vocabulary for herding, for harness, for the condition and age of animals, even — as one linguist noted — terms tracking the months after a reindeer's pregnancy or birth.</p>
+    <p class="in" style="--d:5">Click the points on the diagram.</p>
+    <p class="note in" style="--d:6">That specialised vocabulary is the first thing to go. When herding shrinks, the words for it have nothing to attach to — and no dictionary entry can replace knowing which word applies to the animal standing in front of you.</p>
+  </div>
+  <div class="stage">
+    <div class="panel in" style="--d:3; width:35vw">
+      <strong>The Uilta reindeer:</strong>
+      <div class="deerbox" id="deerbox">
+        <svg viewBox="0 0 400 260" aria-label="Diagram of a reindeer">
+          <path d="M90 180 q-6 50 -2 62 M140 186 q-4 48 0 58 M250 182 q4 48 8 58 M296 174 q8 48 12 58" stroke="#6b5340" stroke-width="9" fill="none" stroke-linecap="round"/>
+          <path d="M80 150 q40 -42 120 -40 q80 2 120 36 q18 16 10 40 q-10 28 -70 30 q-70 4 -120 0 q-56 -6 -66 -30 q-8 -22 6 -36 z" fill="#8a6a4e"/>
+          <path d="M318 148 q30 -16 44 -4 q14 12 2 30 q-14 20 -44 16 z" fill="#8a6a4e"/>
+          <path d="M344 132 q-6 -42 10 -62 q6 18 18 24 M356 128 q24 -34 48 -34 q-14 18 -14 34" stroke="#d9cdbe" stroke-width="7" fill="none" stroke-linecap="round"/>
+          <circle cx="350" cy="152" r="5" fill="#2a2018"/>
+        </svg>
+        <button class="hot" data-h="0" style="left:52%; top:60%">1</button>
+        <button class="hot" data-h="1" style="left:88%; top:34%">2</button>
+        <button class="hot" data-h="2" style="left:28%; top:88%">3</button>
+        <button class="hot" data-h="3" style="left:22%; top:52%">4</button>
+      </div>
+      <p id="dmsg" aria-live="polite">Click a number on the diagram.</p>
+    </div>
+  </div>
+</section>
+
+<!-- 4. The border -->
+<section class="slide" style="--accent: var(--amber)">
+  <div class="text">
+    <p class="kicker in">History you have to explain twice</p>
+    <h2 class="in" style="--d:1">A border across the middle of the island</h2>
+    <div class="bar in" style="--d:2"></div>
+    <ul class="dots">
+      <li class="in" style="--d:3">After the Russo-Japanese War, Japan took the southern half of Sakhalin. From <strong>1905 to 1945</strong> the island was cut in two at the 50th parallel: Japanese <strong>Karafuto</strong> in the south, Russia and then the Soviet Union in the north.</li>
+      <li class="in" style="--d:4">The Uilta, who had moved with their herds across that country for generations, now lived on a frontier — and both sides noticed how useful people who know the forest can be.</li>
+      <li class="in" style="--d:5">Under Japanese rule many indigenous people of Karafuto were concentrated in a managed settlement called <strong>Otasu</strong>, held up as a showcase of colonial administration.</li>
+      <li class="in" style="--d:6">And here is the detail that decided everything: the Karafuto Ainu were granted full Japanese citizenship in <strong>1932</strong>. The Uilta and Nivkh were <strong>not</strong>.</li>
+    </ul>
+    <p class="note in" style="--d:7">That sounds like paperwork. In August 1945 it became the difference between being evacuated and being left behind.</p>
+  </div>
+  <div class="stage">
+    <div class="panel in" style="--d:3; width:35vw">
+      <strong>August 1945. Who are you?</strong>
+      <div class="doors" id="doors" style="margin-top:.5rem">
+        <button class="door" data-d="0">A Japanese settler in Karafuto<small>one of some 400,000</small></button>
+        <button class="door" data-d="1">A Karafuto Ainu family<small>citizens since 1932</small></button>
+        <button class="door" data-d="2">An Uilta family at Otasu<small>not citizens</small></button>
+        <button class="door" data-d="3">A young Uilta man trained by the army<small>conscripted in 1942</small></button>
+      </div>
+      <div class="outcome" id="outcome"><b>Pick one.</b>The Soviet army has invaded. What happens to you depends almost entirely on a legal category you did not choose.</div>
+    </div>
+  </div>
+</section>
+
+<!-- 5. One life -->
+<section class="slide" data-tr="left" style="--accent: var(--larch)">
+  <div class="text">
+    <p class="kicker in">One life</p>
+    <h2 class="in" style="--d:1">Gendanu</h2>
+    <div class="bar in" style="--d:2"></div>
+    <p class="in" style="--d:3">Daxinnieni Geldanu was born on Sakhalin in 1926 and given the Japanese name <strong>Kitagawa Gentarō</strong>. He is usually known as <strong>Gendanu</strong>. He was the adopted son of an Uilta shaman, and he grew up at Otasu being taught that the emperor was to be revered and his own people were backward.</p>
+    <p class="in" style="--d:4">Step through his life in the panel. It is a short life, and almost every turn in it was decided by somebody else's war.</p>
+    <p class="note in" style="--d:5">We are spending a whole slide on one person deliberately. With a population this small, the history of the Uilta in the 20th century genuinely is a handful of biographies — and this one was written down because he insisted on writing it.</p>
+  </div>
+  <div class="stage">
+    <div class="panel in" style="--d:3; width:35vw">
+      <div class="stepbar" id="gbar"></div>
+      <div class="steprow">
+        <button class="arrow" id="gprev" aria-label="Earlier">‹</button>
+        <div class="stepbody"><h4 id="gh"></h4><p id="gp" aria-live="polite"></p></div>
+        <button class="arrow" id="gnext" aria-label="Later">›</button>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- 6. Jakka Duxuni -->
+<section class="slide" style="--accent: var(--snow)">
+  <div class="text">
+    <p class="kicker in">A house for precious things</p>
+    <h2 class="in" style="--d:1">Jakka Duxuni</h2>
+    <div class="bar in" style="--d:2"></div>
+    <ul class="dots">
+      <li class="in" style="--d:3">In 1975 Gendanu founded the <strong>Uilta Kyōkai</strong>, an association in Abashiri in northern Hokkaido, to campaign for Uilta rights and to keep Uilta tradition going in a country that did not know the Uilta existed.</li>
+      <li class="in" style="--d:4">In 1978 he published his autobiography, written with a local high-school teacher, and opened a small museum: <span class="hl">Jakka Duxuni</span>, which in Uilta means roughly <strong>"a house for keeping precious things."</strong></li>
+      <li class="in" style="--d:5">It held Uilta, Nivkh and Sakhalin Ainu objects — a private museum for three displaced peoples, run by the displaced. <strong>Kitagawa Aiko</strong> co-founded it and led it after his death; in 1995 she went to Tokyo to ask the government for a memorial to the Uilta war dead, and got no reply.</li>
+      <li class="in" style="--d:6">Jakka Duxuni closed in 2012 after about 35 years. Its collection moved to the Hokkaido Museum of Northern Peoples in Abashiri, and in 2024 the materials were exhibited together in Tokyo for the first time.</li>
+    </ul>
+  </div>
+  <div class="stage">
+    <div class="cards in" style="--d:3; grid-template-columns:1fr; width:34vw">
+      <div class="card" style="--cardc: var(--snow)"><div class="word">Why a museum?</div><div class="meaning">Because there was nowhere else. The Uilta in Japan were not recognised as an indigenous people, were not counted, and had no pension, memorial or official history. A one-room museum on the Okhotsk coast was the only institution that said: these people exist, and here is the proof.</div><div class="tap">click to reveal</div></div>
+      <div class="card" style="--cardc: var(--larch)"><div class="word">Why did it close?</div><div class="meaning">For the reason very small institutions close: the people who built it grew old and died, and a community of a few dozen could not replace them. The objects survive in a bigger museum. The thing that ended was a place run by Uilta hands.</div><div class="tap">click to reveal</div></div>
+      <div class="card" style="--cardc: var(--amber)"><div class="word">What about the pension?</div><div class="meaning">Gendanu applied repeatedly for a veteran's pension. The Japanese government's position was that Uilta and Nivkh had not been eligible for military service and had therefore been recruited illegally — so no compensation was owed. He died in 1984 with none.</div><div class="tap">click to reveal</div></div>
+    </div>
+  </div>
+</section>
+
+<!-- 7. The language -->
+<section class="slide" data-tr="zoom" style="--accent: var(--lichen)">
+  <div class="text">
+    <p class="kicker in">Language lab</p>
+    <h2 class="in" style="--d:1">Words that have to agree</h2>
+    <div class="bar in" style="--d:2"></div>
+    <p class="in" style="--d:3">Uilta, like most Tungusic languages, runs on <strong>vowel harmony</strong>. The vowels divide into two teams, and every vowel in a word — including the endings you add — has to come from the same team.</p>
+    <p class="in" style="--d:4">That means there is no single form for most endings. There is a hard version and a soft version, and the word you attach it to decides which you use. Sort the vowels in the panel and see.</p>
+    <ul class="dots">
+      <li class="in" style="--d:5">Uilta is <strong>Southern Tungusic</strong>, closest to Nanai and Ulch on the Amur mainland — so its nearest relatives are across the water, not on Sakhalin.</li>
+      <li class="in" style="--d:6">Its neighbours on the island, Nivkh and Ainu, are unrelated to it and to each other. Sakhalin packs three separate deep branches of human language into one island.</li>
+    </ul>
+    <p class="note in" style="--d:7">Harmony also helps explain why Uilta was hard to write with a borrowed alphabet: Russian Cyrillic has no way to show the difference between the two teams, so a new spelling system had to be designed for it.</p>
+  </div>
+  <div class="stage">
+    <div class="panel in" style="--d:3; width:35vw">
+      <strong>Sort the vowels into their teams:</strong>
+      <div class="vowels" id="vowels"></div>
+      <div class="teams">
+        <div class="team h"><h5>hard</h5><div id="teamh"></div></div>
+        <div class="team s"><h5>soft</h5><div id="teams2"></div></div>
+      </div>
+      <p id="vhmsg" aria-live="polite">Click each vowel to see which team it plays for.</p>
+    </div>
+  </div>
+</section>
+
+<!-- 8. Writing -->
+<section class="slide" style="--accent: var(--amber)">
+  <div class="text">
+    <p class="kicker in">2008</p>
+    <h2 class="in" style="--d:1">A language that got its alphabet in 2008</h2>
+    <div class="bar in" style="--d:2"></div>
+    <ul class="dots">
+      <li class="in" style="--d:3">For most of the 20th century Uilta had <strong>no practical writing system</strong>. Soviet alphabet programmes of the 1930s, which gave scripts to dozens of Siberian languages, passed it by — the community was too small to be worth the effort.</li>
+      <li class="in" style="--d:4">The person who finally built one was a Japanese linguist, <strong>Jirō Ikegami</strong>, who had studied Uilta since the 1950s and compiled a dictionary of it.</li>
+      <li class="in" style="--d:5">In <strong>2008</strong> the first Uilta primer was published — a Cyrillic-based system, produced with Uilta speakers including <strong>Elena Bibikova</strong>, with local funding. The title translates roughly as "let's speak Uilta."</li>
+      <li class="in" style="--d:6">The language is now taught in <strong>one school</strong> on Sakhalin.</li>
+    </ul>
+    <p class="in" style="--d:7">Think about that sequence. A writing system arrived a century after the colonisation, decades after the gulag, and at a point when the number of fluent speakers had fallen into double digits. It is not too late to be useful. It is extremely late.</p>
+  </div>
+  <div class="stage">
+    <div class="panel in" style="--d:3; width:34vw">
+      <strong>Who made Uilta writable?</strong>
+      <p class="note" style="margin:.3rem 0 0">A collaboration that crossed the same border that broke the community apart: a Japanese linguist who had worked with Uilta speakers who fled to Hokkaido in 1945, and Uilta speakers still living in Russia. The 2008 primer lists both.</p>
+      <p class="note" style="margin:.4rem 0 0">Earlier, during the Japanese occupation, a researcher named Nakanome Akira had published a short grammar with about a thousand words — meaning that some of the oldest documentation of this Russian language is in Japanese.</p>
+    </div>
+    <div class="panel in" style="--d:5; width:34vw">
+      <strong>Discuss:</strong> is a writing system worth building for a language with ten speakers? List what it makes possible — and what it cannot do.
+    </div>
+  </div>
+</section>
+
+<!-- 9. How many speakers -->
+<section class="slide" data-tr="left" style="--accent: var(--red)">
+  <div class="text">
+    <p class="kicker in">Think like a statistician</p>
+    <h2 class="in" style="--d:1">Pick a number. Any number.</h2>
+    <div class="bar in" style="--d:2"></div>
+    <p class="in" style="--d:3">How many people speak Uilta? Depending on which source you open, the answer is 116, or 64, or 47, or 26, or 10, or 8. These are not sloppy numbers. They are answers to <strong>different questions</strong>.</p>
+    <p class="in" style="--d:4">Click each figure in the panel and work out what it is actually measuring. This is a skill worth more than any single fact in this course: whenever you see a speaker count, ask who counted, how, and what counted as speaking.</p>
+    <p class="note in" style="--d:5">Note especially the gap between a census figure and a linguist's figure. A census asks people to describe themselves, in a context where saying you know your heritage language is a statement of pride. A fieldworker sits down and has a conversation.</p>
+  </div>
+  <div class="stage">
+    <div class="panel in" style="--d:3; width:35vw">
+      <strong>Uilta speakers — six answers:</strong>
+      <div class="nums" id="nums" style="margin-top:.5rem">
+        <button class="numb" data-n="0"><b>116</b><small>2020 Russian census</small></button>
+        <button class="numb" data-n="1"><b>64</b><small>2002 Russian census</small></button>
+        <button class="numb" data-n="2"><b>26–47</b><small>2010 Russian census</small></button>
+        <button class="numb" data-n="3"><b>10</b><small>Yamada, fieldwork 2010</small></button>
+        <button class="numb" data-n="4"><b>50</b><small>Yamada, all levels</small></button>
+        <button class="numb" data-n="5"><b>8–10</b><small>recent estimates</small></button>
+      </div>
+      <p id="numsg" aria-live="polite">Click a figure.</p>
+    </div>
+  </div>
+</section>
+
+<!-- 10. Timeline -->
+<section class="slide" data-tr="zoom" style="--accent: var(--amber)">
+  <div class="text wide">
+    <p class="kicker in">History</p>
+    <h2 class="in" style="--d:1">A century of other people's borders</h2>
+    <div class="bar in" style="--d:2"></div>
+    <p class="in" style="--d:3">Click each moment to explore it.</p>
+    <div class="tl in" id="tl" style="--d:4">
+      <button class="ev" style="--ec: var(--lichen)"><span class="yr">1897</span><small>Nearly 800 counted</small></button>
+      <button class="ev" style="--ec: #c7d6cc"><span class="yr">1905–45</span><small>The island divided</small></button>
+      <button class="ev" style="--ec: var(--amber)"><span class="yr">1945</span><small>Arrested as spies</small></button>
+      <button class="ev" style="--ec: #e8c08a"><span class="yr">1975–84</span><small>The campaign</small></button>
+      <button class="ev" style="--ec: var(--red)"><span class="yr">1989–2010</span><small>The counts fall</small></button>
+      <button class="ev" style="--ec: var(--snow)"><span class="yr">2008 →</span><small>An alphabet, a school</small></button>
+    </div>
+    <div class="panel in" id="tltext" style="--d:5" aria-live="polite"></div>
+  </div>
+</section>
+
+<!-- 11. Quiz -->
+<section class="slide" style="--accent: var(--snow)">
+  <div class="text wide center">
+    <p class="kicker in">Review on the snow</p>
+    <h2 class="in" style="--d:1">Quick quiz!</h2>
+    <div class="bar in" style="--d:2"></div>
+    <div class="quizgrid">
+      <div class="quiz panel in" style="--d:3" data-right="Yes — the only reindeer herders on Sakhalin, using them for transport as well as food." data-wrong="Hint: it's in their name.">
+        <div class="q">What set the Uilta apart from their island neighbours?</div>
+        <div class="options"><button class="opt">Sea hunting</button><button class="opt" data-correct>Reindeer herding</button><button class="opt">Rice farming</button></div>
+        <div class="feedback"></div>
+      </div>
+      <div class="quiz panel in" style="--d:4" data-right="Right — not Japanese citizens, so not evacuated; and those conscripted were arrested as spies." data-wrong="Hint: the Karafuto Ainu got citizenship in 1932. The Uilta did not.">
+        <div class="q">Why were the Uilta left behind in 1945?</div>
+        <div class="options"><button class="opt">They refused to leave</button><button class="opt" data-correct>They were not Japanese citizens</button><button class="opt">The ships were full</button></div>
+        <div class="feedback"></div>
+      </div>
+      <div class="quiz panel in" style="--d:5" data-right="Correct — the first Uilta primer was published in 2008." data-wrong="Hint: more recently than you'd expect.">
+        <div class="q">When did Uilta get a working writing system?</div>
+        <div class="options"><button class="opt">1930s</button><button class="opt">1950s</button><button class="opt" data-correct>2008</button></div>
+        <div class="feedback"></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- 12. Closing -->
+<section class="slide end" style="--accent: var(--snow)">
+  <div class="text">
+    <h1 class="in" style="font-size:4.4rem">Jakka Duxuni</h1>
+    <p class="lead in" style="--d:1; margin-top:.8rem">"A house for keeping precious things." Thank you! Questions?</p>
+    <p class="quote in" style="--d:2">A people of three hundred were colonised by one empire, conscripted by its army, imprisoned by the next empire for obeying it, refused a pension by the first, and then built themselves a museum because no country would do it for them.</p>
+    <p class="note in" style="--d:3">The language got its alphabet in 2008. It is taught in one school, on an island where fewer than ten people can still speak it properly.</p>
+  </div>
+  <details class="fine in" style="--d:4">
+    <summary>Sources &amp; image credits</summary>
+    <div class="box">
+      <h4>Sources</h4>
+      <ul>
+        <li><a href="https://en.wikipedia.org/wiki/Uilta_language">Uilta language (Wikipedia)</a> — census and fieldwork speaker figures, dialects, Nakanome's grammar</li>
+        <li><a href="https://en.wikipedia.org/wiki/Oroks">Oroks (Wikipedia)</a> — population, reindeer herding, the <em>ula</em> etymology</li>
+        <li><a href="https://eprints.lib.hokudai.ac.jp/repo/huscap/all/37062/TSUMAGARI.pdf">Tsumagari, "Grammatical outline of Uilta (revised)" (Hokkaido University)</a> — phonology, the 2008 primer, Ikegami's work</li>
+        <li><a href="https://www.omniglot.com/writing/orok.htm">Omniglot: Orok / Uilta</a> — the Cyrillic alphabet and vowel harmony sets</li>
+        <li>Ikegami Jirō, <em>ウイルタ語辞典 A Dictionary of the Uilta Language Spoken on Sakhalin</em></li>
+        <li>Ikegami, Bibikova, Kitazima, Minato, Roon &amp; Fedjaeva, <em>Uiltadairisu</em> — the 2008 Uilta primer</li>
+        <li><a href="https://en.wikipedia.org/wiki/Dahinien_Gend%C4%81nu">Dahinien Gendānu (Wikipedia)</a> — the Uilta Kyōkai, Jakka Dukhuni, the refused pension</li>
+        <li><a href="https://unseen-japan.com/uilta-sakhalan-japan-part-1/">Unseen Japan: Becoming Japanese — the story of the indigenous Uilta of Sakhalin</a></li>
+        <li><a href="https://unseen-japan.com/uilta-part-2-invisible-indigenous/">Unseen Japan: The Uilta — an invisible indigenous group in Japan</a></li>
+        <li><a href="https://press-files.anu.edu.au/downloads/press/n6994/html/ch07.xhtml">Morris-Suzuki, <em>On the Frontiers of History</em> (ANU Press)</a> — Otasu, citizenship in 1932, the 1945 evacuation</li>
+        <li><a href="https://www.tokyoartbeat.com/en/events/-/Jakka-Duxuni/takashimaya-archives-tokyo/2024-03-16">Tokyo Art Beat: the Jakka Duxuni collection exhibited in Tokyo (2024)</a></li>
+        <li><a href="https://www.encyclopedia.com/humanities/encyclopedias-almanacs-transcripts-and-maps/orok">Encyclopedia of World Cultures: Orok</a> — the 1897 census, the 1925 reindeer count, northern and southern groups</li>
+        <li><a href="https://ejournals.eu/en/journal/studia-etymologica-cracoviensia/article/on-the-ethnonyms-orok-and-uryangkhai">Janhunen, "On the ethnonyms Orok and Uryangkhai"</a> — the case against the "reindeer" etymology</li>
+        <li><a href="https://en.wikipedia.org/wiki/Karafuto_Prefecture">Karafuto Prefecture (Wikipedia)</a></li>
+      </ul>
+      <h4>Images (Wikimedia Commons)</h4>
+      <ul id="credits"></ul>
+    </div>
+  </details>
+</section>
+
+</main>
+
+<nav class="controls">
+  <button id="prev" aria-label="Previous slide">‹</button>
+  <span id="counter">1 / 12</span>
+  <button id="next" aria-label="Next slide">›</button>
+  <button id="fs" aria-label="Fullscreen">⤢</button>
+</nav>
+<p class="hint">Use ← → to move. Press F for fullscreen.</p>
+
+<!-- Uilta effects: caravan and border, reindeer uses, the 1945 doors, Gendanu's life, vowel harmony, census figures -->
+<script>
+(function () {
+  var snow = document.querySelector("#taiga .snow");
+  for (var s = 0; s < 70; s++) {
+    var p = document.createElement("i");
+    p.style.left = Math.random() * 100 + "%";
+    p.style.animationDuration = (8 + Math.random() * 11) + "s";
+    p.style.animationDelay = (-Math.random() * 16) + "s";
+    snow.appendChild(p);
+  }
+  document.addEventListener("slidechange", function (e) {
+    document.body.style.setProperty("--t", e.detail.index / (e.detail.total - 1));
+  });
+
+  function single(selector, callback) {
+    var grp = document.querySelectorAll(selector);
+    grp.forEach(function (b) {
+      b.addEventListener("click", function () {
+        grp.forEach(function (x) { x.classList.remove("on"); });
+        b.classList.add("on");
+        callback(b);
+      });
+    });
+  }
+
+  /* ---------- Reindeer uses ---------- */
+  var USES = [
+    ["Transport", "The reindeer carried packs, carried riders, and pulled sleds. No other people on Sakhalin or the lower Amur used reindeer this way — their neighbours moved by boat and by dog team. In roadless taiga and bog, that difference decided where the Uilta could live and trade."],
+    ["Food", "Milk, meat and blood, used sparingly — these were small herds, and an animal was worth more alive and working than eaten. Fishing and hunting supplied most of the diet; the reindeer was the thing that made reaching the fish and the game possible."],
+    ["Clothing and gear", "Hides for coats and boots, sinew for thread, antler and bone for tools and harness fittings. The specialised vocabulary for all of this is part of what a language loses when the practice stops."],
+    ["Wealth and kinship", "A family's standing was counted in reindeer, and animals moved between families at marriages and in obligations. In 1925 one count found about 1,011 reindeer among forty-six families — and many families had fewer than five, or none at all."]
+  ];
+  var dmsg = document.getElementById("dmsg");
+  single(".hot", function (b) {
+    var U = USES[Number(b.dataset.h)];
+    dmsg.innerHTML = "<strong style='color:var(--amber)'>" + U[0] + "</strong><br>" + U[1];
+  });
+
+  /* ---------- 1945 doors ---------- */
+  var DOORS = [
+    ["var(--lichen)", "Evacuated.", "You are a Japanese citizen. As the Soviet army advances, you join the mass evacuation of Karafuto's civilian population to Hokkaido — hundreds of thousands of people, leaving almost everything behind. Hard, frightening, and survivable."],
+    ["var(--lichen)", "Evacuated.", "The Karafuto Ainu won full Japanese citizenship in 1932 after a long campaign. In 1945 that status means you are included in the evacuation. Most Karafuto Ainu were resettled in Hokkaido, where they faced a different set of hardships — but they got out."],
+    ["var(--amber)", "Left behind.", "You are not a Japanese citizen, so you are not part of the evacuation. Many Uilta at Otasu tried to join it and could not find transport in time. Your homeland is now entirely Soviet, you are inside a border zone, and the authorities know your community worked for the Japanese."],
+    ["var(--red)", "Arrested.", "You were conscripted in 1942 and trained by Japanese army intelligence to cross into Soviet territory. When the Soviets arrive they arrest the young men who did exactly that. The charge is espionage. The sentence is a labour camp thousands of kilometres away, and some of your Uilta and Nivkh comrades will not come back."]
+  ];
+  var out = document.getElementById("outcome");
+  single("#doors .door", function (b) {
+    var D = DOORS[Number(b.dataset.d)];
+    out.style.setProperty("--out", D[0]);
+    out.innerHTML = "<b>" + D[1] + "</b>" + D[2];
+  });
+
+  /* ---------- Gendanu's life ---------- */
+  var LIFE = [
+    ["1926 · Born", "Daxinnieni Geldanu is born on Sakhalin, in the southern half ruled by Japan as Karafuto. He is the adopted son of an Uilta shaman. The authorities give him a Japanese name, Kitagawa Gentarō."],
+    ["1930s · Otasu", "He grows up in the managed indigenous settlement at Otasu, educated to revere the emperor and taught that his own people are backward and uncivilised. He wants, badly, to be accepted as Japanese."],
+    ["1942 · Conscription", "He is inducted into Japanese army intelligence and trained for reconnaissance missions across the border into Soviet Sakhalin. He volunteers eagerly. Uilta and Nivkh men know the taiga and the border country better than anyone, which is exactly why both sides want them."],
+    ["1945 · Arrest", "The Soviet army invades in August. Returning from a mission, Gendanu finds the colony gone and himself under arrest for espionage. He is sent to a labour camp at Kansk, deep in Siberia. Everything he was taught at Otasu — the loyalty, the silence under interrogation — turns out to have been worth nothing to anybody."],
+    ["Post-war · To Japan", "He eventually reaches Japan, settling near Abashiri in northern Hokkaido, where other Sakhalin indigenous people had ended up. He is in a country that does not recognise his people, does not count them, and does not consider him a veteran."],
+    ["1975–78 · The campaign", "He founds the Uilta Kyōkai to fight for Uilta rights and traditions. In 1978 he publishes his autobiography, written with a local high-school teacher, and opens Jakka Duxuni — a museum of Sakhalin's indigenous peoples, with himself as director."],
+    ["1984 · Died", "He applied again and again for a veteran's pension. The government's answer was that Uilta had never been eligible for service, so their recruitment had been illegal and no compensation was due. He died in 1984 with no pension and no compensation — and with a museum, an association and a written record of his language that would not otherwise exist."]
+  ];
+  var gi = 0, gbar = document.getElementById("gbar");
+  LIFE.forEach(function () { gbar.appendChild(document.createElement("i")); });
+  function setLife(i) {
+    gi = (i + LIFE.length) % LIFE.length;
+    document.getElementById("gh").textContent = LIFE[gi][0];
+    document.getElementById("gp").textContent = LIFE[gi][1];
+    gbar.querySelectorAll("i").forEach(function (x, k) { x.classList.toggle("on", k <= gi); });
+  }
+  document.getElementById("gprev").addEventListener("click", function () { setLife(gi - 1); });
+  document.getElementById("gnext").addEventListener("click", function () { setLife(gi + 1); });
+  setLife(0);
+
+  /* ---------- Vowel harmony ---------- */
+  var VOW = [
+    ["а", "hard"], ["ы", "hard"], ["о", "hard"], ["у", "hard"],
+    ["и", "soft"], ["э", "soft"], ["ө", "soft"], ["ү", "soft"]
+  ];
+  var vbox = document.getElementById("vowels"), placed = 0;
+  var vhmsg = document.getElementById("vhmsg");
+  VOW.forEach(function (v, i) {
+    var b = document.createElement("button");
+    b.className = "vw"; b.textContent = v[0];
+    b.addEventListener("click", function () {
+      if (b.classList.contains("hard") || b.classList.contains("soft")) return;
+      b.classList.add(v[1]);
+      var tgt = document.getElementById(v[1] === "hard" ? "teamh" : "teams2");
+      var sp = document.createElement("span"); sp.textContent = v[0]; tgt.appendChild(sp);
+      placed++;
+      vhmsg.innerHTML = v[1] === "hard"
+        ? "<strong style='color:var(--larch)'>Hard team.</strong> These vowels are made further back in the mouth. A word built from them takes hard endings — and cannot contain a soft vowel anywhere."
+        : "<strong style='color:var(--lichen)'>Soft team.</strong> A word built from these takes soft endings instead. One long vowel in Uilta is neutral and can appear in either kind of word.";
+      if (placed === 8) {
+        vhmsg.innerHTML += "<br><br>All eight sorted. Now the consequence: an ending like \u201cour\u201d or \u201cyour\u201d has <strong>two forms</strong>, and you cannot choose between them until you know which team the word plays for.";
+      }
+    });
+    vbox.appendChild(b);
+  });
+
+  /* ---------- Census figures ---------- */
+  var NUMS = [
+    ["116 — the 2020 Russian census", "This is the highest figure anywhere, and it is almost certainly not measuring fluent speakers. Censuses ask people whether they know a language, and in a community with 300 members, saying yes is partly a statement of identity. Compare it with the ethnic population: it would mean roughly a third of all Uilta speak the language, which no fieldworker has found."],
+    ["64 — the 2002 Russian census", "Out of 346 people recorded as Uilta, 64 were listed as competent in the language. Note the definition problem buried in that census: people who called themselves \u201cOroch with Ulta language,\u201d \u201cUlta,\u201d \u201cUilta\u201d and several other labels were all counted together."],
+    ["26–47 — the 2010 Russian census", "Eight years later, and a figure less than half the previous one. Some of that is real decline — the speakers were elderly in 2002. Some of it is a change in how the question was asked and counted."],
+    ["10 — active speakers, fieldwork 2010", "A researcher who actually sat down with the community found ten people who use the language actively. This is the number that means what you think \u201cspeaker\u201d means."],
+    ["50 — all levels of knowledge", "The same fieldwork counted ten active speakers, sixteen who are conditionally bilingual, and twenty-four who can follow Uilta with Russian help. Add them and you get about fifty people with some command of the language. All three groups are real; they are just not the same thing."],
+    ["8–10 — recent estimates", "The current figure in the reference works. Fewer than a dozen people, nearly all elderly. Whichever number you started with, this is where the line is heading."]
+  ];
+  var numsg = document.getElementById("numsg");
+  single("#nums .numb", function (b) {
+    var N = NUMS[Number(b.dataset.n)];
+    numsg.innerHTML = "<strong>" + N[0] + "</strong><br>" + N[1];
+  });
+
+  /* ---------- Timeline ---------- */
+  var EVENTS = [
+    ["Nearly eight hundred counted", "The 1897 Russian census recorded 446 northern and 334 southern Orok — close to 800 people. In later censuses they often were not distinguished as a separate people at all, which is its own kind of disappearance: you cannot track what you stop counting."],
+    ["The island divided", "Japan took southern Sakhalin after the Russo-Japanese War, and from 1905 to 1945 an international border ran across the middle of the island at the 50th parallel. The Uilta, a herding people who moved seasonally, now lived in a frontier zone watched by two armies. Under Japanese rule many were concentrated at Otasu, and unlike the Karafuto Ainu they were never granted citizenship."],
+    ["Arrested as spies", "Soviet forces invaded in August 1945. The Uilta and Nivkh were not evacuated, because they were not Japanese citizens. The young men who had been trained by Japanese intelligence for cross-border missions were arrested almost immediately and sent to labour camps. A community of a few hundred lost a significant part of a generation."],
+    ["The campaign", "Gendanu founded the Uilta Kyōkai in 1975, published his autobiography in 1978, and opened the Jakka Duxuni museum in Abashiri the same year. He spent the rest of his life seeking recognition and a pension for Uilta who had served, and died in 1984 without either. Kitagawa Aiko continued the work, asking Tokyo in 1995 for a memorial to the Uilta war dead and receiving no answer."],
+    ["The counts fall", "The 1989 census recorded 200 Uilta, of whom under half spoke the language. By 2002 it was 346 people and 64 speakers; by 2010, 295 people and far fewer speakers. Soviet and Russian policy did to the Uilta what it did across Siberia: settlement, Russian-language boarding schools, and an economy with no place for a small herding people."],
+    ["An alphabet, a school", "In 2008 the first Uilta primer appeared, giving the language a workable Cyrillic writing system at last — the product of a Japanese linguist's fifty years of work and the Uilta speakers who taught him. Uilta is now taught in one school on Sakhalin. Meanwhile the Jakka Duxuni closed in 2012, and its collection is now in a larger museum in Abashiri."]
+  ];
+  var tlText = document.getElementById("tltext");
+  var evs = document.querySelectorAll("#tl .ev");
+  function setEvent(i) {
+    evs.forEach(function (e, k) { e.classList.toggle("on", k === i); });
+    tlText.innerHTML = '<strong style="color:var(--amber); font-size:1.2rem">' + EVENTS[i][0] + "</strong><br>" + EVENTS[i][1];
+  }
+  evs.forEach(function (e, i) { e.addEventListener("click", function () { setEvent(i); }); });
+  setEvent(0);
+})();
+</script>
+<script src="../assets/deck.js"></script>
+</body>
+</html>
