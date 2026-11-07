@@ -1,0 +1,658 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Koro Aka: The Language Hiding in Plain Sight</title>
+<link rel="stylesheet" href="../assets/deck.css">
+<style>
+@import url("https://fonts.googleapis.com/css2?family=Spectral:wght@600;800&family=Barlow:wght@400;500;600;800&display=swap");
+
+/* ---------- Koro theme: Eastern Himalayan foothills, mist, hearth light ---------- */
+:root {
+  --bg: #0a1a1c;
+  --ink: #f0f3ee;
+  --muted: #bdd0cd;
+  --line: rgba(240, 243, 238, .22);
+  --panel: rgba(10, 32, 34, .85);
+  --hill: #2f5452;
+  --mist: #cfdede;
+  --hearth: #f0a24a;
+  --bamboo: #d9c48a;
+  --koro: #45d0c0;
+  --red: #d1543f;
+  --rose: #d1543f;
+  --accent: var(--koro);
+  --serif: "Spectral", Georgia, serif;
+  --sans: "Barlow", system-ui, sans-serif;
+  --t: 0;
+  font-size: clamp(12px, 1.3vw, 28px);
+}
+h1 { font-family: var(--serif); font-size: 5.4rem; font-weight: 800; line-height: 1.02; }
+h2 { font-family: var(--serif); font-size: 2.6rem; font-weight: 800; line-height: 1.12; }
+.slide { padding: 7vh 4vw 8vh 6vw; }
+.text { max-width: 44vw; }
+.text.wide { max-width: 86vw; width: 86vw; }
+.stage {
+  right: 5vw; top: 6vh; bottom: 10vh; width: 38vw;
+  display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 1.1rem;
+}
+ul.dots li { font-size: 1.04rem; }
+.speak .line, .card .word { font-family: var(--sans); font-weight: 800; }
+.card.revealed .meaning { max-height: 15rem; }
+.btn { background: var(--koro); color: #04231f; }
+.syl.on { background: var(--koro); color: #04231f; }
+.loc .disc { border-color: var(--koro); box-shadow: 0 0 0 .55rem rgba(69,208,192,.16), 0 22px 40px rgba(0,0,0,.55); }
+.loc .tint { background: #cfe0c6; }
+.loc .sea { background: #10404a; }
+.loc .tag { background: #082527; border-color: var(--koro); }
+.note { font-size: .82rem; color: var(--muted); }
+.quote { font-family: var(--serif); font-size: 1.65rem; font-weight: 600; line-height: 1.34; color: var(--koro); }
+
+/* ---------- Background: hills, mist, village lights, one different ---------- */
+#hills { position: fixed; inset: 0; z-index: 0; overflow: hidden; pointer-events: none;
+  background: linear-gradient(180deg, #06121a 0%, #0c2a2e 44%, #14403c 72%, #0a2423 100%); }
+#hills .ridge { position: absolute; left: 0; right: 0; }
+#hills .ridge svg { width: 100%; height: 100%; display: block; }
+#hills .r1 { bottom: 26vh; height: 40vh; opacity: .45; }
+#hills .r2 { bottom: 14vh; height: 36vh; opacity: .7; }
+#hills .r3 { bottom: 0; height: 30vh; opacity: 1; }
+#hills .lamp { position: absolute; width: 5px; height: 5px; border-radius: 50%;
+  background: var(--hearth); box-shadow: 0 0 9px 2px rgba(240,162,74,.6);
+  opacity: 0; transition: opacity 1.5s ease; animation: flicker 4s ease-in-out infinite; }
+@keyframes flicker { 50% { opacity: .72; } }
+#hills .lamp.koro { background: var(--koro); box-shadow: 0 0 14px 4px rgba(69,208,192,.75); width: 7px; height: 7px; }
+#hills .mistband { position: absolute; left: -10%; right: -10%; height: 16vh;
+  background: linear-gradient(180deg, rgba(207,222,222,0), rgba(207,222,222,.4), rgba(207,222,222,0));
+  filter: blur(9px); animation: drift 34s linear infinite alternate; }
+#hills .mistband.m1 { bottom: 22vh; }
+#hills .mistband.m2 { bottom: 38vh; animation-duration: 48s; animation-direction: alternate-reverse; }
+@keyframes drift { to { transform: translateX(10%); } }
+#hills .mistwrap { position: absolute; inset: 0; opacity: calc(1 - var(--t) * .55); transition: opacity 1.6s ease; }
+#hills .shade { position: absolute; inset: 0;
+  background: linear-gradient(90deg, rgba(3,12,14,.95) 0%, rgba(3,12,14,.78) 50%, rgba(3,12,14,.3) 100%); }
+
+/* ---------- Photos ---------- */
+.board { position: relative; margin: 0; width: var(--w, 19vw); padding: .6rem .6rem .5rem;
+  background: #e9e5d6; border-radius: .2rem; box-shadow: 0 18px 34px rgba(0,0,0,.6);
+  transform: rotate(var(--r, 0deg)); transition: transform .9s cubic-bezier(.2,.8,.2,1), opacity .7s ease; }
+.slide:not(.active) .board { opacity: 0; transform: translateY(46px) rotate(var(--r, 0deg)); }
+.slide.active .board { transition-delay: calc(.4s + var(--d, 0) * .16s); }
+.board img { display: block; width: 100%; aspect-ratio: var(--ar, 4 / 3); object-fit: cover; background: #c7c3b0; }
+.board figcaption { color: #22281f; font-size: .73rem; font-weight: 700; line-height: 1.25; margin: .4rem .1rem 0; font-family: var(--serif); }
+
+/* ---------- Shared controls ---------- */
+.switch { display: flex; gap: .4rem; margin: .4rem 0 .6rem; flex-wrap: wrap; }
+.sbtn { font: inherit; font-weight: 600; font-size: .92rem; color: var(--ink); background: var(--panel);
+  border: 2px solid var(--line); border-radius: .3rem; padding: .25em .9em; cursor: pointer; transition: transform .2s; }
+.sbtn:hover { transform: translateY(-2px); }
+.sbtn.on { background: var(--koro); border-color: var(--koro); color: #04231f; }
+.out { min-height: 3.2em; margin-top: .5rem; }
+
+/* ---------- Notebook game ---------- */
+.notebook { background: #f1ead6; color: #22281f; border-radius: .3rem; padding: .7rem .8rem; box-shadow: inset 0 0 0 2px rgba(0,0,0,.12); }
+.nbrow { display: grid; grid-template-columns: 5.5rem 1fr 1fr; gap: .4rem; align-items: center;
+  border-bottom: 1px dashed rgba(0,0,0,.25); padding: .3rem 0; font-family: var(--sans); }
+.nbrow.head { font-weight: 800; font-size: .76rem; text-transform: uppercase; letter-spacing: .06em; border-bottom-width: 2px; border-bottom-style: solid; }
+.nbrow .gl { font-size: .84rem; font-weight: 600; }
+.nbrow .wd { font-size: 1.25rem; font-weight: 800; }
+.nbrow .wd.k { color: #0d7f74; }
+.nbrow.hidden .wd { color: transparent; text-shadow: 0 0 10px rgba(0,0,0,.5); }
+.verdict2 { display: flex; gap: .4rem; justify-content: center; margin-top: .5rem; }
+#nbmsg { min-height: 4.6em; margin-top: .4rem; }
+
+/* ---------- 9% grid ---------- */
+.grid100 { display: grid; grid-template-columns: repeat(10, 1fr); gap: 3px; margin: .5rem 0; }
+.grid100 i { aspect-ratio: 1; border-radius: 2px; background: rgba(255,255,255,.12); transition: background .5s; }
+.grid100 i.hit { background: var(--koro); }
+.grid100 i.dial { background: var(--hearth); }
+#gmsg { min-height: 4.4em; }
+
+/* ---------- Evidence board ---------- */
+.evlist { display: grid; gap: .4rem; }
+.evb { font: inherit; text-align: left; font-weight: 600; font-size: .86rem; color: var(--ink); background: var(--panel);
+  border: 2px solid var(--line); border-radius: .3rem; padding: .45em .7em; cursor: pointer; }
+.evb:hover { border-color: var(--koro); }
+.evb.on { border-color: var(--hearth); background: rgba(240,162,74,.14); }
+.hyps { display: grid; grid-template-columns: repeat(3, 1fr); gap: .35rem; margin-top: .5rem; }
+.hyp { background: var(--panel); border: 2px solid var(--line); border-radius: .3rem; padding: .4rem .3rem; text-align: center;
+  font-size: .76rem; font-weight: 700; transition: border-color .4s, background .4s; }
+.hyp.lit { border-color: var(--koro); background: rgba(69,208,192,.16); }
+#evmsg { min-height: 5.2em; margin-top: .4rem; }
+
+/* ---------- Family map ---------- */
+.fammap { display: grid; grid-template-columns: repeat(2, 1fr); gap: .4rem; }
+.fam { font: inherit; text-align: left; font-weight: 700; font-size: .84rem; color: var(--ink); background: var(--panel);
+  border: 2px solid var(--line); border-radius: .3rem; padding: .4em .6em; cursor: pointer; }
+.fam:hover { border-color: var(--bamboo); }
+.fam.on { border-color: var(--bamboo); background: rgba(217,196,138,.16); }
+.fam small { display: block; font-weight: 400; font-size: .72rem; color: var(--muted); }
+#fammsg { min-height: 5em; margin-top: .4rem; }
+
+/* ---------- Identity toggle ---------- */
+.idbox { display: grid; grid-template-columns: 1fr 1fr; gap: .5rem; }
+.idcol { background: var(--panel); border: 2px solid var(--line); border-radius: .35rem; padding: .55rem .6rem; }
+.idcol h4 { margin: 0 0 .25rem; font-family: var(--serif); font-size: 1rem; }
+.idcol.a h4 { color: var(--hearth); }
+.idcol.b h4 { color: var(--koro); }
+.idcol p { margin: 0; font-size: .85rem; }
+
+/* ---------- Timeline ---------- */
+.tl { display: grid; grid-template-columns: repeat(6, 1fr); gap: .55rem; margin-top: 1rem; position: relative; padding-bottom: 1.4rem; }
+.tl::after { content: ""; position: absolute; left: 0; right: 0; bottom: .45rem; height: 3px; border-radius: 3px;
+  background: linear-gradient(90deg, var(--hill), var(--hearth), var(--koro)); }
+.ev { font: inherit; text-align: left; color: #122320; background: var(--ec); border: 0; border-radius: .3rem;
+  padding: .65rem .75rem; cursor: pointer; transition: transform .25s, box-shadow .25s; }
+.ev:hover { transform: translateY(-4px); }
+.ev.on { box-shadow: 0 0 0 3px #fff, 0 10px 24px rgba(0,0,0,.4); transform: translateY(-6px); }
+.ev .yr { font-family: var(--serif); font-weight: 800; font-size: 1.25rem; line-height: 1; display: block; }
+.ev small { display: block; font-weight: 700; font-size: .76rem; margin-top: .3rem; }
+#tltext { min-height: 5.4rem; margin-top: .4rem; }
+
+/* ---------- Quiz tint ---------- */
+.opt.right { background: #2e8b74; }
+.opt.wrong { background: var(--red); }
+
+@media (max-width: 820px) {
+  .slide { padding: 6vh 6vw 12vh; }
+  h1 { font-size: 3.1rem; }
+  .text, .text.wide { max-width: none; width: auto; }
+  .stage { position: relative; inset: auto; width: 100%; margin-top: 1.5rem; }
+  .board { width: 74vw; }
+  .stage .panel, .stage .speak { width: 100% !important; max-width: none !important; }
+  .tl { grid-template-columns: repeat(2, 1fr); }
+  .fammap, .idbox { grid-template-columns: 1fr; }
+}
+</style>
+</head>
+<body data-map="BlankMap-Equirectangular.svg">
+
+<div id="hills" aria-hidden="true">
+  <div class="ridge r1"><svg viewBox="0 0 1600 300" preserveAspectRatio="none"><path d="M0 300 V140 L180 70 L360 150 L540 60 L740 160 L920 70 L1120 150 L1320 80 L1600 140 V300 Z" fill="#1b3a40"/></svg></div>
+  <div class="ridge r2"><svg viewBox="0 0 1600 300" preserveAspectRatio="none"><path d="M0 300 V180 L200 110 L400 190 L600 120 L800 200 L1000 130 L1220 196 L1420 136 L1600 186 V300 Z" fill="#1f4544"/></svg></div>
+  <div class="ridge r3"><svg viewBox="0 0 1600 300" preserveAspectRatio="none"><path d="M0 300 V210 L220 170 L440 226 L680 176 L900 230 L1140 182 L1380 232 L1600 200 V300 Z" fill="#153331"/></svg></div>
+  <div class="lamps"></div>
+  <div class="mistwrap"><div class="mistband m1"></div><div class="mistband m2"></div></div>
+  <div class="shade"></div>
+</div>
+<div class="progress"></div>
+
+<main>
+
+<!-- 1. Title -->
+<section class="slide" style="--accent: var(--koro)">
+  <div class="text">
+    <p class="kicker in">Rare Languages of the Asia-Pacific · Module 26</p>
+    <h1 class="in" style="--d:1">Koro Aka</h1>
+    <p class="in" style="--d:2; font-size:1.35rem; font-weight:800; color:var(--koro)">East Kameng, Arunachal Pradesh, India</p>
+    <div class="bar in" style="--d:3"></div>
+    <p class="lead in" style="--d:4">In 2010 the world's language count went up by one. Not because a new language was created — because linguists walked into a village and realised two languages were being spoken there, and nobody had noticed</p>
+    <p class="muted in" style="--d:5">Watch the hillside: the village lights are coming on. One of them is not like the others.</p>
+  </div>
+  <div class="stage">
+    <figure class="board" style="--w:24vw; --r:1.5deg; --d:0">
+      <img data-wiki="Arunachal Pradesh" data-width="1200" alt="Hills of Arunachal Pradesh, northeast India">
+      <figcaption>Arunachal Pradesh — perhaps the least linguistically surveyed place on earth</figcaption>
+    </figure>
+  </div>
+</section>
+
+<!-- 2. Where and who -->
+<section class="slide" data-tr="left" style="--accent: var(--hill)">
+  <div class="text">
+    <p class="kicker in">Where and who</p>
+    <h2 class="in" style="--d:1">A thousand people in the hills</h2>
+    <div class="bar in" style="--d:2"></div>
+    <ul class="dots">
+      <li class="in" style="--d:3">Arunachal Pradesh is India's northeasternmost state: forested Himalayan foothills on the borders of Bhutan, Tibet and Myanmar, with dozens of languages packed into valleys that are hard to reach.</li>
+      <li class="in" style="--d:4">In the <strong>Kameng</strong> districts live the <strong>Aka</strong>, also called Hruso — four to six thousand people, farmers and hunters in villages of stilt houses.</li>
+      <li class="in" style="--d:5">Among them, in the same villages, in the same tribe, live the <span class="hl">Koro</span> — somewhere between <strong>800 and 1,500</strong> people, who speak something else entirely.</li>
+      <li class="in" style="--d:6">Koro is unwritten, passed on by speaking. Few speakers are under twenty, and many younger Koro now use <strong>Hindi</strong> as their main language.</li>
+    </ul>
+    <p class="note in" style="--d:7">Visiting Arunachal Pradesh requires a government permit even for Indian citizens from other states. That restriction is one reason its languages have gone unrecorded for so long.</p>
+  </div>
+  <div class="stage">
+    <div class="loc" data-lat="27.3" data-lon="93.0" data-zoom="6" style="--s:13vw; --d:0">
+      <div class="disc"><div class="lmap"></div><div class="tint"></div><div class="sea"></div><span class="pinpt"></span></div>
+      <span class="tag">East Kameng District, Arunachal Pradesh, India</span>
+    </div>
+    <div class="panel in" style="--d:4; width:34vw">
+      <strong>Two languages, one village</strong>
+      <p class="note" style="margin:.3rem 0 0">This is the unusual part. Koro speakers are not a separate tribe living down the valley. They are <em>members of the Aka tribe</em> — same community, same festivals, same chief, intermarried for generations — who speak a language their neighbours cannot understand.</p>
+      <p class="note" style="margin:.4rem 0 0">And until 2010, both communities described the difference as a matter of accent.</p>
+    </div>
+  </div>
+</section>
+
+<!-- 3. The discovery -->
+<section class="slide" data-tr="zoom" style="--accent: var(--koro)">
+  <div class="text">
+    <p class="kicker in">Be the linguist</p>
+    <h2 class="in" style="--d:1">How you find a hidden language</h2>
+    <div class="bar in" style="--d:2"></div>
+    <p class="in" style="--d:3">In 2008 a team from the National Geographic <strong>Enduring Voices</strong> project — Gregory Anderson, David Harrison and Ganesh Murmu — went to Arunachal Pradesh to record two little-documented languages, Aka and Miji.</p>
+    <p class="in" style="--d:4">They worked the way linguists do: house to house, collecting a standard word list. Body parts, numbers, animals, landscape. And partway through, the words stopped matching.</p>
+    <p class="in" style="--d:5">The speakers had told them it was the same language with a slight difference in accent. The notebook said otherwise. Use the panel and see what they saw.</p>
+    <p class="note in" style="--d:6">This is why word lists exist. They are boring, repetitive, and they catch things that conversation and good manners hide.</p>
+  </div>
+  <div class="stage">
+    <div class="panel in" style="--d:3; width:35vw">
+      <strong>Your field notebook:</strong> reveal each pair, then decide.
+      <div class="notebook" style="margin-top:.5rem">
+        <div class="nbrow head"><span>meaning</span><span>village A</span><span>village B</span></div>
+        <div class="nbrow hidden" data-w="0"><span class="gl">pig</span><span class="wd">vo</span><span class="wd k">lele</span></div>
+        <div class="nbrow hidden" data-w="1"><span class="gl">mountain</span><span class="wd">phu</span><span class="wd k">nggo</span></div>
+        <div class="nbrow hidden" data-w="2"><span class="gl">…and so on</span><span class="wd">?</span><span class="wd k">?</span></div>
+      </div>
+      <div class="verdict2">
+        <button class="sbtn" id="revealw">reveal the next word</button>
+        <button class="sbtn" id="samebtn">same language</button>
+        <button class="sbtn" id="diffbtn">different language</button>
+      </div>
+      <p id="nbmsg" aria-live="polite">Reveal a word first.</p>
+    </div>
+  </div>
+</section>
+
+<!-- 4. Nine in a hundred -->
+<section class="slide" style="--accent: var(--koro)">
+  <div class="text">
+    <p class="kicker in">The measurement</p>
+    <h2 class="in" style="--d:1">Nine words in a hundred</h2>
+    <div class="bar in" style="--d:2"></div>
+    <p class="in" style="--d:3">When linguists want to know how close two speech varieties are, one quick test is to compare basic vocabulary and count the matches. It is rough, but it sorts the obvious cases.</p>
+    <ul class="dots">
+      <li class="in" style="--d:4">As a rule of thumb, two <strong>dialects of one language</strong> share most of their basic words — commonly 80% or more.</li>
+      <li class="in" style="--d:5">Koro and Hruso Aka, spoken in the same villages by people of the same tribe, share about <strong>9%</strong>.</li>
+      <li class="in" style="--d:6">Nine percent is not "a strong accent." Nine percent is roughly what you would expect from two languages that have been apart for thousands of years, or were never together at all.</li>
+    </ul>
+    <p class="note in" style="--d:7">The surveys and censuses that list India's languages had never recorded Koro separately. In 2010 the published world total went from 6,909 languages to 6,910 — one line added to a list, for a language with a full grammar, a vocabulary and a thousand speakers.</p>
+  </div>
+  <div class="stage">
+    <div class="panel in" style="--d:3; width:34vw">
+      <strong>One hundred basic words:</strong>
+      <div class="grid100" id="grid100"></div>
+      <div class="switch" style="justify-content:center">
+        <button class="sbtn" id="showdial">two dialects</button>
+        <button class="sbtn on" id="showkoro">Koro vs Hruso Aka</button>
+      </div>
+      <p id="gmsg" aria-live="polite">Lit squares are words the two varieties share.</p>
+    </div>
+  </div>
+</section>
+
+<!-- 5. Evidence board -->
+<section class="slide" data-tr="left" style="--accent: var(--hearth)">
+  <div class="text">
+    <p class="kicker in">The mystery</p>
+    <h2 class="in" style="--d:1">So where did Koro come from?</h2>
+    <div class="bar in" style="--d:2"></div>
+    <p class="in" style="--d:3">A language does not simply appear inside another community. Either the Koro moved there, or the Aka arrived around them, or something else happened. Three explanations are on the table, and the evidence does not cleanly pick one.</p>
+    <p class="in" style="--d:4">Click each piece of evidence and watch which explanations it supports. Notice that one clue supports two of them at once — which is exactly why this is unsolved.</p>
+    <p class="note in" style="--d:5">Also worth noticing: the hypothesis about enslaved ancestors is raised by researchers as a possibility requiring much more study, not as an established fact. Claims about other people's origins deserve that kind of care.</p>
+  </div>
+  <div class="stage">
+    <div class="panel in" style="--d:3; width:35vw">
+      <strong>Evidence:</strong>
+      <div class="evlist" id="evlist" style="margin-top:.4rem">
+        <button class="evb" data-e="0">Aka were historically slave traders in this region</button>
+        <button class="evb" data-e="1">Koro shares forms with Milang — 500 km east</button>
+        <button class="evb" data-e="2">Some Koro words match nothing known at all</button>
+        <button class="evb" data-e="3">Shared words with Aka look like recent borrowings</button>
+      </div>
+      <div class="hyps" id="hyps">
+        <div class="hyp" data-h="0">A: descendants of people brought here</div>
+        <div class="hyp" data-h="1">B: Siangic — relatives far to the east</div>
+        <div class="hyp" data-h="2">C: a family of its own</div>
+      </div>
+      <p id="evmsg" aria-live="polite">Click a piece of evidence.</p>
+    </div>
+  </div>
+</section>
+
+<!-- 6. The black hole -->
+<section class="slide" style="--accent: var(--bamboo)">
+  <div class="text">
+    <p class="kicker in">The bigger picture</p>
+    <h2 class="in" style="--d:1">The least-mapped language region on earth</h2>
+    <div class="bar in" style="--d:2"></div>
+    <p class="in" style="--d:3">Koro was not a freak event. Arunachal Pradesh has been called the black hole of linguistics, and it has earned it: few linguists have worked there, a permit is required to enter, and no reliable list of the state's languages has ever been completed.</p>
+    <p class="in" style="--d:4">What is there is extraordinary. Several small language families sit side by side in one state — and researchers increasingly suspect that <strong>some of them may not belong to Sino-Tibetan at all</strong>, but could be survivors of older families with no surviving relatives.</p>
+    <p class="in" style="--d:5">Click the families in the panel. The question marks are not laziness. They are the honest state of the science.</p>
+    <p class="note in" style="--d:6">If several independent families really are hiding in one Indian state, this region matters for the history of all of Asia — and most of those languages have a few thousand speakers each.</p>
+  </div>
+  <div class="stage">
+    <div class="panel in" style="--d:3; width:35vw">
+      <strong>Language families of Arunachal Pradesh:</strong>
+      <div class="fammap" id="fammap" style="margin-top:.5rem">
+        <button class="fam" data-f="0">Hrusish<small>Hruso (Aka), Miji</small></button>
+        <button class="fam" data-f="1">Siangic<small>Koro, Milang</small></button>
+        <button class="fam" data-f="2">Kho-Bwa<small>also called Kamengic</small></button>
+        <button class="fam" data-f="3">Tani<small>about 2 million speakers</small></button>
+        <button class="fam" data-f="4">Digaro &amp; Miju<small>Idu, Taraon, Kman</small></button>
+        <button class="fam" data-f="5">Greater Siangic?<small>a proposed bigger grouping</small></button>
+      </div>
+      <p id="fammsg" aria-live="polite">Pick a family.</p>
+    </div>
+  </div>
+</section>
+
+<!-- 7. Tribe and tongue -->
+<section class="slide" data-tr="zoom" style="--accent: var(--hearth)">
+  <div class="text">
+    <p class="kicker in">Identity</p>
+    <h2 class="in" style="--d:1">Aka by tribe, Koro by tongue</h2>
+    <div class="bar in" style="--d:2"></div>
+    <p class="in" style="--d:3">We tend to assume that a people and a language come as a pair: the French speak French, the Japanese speak Japanese. Koro is a reminder that the world is not organised that neatly.</p>
+    <ul class="dots">
+      <li class="in" style="--d:4">Koro speakers say they are <strong>Aka</strong>. They share the tribe's festivals, institutions and history, and they intermarry.</li>
+      <li class="in" style="--d:5">Linguistically they speak something only distantly related to Aka — perhaps not related at all.</li>
+      <li class="in" style="--d:6">Both statements are true at once. The community's own description is not wrong; it is answering a different question than the linguist's.</li>
+    </ul>
+    <p class="in" style="--d:7">Linguists also note that this arrangement usually kills the smaller language. A minority tongue inside a shared tribal identity has no separate flag to rally around — which makes Koro's survival this long genuinely surprising.</p>
+  </div>
+  <div class="stage">
+    <div class="panel in" style="--d:3; width:35vw">
+      <strong>Two true answers to "who are you?"</strong>
+      <div class="idbox" style="margin-top:.5rem">
+        <div class="idcol a"><h4>The community's answer</h4><p>We are Aka. We live in Aka villages, we keep Aka custom, our chief is the Aka chief. The way we talk is just a little different.</p></div>
+        <div class="idcol b"><h4>The linguist's answer</h4><p>These are two separate languages. They share about nine words in a hundred, and the sound systems are built differently.</p></div>
+      </div>
+      <p style="margin:.6rem 0 0"><strong>Discuss:</strong> who gets to decide what counts as a separate language — the people who speak it, or the scientists who measure it? What is at stake in the answer? (Hint: government recognition, school funding and census categories all depend on it.)</p>
+    </div>
+  </div>
+</section>
+
+<!-- 8. Culture -->
+<section class="slide" style="--accent: var(--bamboo)">
+  <div class="text">
+    <p class="kicker in">Cultural significance</p>
+    <h2 class="in" style="--d:1">Houses on stilts, silver, and spirit houses</h2>
+    <div class="bar in" style="--d:2"></div>
+    <ul class="dots">
+      <li class="in" style="--d:3">The Aka live in villages of houses raised on stilts, farming, hunting and keeping livestock in steep forested country. Villages elect a <strong>chief</strong> who serves as headman.</li>
+      <li class="in" style="--d:4">The big Aka festival is <span class="hl">Nechido</span>, held over four days in November under the chief's direction — a community occasion tied to the natural world.</li>
+      <li class="in" style="--d:5">Dress matters here. <strong>Silver ornaments</strong> are an important part of women's traditional costume, and facial tattooing has been practised among some Aka.</li>
+      <li class="in" style="--d:6">The Koro keep their own ritual practice within this shared world: documentation teams photographed a Koro priest performing a ritual in front of a <span class="hl">sokrou ngin</span>, a spirit house, in Pichong village.</li>
+    </ul>
+    <p class="note in" style="--d:7">Centuries of contact with Assam and with Buddhist neighbours have layered Hindu and Buddhist influence over older indigenous belief — one more reason the region's history is hard to untangle.</p>
+  </div>
+  <div class="stage">
+    <div class="cards in" style="--d:3; grid-template-columns:1fr; width:34vw">
+      <div class="card" style="--cardc: var(--hearth)"><div class="word">Who did the fieldwork?</div><div class="meaning">Not just the visiting linguists. The published work names Koro and Hruso consultants — Sange Degio, Khandu Degio, Anthony Degio and others — who did the slow work of giving words, checking transcriptions and listening to playback. A language is "discovered" by the people who already knew it.</div><div class="tap">click to reveal</div></div>
+      <div class="card" style="--cardc: var(--koro)"><div class="word">What does "discovered" even mean?</div><div class="meaning">A thousand people had been speaking Koro their whole lives. Nothing was discovered <em>to them</em>. What happened in 2010 is that the language entered the written record of the outside world — which matters because census categories, school policy and funding all run on that record.</div><div class="tap">click to reveal</div></div>
+      <div class="card" style="--cardc: var(--bamboo)"><div class="word">Why does the permit matter?</div><div class="meaning">The Inner Line Permit restricts entry to Arunachal Pradesh. It was designed to protect indigenous communities from outside pressure, and it has done some of that. It has also meant that almost no linguists went in — so the state's languages have gone unrecorded in a way that is now a race against time.</div><div class="tap">click to reveal</div></div>
+    </div>
+  </div>
+</section>
+
+<!-- 9. Timeline -->
+<section class="slide" data-tr="zoom" style="--accent: var(--hill)">
+  <div class="text wide">
+    <p class="kicker in">History of a record</p>
+    <h2 class="in" style="--d:1">A century of being missed</h2>
+    <div class="bar in" style="--d:2"></div>
+    <p class="in" style="--d:3">Click each moment to explore it.</p>
+    <div class="tl in" id="tl" style="--d:4">
+      <button class="ev" style="--ec: var(--mist)"><span class="yr">1909</span><small>The great survey</small></button>
+      <button class="ev" style="--ec: #b8cfc8"><span class="yr">1947</span><small>Grouped wrongly</small></button>
+      <button class="ev" style="--ec: var(--bamboo)"><span class="yr">1997</span><small>One stray wordlist</small></button>
+      <button class="ev" style="--ec: var(--hearth)"><span class="yr">2008</span><small>The expedition</small></button>
+      <button class="ev" style="--ec: #f0bd86"><span class="yr">2010</span><small>Announced</small></button>
+      <button class="ev" style="--ec: var(--koro)"><span class="yr">2011 →</span><small>The hard questions</small></button>
+    </div>
+    <div class="panel in" id="tltext" style="--d:5" aria-live="polite"></div>
+  </div>
+</section>
+
+<!-- 10. Endangered from day one -->
+<section class="slide" data-tr="left" style="--accent: var(--red)">
+  <div class="text">
+    <p class="kicker in">Why it matters now</p>
+    <h2 class="in" style="--d:1">Endangered the day it was found</h2>
+    <div class="bar in" style="--d:2"></div>
+    <p class="in" style="--d:3">The researchers described the discovery as bittersweet, and they were right to. Koro entered the world's language catalogue already in trouble: a few hundred to a thousand speakers, almost none of them children, in a community where the prestige languages are Aka, Hindi and English.</p>
+    <ul class="dots">
+      <li class="in" style="--d:4">A follow-up expedition in 2011 found something more hopeful: speakers aged 16 to 20 who still used the language. Not many, but not zero.</li>
+      <li class="in" style="--d:5">Recordings now exist — stories, word lists, audio placed online — where in 2007 there were none at all.</li>
+      <li class="in" style="--d:6">And Koro now has a name in print. That sounds trivial; it is not. A language that does not appear in any official list cannot be taught in a school, counted in a census or funded by anyone.</li>
+    </ul>
+    <p class="note in" style="--d:7">The deeper lesson for a class is this: the count of the world's languages is not a fact we possess. It is an estimate, and it is wrong in both directions — there are languages on the list that no longer exist, and languages like Koro that were never on it.</p>
+  </div>
+  <div class="stage">
+    <div class="panel in" style="--d:3; width:34vw">
+      <strong>What changed between 2007 and today</strong>
+      <div class="scalerow" style="margin-top:.4rem">
+        <div style="display:grid; grid-template-columns:8rem 1fr; gap:.4rem; align-items:center; margin-bottom:.3rem">
+          <span style="font-size:.8rem; font-weight:700">recordings</span><div style="height:1rem; border-radius:.2rem; background:var(--koro); width:34%"></div>
+        </div>
+        <div style="display:grid; grid-template-columns:8rem 1fr; gap:.4rem; align-items:center; margin-bottom:.3rem">
+          <span style="font-size:.8rem; font-weight:700">published work</span><div style="height:1rem; border-radius:.2rem; background:var(--koro); width:22%"></div>
+        </div>
+        <div style="display:grid; grid-template-columns:8rem 1fr; gap:.4rem; align-items:center; margin-bottom:.3rem">
+          <span style="font-size:.8rem; font-weight:700">grammar</span><div style="height:1rem; border-radius:.2rem; background:rgba(255,255,255,.14); width:8%"></div>
+        </div>
+        <div style="display:grid; grid-template-columns:8rem 1fr; gap:.4rem; align-items:center">
+          <span style="font-size:.8rem; font-weight:700">child speakers</span><div style="height:1rem; border-radius:.2rem; background:var(--red); width:5%"></div>
+        </div>
+      </div>
+      <p class="note" style="margin:.4rem 0 0">An illustrative picture, not a measurement. Documentation has moved quickly. Transmission to children has not — the same gap you have now seen in every module of this course.</p>
+    </div>
+    <div class="panel in" style="--d:5; width:34vw">
+      <strong>Your turn:</strong> how many languages do you think are still unrecorded? Where would you look for them — and what would you need besides a plane ticket?
+    </div>
+  </div>
+</section>
+
+<!-- 11. Quiz -->
+<section class="slide" style="--accent: var(--koro)">
+  <div class="text wide center">
+    <p class="kicker in">Review in the hills</p>
+    <h2 class="in" style="--d:1">Quick quiz!</h2>
+    <div class="bar in" style="--d:2"></div>
+    <div class="quizgrid">
+      <div class="quiz panel in" style="--d:3" data-right="Yes — they were recording Aka and Miji and the words stopped matching." data-wrong="Hint: nobody went looking for it.">
+        <div class="q">How was Koro identified as a separate language?</div>
+        <div class="options"><button class="opt">From old manuscripts</button><button class="opt" data-correct>By accident, during a word-list survey</button><button class="opt">By satellite mapping</button></div>
+        <div class="feedback"></div>
+      </div>
+      <div class="quiz panel in" style="--d:4" data-right="Right — about 9%, where dialects of one language usually share 80% or more." data-wrong="Hint: far lower than you'd expect from neighbours.">
+        <div class="q">How much basic vocabulary do Koro and Hruso Aka share?</div>
+        <div class="options"><button class="opt">about 80%</button><button class="opt">about 40%</button><button class="opt" data-correct>about 9%</button></div>
+        <div class="feedback"></div>
+      </div>
+      <div class="quiz panel in" style="--d:5" data-right="Correct — tribally Aka, linguistically Koro. Both are true." data-wrong="Hint: they live in Aka villages and share Aka custom.">
+        <div class="q">How do Koro speakers describe their own identity?</div>
+        <div class="options"><button class="opt">As a separate tribe</button><button class="opt" data-correct>As members of the Aka tribe</button><button class="opt">As recent migrants</button></div>
+        <div class="feedback"></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- 12. Closing -->
+<section class="slide end" style="--accent: var(--koro)">
+  <div class="text">
+    <h1 class="in" style="font-size:4.4rem">vo · lele</h1>
+    <p class="lead in" style="--d:1; margin-top:.8rem">Two words for "pig," two houses apart. Thank you! Questions?</p>
+    <p class="quote in" style="--d:2">A thousand people had been speaking Koro for generations. What happened in 2010 was not that the language appeared — it was that the rest of us finally wrote it down.</p>
+    <p class="note in" style="--d:3">Which raises the question this whole course keeps circling: how many more are out there, in valleys nobody has a permit to enter?</p>
+  </div>
+  <details class="fine in" style="--d:4">
+    <summary>Sources &amp; image credits</summary>
+    <div class="box">
+      <h4>Sources</h4>
+      <ul>
+        <li><a href="https://en.wikipedia.org/wiki/Koro_language_(India)">Koro language, India (Wikipedia)</a> — speakers, 9% lexical similarity, classification proposals</li>
+        <li>Anderson &amp; Murmu, "Preliminary notes on Koro: a 'hidden' language of Arunachal Pradesh," <em>Indian Linguistics</em> 71 (2010)</li>
+        <li><a href="https://livingtongues.org/koro-aka/">Living Tongues Institute: Koro Aka Documentation Project</a> — demographics, consultants, Koro–Hruso–Miji comparison</li>
+        <li><a href="https://harrison.domains.swarthmore.edu/pdfs/reports/Enduring_Voices-Arunachal_Pradesh_2011.pdf">Enduring Voices fieldwork report, Arunachal Pradesh, December 2011</a> — young speakers, the Koro priest and spirit house at Pichong</li>
+        <li><a href="https://www.cnn.com/2010/WORLD/asiapcf/10/05/india.language.discovered/index.html">CNN (October 2010): Previously unknown language emerges in India</a> — the word pairs, the slave-trade hypothesis</li>
+        <li><a href="https://www.csmonitor.com/World/Latest-News-Wires/2010/1006/Koro-language-discovered-in-India">Christian Science Monitor (October 2010): Koro language discovered in India</a></li>
+        <li><a href="https://phys.org/news/2010-10-undocumented-language-hidden-india.html">Phys.org: Undocumented language found hidden in India</a></li>
+        <li><a href="https://www.academia.edu/36413399/The_Koro_language_of_Arunachal_Pradesh_wordlist_and_etymological_analysis">Blench, "The Koro language of Arunachal Pradesh: wordlist and etymological analysis"</a> — Greater Siangic, borrowing vs inheritance</li>
+        <li><a href="https://www.academia.edu/36413427/The_Hruso_language_grammar_sketch_and_wordlist">Blench, "The Hruso language: grammar sketch and wordlist"</a></li>
+        <li><a href="https://en.wikipedia.org/wiki/Siangic_languages">Siangic languages (Wikipedia)</a> — Post &amp; Blench 2011, Anderson's Koro-Holon</li>
+        <li><a href="https://en.wikipedia.org/wiki/Arunachal_languages">Arunachal languages (Wikipedia)</a> — the state's families and the classification debate</li>
+        <li><a href="https://en.wikipedia.org/wiki/Hruso_people">Hruso (Aka) people (Wikipedia)</a> — Nechido festival, silver ornaments, village chief</li>
+        <li><a href="http://www.rogerblench.info/Language/South%20Asia/NEI/General/Lingres/Declassifying%20Arunachal.pdf">Blench &amp; Post, "(De)classifying Arunachal languages: reconsidering the evidence"</a></li>
+        <li>Harrison, <em>The Last Speakers</em> (National Geographic, 2010)</li>
+        <li><a href="https://elcat.colo.hawaii.edu/lang/7649">Endangered Languages Project: Koro (India)</a></li>
+      </ul>
+      <h4>Images (Wikimedia Commons)</h4>
+      <ul id="credits"></ul>
+    </div>
+  </details>
+</section>
+
+</main>
+
+<nav class="controls">
+  <button id="prev" aria-label="Previous slide">‹</button>
+  <span id="counter">1 / 12</span>
+  <button id="next" aria-label="Next slide">›</button>
+  <button id="fs" aria-label="Fullscreen">⤢</button>
+</nav>
+<p class="hint">Use ← → to move. Press F for fullscreen.</p>
+
+<!-- Koro effects: village lights, notebook game, 9% grid, evidence board, families, timeline -->
+<script>
+(function () {
+  /* ---------- Background lamps ---------- */
+  var lampbox = document.querySelector("#hills .lamps");
+  var LAMPS = [];
+  for (var k = 0; k < 26; k++) {
+    var l = document.createElement("div");
+    l.className = "lamp";
+    l.style.left = (6 + Math.random() * 88) + "%";
+    l.style.bottom = (6 + Math.random() * 34) + "vh";
+    l.style.animationDelay = (-Math.random() * 4) + "s";
+    l.dataset.th = (k / 30).toFixed(3);
+    lampbox.appendChild(l);
+    LAMPS.push(l);
+  }
+  var koroLamp = document.createElement("div");
+  koroLamp.className = "lamp koro";
+  koroLamp.style.left = "61%";
+  koroLamp.style.bottom = "25vh";
+  koroLamp.dataset.th = "0.42";
+  lampbox.appendChild(koroLamp);
+  LAMPS.push(koroLamp);
+  function tune(t) {
+    LAMPS.forEach(function (l) {
+      l.style.opacity = String(Math.max(0, Math.min(.85, (t - parseFloat(l.dataset.th)) * 4)));
+    });
+  }
+  document.addEventListener("slidechange", function (e) {
+    var t = e.detail.index / (e.detail.total - 1);
+    document.body.style.setProperty("--t", t);
+    tune(t);
+  });
+  tune(0);
+
+  function single(selector, callback) {
+    var grp = document.querySelectorAll(selector);
+    grp.forEach(function (b) {
+      b.addEventListener("click", function () {
+        grp.forEach(function (x) { x.classList.remove("on"); });
+        b.classList.add("on");
+        callback(b);
+      });
+    });
+  }
+
+  /* ---------- Notebook ---------- */
+  var rows = document.querySelectorAll(".nbrow.hidden"), shown = 0;
+  var nbmsg = document.getElementById("nbmsg");
+  document.getElementById("revealw").addEventListener("click", function () {
+    if (shown >= rows.length) { nbmsg.textContent = "That's all the notebook will show you. Now make the call."; return; }
+    rows[shown].classList.remove("hidden");
+    shown++;
+    nbmsg.innerHTML = shown === 1
+      ? "Village A says <strong>vo</strong>. Village B says <strong>lele</strong>. One word proves nothing — languages borrow, and words for animals wander. Keep going."
+      : shown === 2
+        ? "Mountain: <strong>phu</strong> against <strong>nggo</strong>. Now it is two of the most basic words in any vocabulary, and they share nothing. Body parts and numbers came out the same way."
+        : "Keep listing and the pattern holds. The sound inventories are different, and the way sounds combine into words is different. Make the call.";
+  });
+  document.getElementById("samebtn").addEventListener("click", function () {
+    nbmsg.innerHTML = "<strong style='color:var(--red)'>That was everyone's answer for a century.</strong> Both communities said so, and every survey of India's languages agreed by leaving Koro off the list. The words say otherwise.";
+  });
+  document.getElementById("diffbtn").addEventListener("click", function () {
+    nbmsg.innerHTML = "<strong style='color:var(--koro)'>Correct — and that was the finding.</strong> Anderson, Harrison and Murmu concluded that Koro is a separate language, not a dialect of Aka, and published it in 2010.";
+  });
+
+  /* ---------- 9% grid ---------- */
+  var g = document.getElementById("grid100");
+  for (var n = 0; n < 100; n++) g.appendChild(document.createElement("i"));
+  function setGrid(mode) {
+    var cells = g.querySelectorAll("i");
+    cells.forEach(function (c, i) {
+      c.className = "";
+      if (mode === "koro" && i < 9) c.className = "hit";
+      if (mode === "dial" && i < 85) c.className = "dial";
+    });
+    document.getElementById("gmsg").innerHTML = mode === "koro"
+      ? "<strong>Koro and Hruso Aka: about 9 shared words in 100.</strong> Same tribe, same villages, same festivals — and a vocabulary that barely overlaps."
+      : "<strong>Two dialects of one language: usually 80% or more.</strong> This is what \"a slight difference in accent\" actually looks like when you measure it.";
+  }
+  document.getElementById("showkoro").addEventListener("click", function () {
+    this.classList.add("on"); document.getElementById("showdial").classList.remove("on"); setGrid("koro");
+  });
+  document.getElementById("showdial").addEventListener("click", function () {
+    this.classList.add("on"); document.getElementById("showkoro").classList.remove("on"); setGrid("dial");
+  });
+  setGrid("koro");
+
+  /* ---------- Evidence board ---------- */
+  var EVID = [
+    [[0], "Historically, Aka communities in this region were involved in slave trading. Anderson and Harrison raised the possibility that the Koro are descended from people brought here as captives, who kept their own language inside the community that held them. They were explicit that this needs far more study — and it is a serious claim to make about living people, so treat it as a hypothesis, not a finding."],
+    [[1, 2], "Koro shares forms with <strong>Milang</strong>, spoken hundreds of kilometres to the east and previously filed as an odd kind of Tani. Mark Post and Roger Blench proposed in 2011 that Koro and Milang form a group they call <strong>Siangic</strong>. If so, the Koro's relatives are not next door — and either they travelled, or a once-widespread family has been broken into fragments."],
+    [[2], "Some Koro vocabulary matches nothing anyone can identify — not Tani, not Hruso, not Sino-Tibetan generally. Post and Blench argue Siangic sits on a <strong>substratum of unknown origin</strong>, raising the possibility that Koro preserves pieces of a language family that is otherwise entirely gone."],
+    [[1, 2], "The words Koro <em>does</em> share with Hruso and Miji look like <strong>recent borrowings</strong> — exactly what you would expect from neighbours who trade and intermarry. Strip those out and the local resemblance mostly disappears, which strengthens the case that Koro's real relatives are elsewhere."]
+  ];
+  var evmsg = document.getElementById("evmsg");
+  single("#evlist .evb", function (b) {
+    var E = EVID[Number(b.dataset.e)];
+    document.querySelectorAll("#hyps .hyp").forEach(function (h, i) {
+      h.classList.toggle("lit", E[0].indexOf(i) !== -1);
+    });
+    evmsg.innerHTML = E[1];
+  });
+
+  /* ---------- Families ---------- */
+  var FAMS = [
+    ["Hrusish", "Hruso (Aka) and the Miji languages, in the Kameng districts. Glottolog does not accept the grouping at all, arguing the similarities between Hruso and Miji are loanwords. Blench and Post have suggested Hruso may be an independent family. Two neighbouring languages, and specialists cannot agree whether they are related."],
+    ["Siangic", "Koro and Milang. Proposed by Post and Blench in 2011 — possibly a branch of Sino-Tibetan, possibly an independent family with an unknown older layer underneath. Anderson calls the same grouping Koro-Holon and treats it as Sino-Tibetan. Everything about this box has a question mark on it."],
+    ["Kho-Bwa", "Also called Kamengic: a small cluster in the Kameng area. Blench argues these may not be Sino-Tibetan either, and that the resemblances come from long contact rather than shared ancestry."],
+    ["Tani", "The big one — around two million speakers across Arunachal Pradesh and Assam. Even here there is a twist: researchers have argued that Tani sits on top of an older non-Tani layer, absorbed as Tani speakers expanded into the region."],
+    ["Digaro and Miju", "The Idu, Taraon and Kman languages of the far east of the state. Blench has grouped Idu-Taraon with Siangic into a proposed \u201cGreater Siangic\u201d, outside Sino-Tibetan entirely."],
+    ["Greater Siangic?", "The boldest proposal: that Siangic and Idu-Taraon together form a non-Sino-Tibetan family which was once widespread, and whose traces survive underneath Tani. If it holds, the linguistic map of northeast India gets redrawn — and Koro is one of the key witnesses."]
+  ];
+  var fammsg = document.getElementById("fammsg");
+  single("#fammap .fam", function (b) {
+    var F = FAMS[Number(b.dataset.f)];
+    fammsg.innerHTML = "<strong style='color:var(--bamboo)'>" + F[0] + "</strong><br>" + F[1];
+  });
+
+  /* ---------- Timeline ---------- */
+  var EVENTS = [
+    ["The great survey", "George Grierson's Linguistic Survey of India, published from 1903, was one of the most ambitious language surveys ever attempted, covering hundreds of languages across the subcontinent. It recorded Aka. It did not record Koro — nobody told the surveyors there was a second language in those villages, because as far as anyone there was concerned, there wasn't."],
+    ["Grouped wrongly", "In 1947 Robert Shafer classified the languages of the region, grouping Hruso with Miji. The Koro Aka were grouped with the Hruso ethnically — which is correct — and the linguistic question simply never came up. For another sixty years, Koro existed in no scientific list."],
+    ["One stray wordlist", "Before the Living Tongues project, Koro data had appeared in print exactly once, in a 1997 work by Grewal. One wordlist, unremarked. This is how languages hide: not in total obscurity, but in a footnote nobody follows up."],
+    ["The expedition", "In 2008 the Enduring Voices team — Gregory Anderson, David Harrison and Ganesh Murmu — came to document Hruso Aka and Miji. They went house to house collecting vocabulary, and partway through the survey they realised some of their consultants were giving them a completely different set of words."],
+    ["Announced", "In October 2010 the team announced Koro as a distinct language, with the research published in the journal Indian Linguistics. It made headlines worldwide — a \u201cnew\u201d language in the 21st century — and the world's published language count ticked up by one."],
+    ["The hard questions", "Since then the work has been about where Koro belongs. Post and Blench proposed Siangic in 2011; Blench published a Koro wordlist and etymological analysis; Anderson proposed Koro-Holon. A 2011 return expedition recorded more material and found teenage speakers. The classification remains open — and the clock is running."]
+  ];
+  var tlText = document.getElementById("tltext");
+  var evs = document.querySelectorAll("#tl .ev");
+  function setEvent(i) {
+    evs.forEach(function (e, k) { e.classList.toggle("on", k === i); });
+    tlText.innerHTML = '<strong style="color:var(--koro); font-size:1.2rem">' + EVENTS[i][0] + "</strong><br>" + EVENTS[i][1];
+  }
+  evs.forEach(function (e, i) { e.addEventListener("click", function () { setEvent(i); }); });
+  setEvent(0);
+})();
+</script>
+<script src="../assets/deck.js"></script>
+</body>
+</html>
