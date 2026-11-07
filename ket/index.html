@@ -1,0 +1,694 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Ket: The Last Language of the Yenisei</title>
+<link rel="stylesheet" href="../assets/deck.css">
+<style>
+@import url("https://fonts.googleapis.com/css2?family=Lora:wght@600;700&family=Rubik:wght@400;500;700;900&display=swap");
+
+/* ---------- Ket theme: taiga night, aurora, river ice, shaman-drum ochre ---------- */
+:root {
+  --bg: #06121a;
+  --ink: #eef4f2;
+  --muted: #b4cbc6;
+  --line: rgba(238, 244, 242, .22);
+  --panel: rgba(8, 28, 34, .84);
+  --aurora: #6fe3a8;
+  --birch: #e9e3d4;
+  --drum: #d4762f;
+  --ember: #e85c3a;
+  --ice: #a8d8e8;
+  --fir: #2b5a46;
+  --rose: #e85c3a;
+  --accent: var(--aurora);
+  --serif: "Lora", Georgia, serif;
+  --sans: "Rubik", system-ui, sans-serif;
+  --t: 0;
+  font-size: clamp(12px, 1.3vw, 28px);
+}
+h1 { font-family: var(--serif); font-size: 5.8rem; line-height: 1; }
+h2 { font-family: var(--serif); font-size: 2.75rem; line-height: 1.1; }
+.slide { padding: 7vh 4vw 8vh 6vw; }
+.text { max-width: 44vw; }
+.text.wide { max-width: 86vw; width: 86vw; }
+.stage {
+  right: 5vw; top: 6vh; bottom: 10vh; width: 39vw;
+  display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 1.1rem;
+}
+ul.dots li { font-size: 1.04rem; }
+.speak .line, .card .word { font-family: var(--sans); font-weight: 700; }
+.card.revealed .meaning { max-height: 14rem; }
+.btn { background: var(--aurora); color: #06211a; }
+.syl.on { background: var(--aurora); color: #06211a; }
+.loc .disc { border-color: var(--aurora); box-shadow: 0 0 0 .55rem rgba(111,227,168,.14), 0 22px 40px rgba(0,0,0,.55); }
+.loc .tint { background: #cfe0d2; }
+.loc .sea { background: #0e3a4a; }
+.loc .tag { background: #082028; border-color: var(--aurora); }
+.note { font-size: .82rem; color: var(--muted); }
+.quote { font-family: var(--serif); font-size: 1.7rem; line-height: 1.3; color: var(--aurora); }
+.cyr { font-family: var(--serif); }
+
+/* ---------- Background: taiga, aurora, and the arc to Alaska ---------- */
+#taiga { position: fixed; inset: 0; z-index: 0; overflow: hidden; pointer-events: none;
+  background: linear-gradient(180deg, #04101a 0%, #072231 48%, #0a3141 74%, #061d26 100%); }
+#taiga .stars i { position: absolute; width: 2px; height: 2px; border-radius: 50%; background: #fff;
+  animation: tw 4s ease-in-out infinite; }
+@keyframes tw { 50% { opacity: .25; } }
+#taiga .aur { position: absolute; left: -10%; right: -10%; height: 26vh; top: 8vh;
+  background: linear-gradient(180deg, rgba(111,227,168,0), rgba(111,227,168,.26), rgba(111,227,168,0));
+  filter: blur(14px); transform-origin: center; animation: wave 18s ease-in-out infinite alternate; }
+#taiga .aur.a2 { top: 16vh; background: linear-gradient(180deg, rgba(168,216,232,0), rgba(168,216,232,.18), rgba(168,216,232,0)); animation-duration: 26s; animation-direction: alternate-reverse; }
+@keyframes wave { to { transform: translateY(-4vh) skewY(-2deg) scaleY(1.3); } }
+#taiga .arc { position: absolute; inset: 0; }
+#taiga .arc svg { width: 100%; height: 100%; }
+#taiga .arc .route { stroke: var(--drum); stroke-width: 3; fill: none; stroke-dasharray: 8 10;
+  stroke-dashoffset: calc(1000 - var(--t) * 1000); transition: stroke-dashoffset 1.6s ease; opacity: .85; }
+#taiga .arc .dot { fill: var(--drum); }
+#taiga .arc .dotB { fill: var(--drum); opacity: calc((var(--t) - .82) * 6); transition: opacity 1.4s ease; }
+#taiga .arc text { fill: rgba(233,227,212,.6); font: 600 13px "Rubik", sans-serif; }
+#taiga .river { position: absolute; left: 0; right: 0; bottom: 0; height: 22vh;
+  background: linear-gradient(180deg, #123a4a 0%, #07202b 100%); }
+#taiga .river::before { content: ""; position: absolute; inset: 0;
+  background: repeating-linear-gradient(180deg, rgba(168,216,232,.08) 0 2px, transparent 2px 16px);
+  animation: rip 10s ease-in-out infinite alternate; }
+@keyframes rip { to { transform: translateY(6px); } }
+#taiga .firs { position: absolute; left: 0; right: 0; bottom: 18vh; height: 20vh; }
+#taiga .firs svg { width: 100%; height: 100%; }
+#taiga .shade { position: absolute; inset: 0;
+  background: linear-gradient(90deg, rgba(3,9,14,.94) 0%, rgba(3,9,14,.76) 50%, rgba(3,9,14,.22) 100%); }
+
+/* ---------- Photos ---------- */
+.board { position: relative; margin: 0; width: var(--w, 19vw); padding: .6rem .6rem .5rem;
+  background: var(--birch); border-radius: .25rem; box-shadow: 0 18px 34px rgba(0,0,0,.6);
+  transform: rotate(var(--r, 0deg)); transition: transform .9s cubic-bezier(.2,.8,.2,1), opacity .7s ease; }
+.slide:not(.active) .board { opacity: 0; transform: translateY(46px) rotate(var(--r, 0deg)); }
+.slide.active .board { transition-delay: calc(.4s + var(--d, 0) * .16s); }
+.slide.active .board:hover { transform: rotate(0deg) scale(1.04); transition-delay: 0s; }
+.board img { display: block; width: 100%; aspect-ratio: var(--ar, 4 / 3); object-fit: cover; background: #c8c2b1; }
+.board figcaption { color: #231f17; font-size: .73rem; font-weight: 700; line-height: 1.25; margin: .4rem .1rem 0; font-family: var(--serif); }
+
+/* ---------- Shared controls ---------- */
+.switch { display: flex; gap: .4rem; margin: .4rem 0 .6rem; flex-wrap: wrap; }
+.sbtn { font: inherit; font-weight: 700; font-size: .92rem; color: var(--ink); background: var(--panel);
+  border: 2px solid var(--line); border-radius: .3rem; padding: .25em .9em; cursor: pointer; transition: transform .2s; }
+.sbtn:hover { transform: translateY(-2px); }
+.sbtn.on { background: var(--aurora); border-color: var(--aurora); color: #06211a; }
+.out { min-height: 3.2em; margin-top: .5rem; }
+
+/* ---------- Ghost river map ---------- */
+.ghostmap { position: relative; width: 100%; aspect-ratio: 4 / 5; max-width: 16rem; margin: .3rem auto; }
+.ghostmap svg { position: absolute; inset: 0; width: 100%; height: 100%; }
+.gspot { position: absolute; transform: translate(-50%, -50%); border: 0; cursor: pointer;
+  background: rgba(212,118,47,.25); border: 2px solid var(--drum); border-radius: 999px;
+  color: var(--ink); font: 700 .66rem "Rubik", sans-serif; padding: .15em .5em; white-space: nowrap;
+  transition: transform .25s, background .25s; }
+.gspot:hover { transform: translate(-50%, -50%) scale(1.12); }
+.gspot.on { background: var(--drum); color: #1a0f06; }
+.gspot.alive { border-color: var(--aurora); background: rgba(111,227,168,.22); }
+.gspot.alive.on { background: var(--aurora); color: #06211a; }
+#gmsg { min-height: 6.2em; margin-top: .4rem; }
+#gmsg b { color: var(--drum); }
+
+/* ---------- Evidence weigher ---------- */
+.evid { display: grid; gap: .4rem; }
+.ebtn { font: inherit; text-align: left; font-weight: 700; font-size: .88rem; color: var(--ink); background: var(--panel);
+  border: 2px solid var(--line); border-radius: .35rem; padding: .45em .75em; cursor: pointer; }
+.ebtn:hover { border-color: var(--aurora); }
+.ebtn small { display: block; font-weight: 400; font-size: .74rem; color: var(--muted); }
+.weigh { display: flex; gap: .3rem; justify-content: center; margin: .5rem 0 .2rem; }
+.wbar { flex: 1; height: .5rem; border-radius: 999px; background: rgba(255,255,255,.12); }
+.wbar.fill { background: var(--aurora); }
+#emsg { min-height: 5.4em; margin-top: .3rem; }
+.strength { font-family: var(--serif); color: var(--aurora); }
+
+/* ---------- Verb builder ---------- */
+.slots { display: flex; gap: .25rem; justify-content: center; flex-wrap: wrap; margin: .5rem 0; }
+.slot { font: inherit; font-weight: 700; font-size: .78rem; color: var(--muted); background: var(--panel);
+  border: 2px dashed var(--line); border-radius: .3rem; padding: .35em .5em; cursor: pointer; min-width: 3.2rem; text-align: center; }
+.slot.on { border-style: solid; border-color: var(--drum); color: var(--ink); background: rgba(212,118,47,.16); }
+.slot.stem { border-color: var(--aurora); }
+.built { font-family: var(--sans); font-weight: 900; font-size: 1.5rem; text-align: center; color: var(--aurora); min-height: 2.4em; line-height: 1.25; }
+#vbmsg { min-height: 3.6em; }
+
+/* ---------- Tone contours ---------- */
+.tones { display: grid; grid-template-columns: repeat(4, 1fr); gap: .4rem; }
+.tone { background: var(--panel); border: 2px solid var(--line); border-radius: .35rem; padding: .3rem; cursor: pointer; }
+.tone:hover { border-color: var(--ice); }
+.tone.on { border-color: var(--ice); background: rgba(168,216,232,.14); }
+.tone svg { width: 100%; height: 2.6rem; display: block; }
+.tone small { display: block; text-align: center; font-size: .66rem; font-weight: 700; color: var(--muted); }
+#tnmsg { min-height: 3.6em; margin-top: .4rem; }
+
+/* ---------- River cosmology ---------- */
+.cosmo { position: relative; width: 100%; max-width: 8rem; margin: .3rem auto; aspect-ratio: 1 / 3.1; }
+.cosmo .flow { position: absolute; left: 50%; top: 0; bottom: 0; width: 34%; transform: translateX(-50%);
+  background: linear-gradient(180deg, #2e7f60, #1d5a6e 50%, #2a3f6b); border-radius: 999px; }
+.cband { position: absolute; left: 50%; transform: translate(-50%, -50%); width: 118%; text-align: center;
+  font: 700 .7rem "Rubik", sans-serif; color: var(--ink); background: rgba(8,28,34,.9);
+  border: 2px solid var(--line); border-radius: .3rem; padding: .2em .3em; cursor: pointer; transition: transform .2s; }
+.cband:hover { transform: translate(-50%, -50%) scale(1.05); }
+.cband.on { border-color: var(--drum); background: rgba(212,118,47,.25); }
+#comsg { min-height: 6.4em; }
+
+/* ---------- Decline chart ---------- */
+.colchart { display: flex; align-items: flex-end; gap: 1rem; height: 19vh; padding: .5rem .6rem 0; }
+.col { flex: 1; height: 100%; display: flex; flex-direction: column; align-items: center; justify-content: flex-end; }
+.col .n { font-family: var(--serif); font-size: 1.05rem; }
+.col .colbar { width: 100%; max-width: 4rem; height: 0; border-radius: .3rem .3rem 0 0; background: var(--c);
+  transition: height 1.5s cubic-bezier(.2,.8,.2,1) .6s; }
+.slide.active .col .colbar { height: var(--h); }
+.col .y { color: var(--muted); font-size: .76rem; margin-top: .3rem; }
+
+/* ---------- Timeline ---------- */
+.tl { display: grid; grid-template-columns: repeat(6, 1fr); gap: .55rem; margin-top: 1rem; position: relative; padding-bottom: 1.4rem; }
+.tl::after { content: ""; position: absolute; left: 0; right: 0; bottom: .45rem; height: 3px; border-radius: 3px;
+  background: linear-gradient(90deg, var(--aurora), var(--drum), var(--ice)); }
+.ev { font: inherit; text-align: left; color: #10201c; background: var(--ec); border: 0; border-radius: .35rem;
+  padding: .65rem .75rem; cursor: pointer; transition: transform .25s, box-shadow .25s; }
+.ev:hover { transform: translateY(-4px); }
+.ev.on { box-shadow: 0 0 0 3px #fff, 0 10px 24px rgba(0,0,0,.4); transform: translateY(-6px); }
+.ev .yr { font-family: var(--serif); font-size: 1.3rem; line-height: 1; display: block; }
+.ev small { display: block; font-weight: 700; font-size: .78rem; margin-top: .3rem; }
+#tltext { min-height: 5.4rem; margin-top: .4rem; }
+
+/* ---------- Quiz tint ---------- */
+.opt.right { background: var(--fir); }
+.opt.wrong { background: var(--ember); }
+
+@media (max-width: 820px) {
+  .slide { padding: 6vh 6vw 12vh; }
+  h1 { font-size: 3.3rem; }
+  .text, .text.wide { max-width: none; width: auto; }
+  .stage { position: relative; inset: auto; width: 100%; margin-top: 1.5rem; }
+  .board { width: 74vw; }
+  .stage .panel, .stage .speak { width: 100% !important; max-width: none !important; }
+  .tl { grid-template-columns: repeat(2, 1fr); }
+  .tones { grid-template-columns: repeat(2, 1fr); }
+}
+</style>
+</head>
+<body data-map="BlankMap-Equirectangular.svg">
+
+<div id="taiga" aria-hidden="true">
+  <div class="stars"></div>
+  <div class="aur"></div>
+  <div class="aur a2"></div>
+  <div class="arc">
+    <svg viewBox="0 0 1000 400" preserveAspectRatio="none">
+      <path class="route" pathLength="1000" d="M120 300 C 300 70, 700 60, 900 190"/>
+      <circle class="dot" cx="120" cy="300" r="7"/>
+      <circle class="dotB" cx="900" cy="190" r="7"/>
+      <text x="96" y="330">Yenisei</text>
+      <text x="852" y="172">Alaska</text>
+    </svg>
+  </div>
+  <div class="firs">
+    <svg viewBox="0 0 1200 200" preserveAspectRatio="none">
+      <g fill="#0b2620"><path d="M40 200 L70 90 L100 200 Z"/><path d="M48 150 L70 110 L92 150 Z"/>
+      <path d="M150 200 L186 60 L222 200 Z"/><path d="M250 200 L274 110 L298 200 Z"/>
+      <path d="M340 200 L376 70 L412 200 Z"/><path d="M450 200 L472 120 L494 200 Z"/>
+      <path d="M540 200 L578 50 L616 200 Z"/><path d="M650 200 L676 108 L702 200 Z"/>
+      <path d="M740 200 L774 76 L808 200 Z"/><path d="M850 200 L872 118 L894 200 Z"/>
+      <path d="M940 200 L978 62 L1016 200 Z"/><path d="M1060 200 L1086 112 L1112 200 Z"/></g>
+    </svg>
+  </div>
+  <div class="river"></div>
+  <div class="shade"></div>
+</div>
+<div class="progress"></div>
+
+<main>
+
+<!-- 1. Title -->
+<section class="slide" style="--accent: var(--aurora)">
+  <div class="text">
+    <p class="kicker in">Rare Languages of the Asia-Pacific · Module 23</p>
+    <h1 class="in" style="--d:1">Ket</h1>
+    <p class="in cyr" style="--d:2; font-size:1.45rem; font-weight:700; color:var(--aurora)">кет · деӈ · the middle Yenisei, Siberia</p>
+    <div class="bar in" style="--d:3"></div>
+    <p class="lead in" style="--d:4">The last survivor of a language family that once covered half of Siberia — and the best candidate anyone has ever found for a language family that crossed into America</p>
+    <p class="muted in" style="--d:5">Watch the sky: a line is being drawn from the Yenisei to Alaska.</p>
+  </div>
+  <div class="stage">
+    <figure class="board" style="--w:25vw; --r:-1.5deg; --d:0">
+      <img data-wiki="Yenisei" data-width="1200" alt="The Yenisei River in Siberia">
+      <figcaption>The Yenisei, which runs 3,500 km north to the Arctic Ocean</figcaption>
+    </figure>
+  </div>
+</section>
+
+<!-- 2. Where and who -->
+<section class="slide" data-tr="left" style="--accent: var(--ice)">
+  <div class="text">
+    <p class="kicker in">Where and who</p>
+    <h2 class="in" style="--d:1">Hunters of the middle Yenisei</h2>
+    <div class="bar in" style="--d:2"></div>
+    <ul class="dots">
+      <li class="in" style="--d:3">The Ket live in a handful of villages along the <strong>middle Yenisei</strong> and its tributaries, in the Turukhansk district of Krasnoyarsk Krai — taiga, forty below in winter, and a river that is the only road.</li>
+      <li class="in" style="--d:4"><span class="hl">Keʼt</span> means "person." The plural is <span class="hl">deŋ</span>, "people." Russians long called them Yenisei Ostyaks, a label borrowed from an unrelated neighbouring people.</li>
+      <li class="in" style="--d:5">The 2021 census counted <strong>1,088</strong> Ket. Speaker counts range from <strong>153</strong> (2020 census) down to specialists' estimates of <strong>fewer than 30</strong>, and local reporting of ten to twenty.</li>
+      <li class="in" style="--d:6">In 1926, by contrast, <strong>1,225 of 1,428</strong> Ket — around 86 percent — spoke the language. By 1989 it was under half.</li>
+    </ul>
+    <p class="note in" style="--d:7">Until the 20th century the Ket were nomadic hunters and fishers over a huge area of boreal forest, with so little contact with neighbours that their language has remarkably few loanwords.</p>
+  </div>
+  <div class="stage">
+    <div class="loc" data-lat="63.5" data-lon="87.5" data-zoom="5" style="--s:13vw; --d:0">
+      <div class="disc"><div class="lmap"></div><div class="tint"></div><div class="sea"></div><span class="pinpt"></span></div>
+      <span class="tag">Turukhansk District, Krasnoyarsk Krai, Russia</span>
+    </div>
+    <div class="speak panel compact in" data-tempo="540" style="--d:4; width:33vw">
+      <div class="line" data-syl="keʼt"></div><p class="gloss">a person, a man</p>
+      <div class="line" data-syl="deŋ"></div><p class="gloss">people — and the name they use for themselves</p>
+      <button class="btn play">▶ Say them</button>
+      <p class="note" style="margin-top:.5rem">Hold on to <em>deŋ</em>. It comes back in slide four, four thousand miles away.</p>
+    </div>
+  </div>
+</section>
+
+<!-- 3. Ghost rivers -->
+<section class="slide" data-tr="zoom" style="--accent: var(--drum)">
+  <div class="text">
+    <p class="kicker in">A family of one</p>
+    <h2 class="in" style="--d:1">The rivers remember</h2>
+    <div class="bar in" style="--d:2"></div>
+    <p class="in" style="--d:3">Ket is the <strong>last living Yeniseian language</strong>. It had at least five siblings: Yugh, Kott, Arin, Assan and Pumpokol. Every one of them is gone, most recorded only in word lists taken by 18th-century travellers before they died out.</p>
+    <p class="in" style="--d:4">But the family left a fingerprint across Siberia. Yeniseian words for <strong>river</strong> — Ket <em>ses</em>, Kott <em>šet</em> — survive inside hundreds of river names over a vast region: from northern Mongolia up to the middle Yenisei, from the Irtysh in the west to the Angara in the east.</p>
+    <p class="in" style="--d:5">Nobody there speaks Yeniseian now. The rivers are still called what Yeniseian speakers called them. Click the map to meet the family.</p>
+    <p class="note in" style="--d:6">This is the detective work of <strong>toponymy</strong>: place names outlive the people who coined them, so a map of river names can show you where a language used to be.</p>
+  </div>
+  <div class="stage">
+    <div class="panel in" style="--d:3; width:35vw">
+      <div class="ghostmap" id="ghostmap">
+        <svg viewBox="0 0 100 125" preserveAspectRatio="none">
+          <rect x="0" y="0" width="100" height="125" fill="rgba(255,255,255,.03)" rx="4"/>
+          <path d="M54 4 Q50 30 56 52 Q60 78 52 104 Q48 116 50 124" stroke="var(--ice)" stroke-width="2.5" fill="none"/>
+          <path d="M80 118 Q70 96 58 86" stroke="var(--ice)" stroke-width="1.6" fill="none" opacity=".7"/>
+          <path d="M22 112 Q38 100 52 96" stroke="var(--ice)" stroke-width="1.6" fill="none" opacity=".7"/>
+          <path d="M30 60 Q44 56 55 54" stroke="var(--ice)" stroke-width="1.6" fill="none" opacity=".7"/>
+        </svg>
+        <button class="gspot alive on" data-g="0" style="left:50%; top:16%">Ket</button>
+        <button class="gspot" data-g="1" style="left:34%; top:34%">Yugh</button>
+        <button class="gspot" data-g="2" style="left:26%; top:58%">Pumpokol</button>
+        <button class="gspot" data-g="3" style="left:56%; top:74%">Arin</button>
+        <button class="gspot" data-g="4" style="left:72%; top:88%">Assan</button>
+        <button class="gspot" data-g="5" style="left:44%; top:98%">Kott</button>
+      </div>
+      <p id="gmsg" aria-live="polite"></p>
+    </div>
+  </div>
+</section>
+
+<!-- 4. Dene-Yeniseian -->
+<section class="slide" style="--accent: var(--aurora)">
+  <div class="text">
+    <p class="kicker in">Think like a linguist</p>
+    <h2 class="in" style="--d:1">A line to Alaska</h2>
+    <div class="bar in" style="--d:2"></div>
+    <p class="in" style="--d:3">In 2008, Edward Vajda proposed that Yeniseian is related to the <strong>Na-Dene</strong> languages of North America — Navajo, Apache, Tlingit, and the Athabaskan languages of Alaska and Canada. It has been called the first proposed link between an Old World and a New World language family that meets the standards of ordinary historical linguistics.</p>
+    <p class="in" style="--d:4">If it holds, it means a single family straddles the Bering Strait: the speakers who stayed in Siberia, and the speakers who kept going.</p>
+    <p class="in" style="--d:5">It is not settled. Plenty of linguists remain unconvinced, and the work continues. What makes it worth your attention is <em>what kind of evidence</em> it rests on. Weigh three pieces yourself.</p>
+    <p class="note in" style="--d:6">Note what is <strong>not</strong> the main evidence: a list of similar-sounding words. Anyone can find those between any two languages by chance.</p>
+  </div>
+  <div class="stage">
+    <div class="panel in" style="--d:3; width:35vw">
+      <strong>Three pieces of evidence. How strong is each?</strong>
+      <div class="evid" id="evid" style="margin-top:.5rem">
+        <button class="ebtn" data-e="0">Ket <em>deʼŋ</em> "people" ≈ Proto-Athabaskan <em>*dəne·</em> "person"<small>a word that looks alike</small></button>
+        <button class="ebtn" data-e="1">Both families build verbs from the same kind of rigid prefix template<small>shared grammatical machinery</small></button>
+        <button class="ebtn" data-e="2">Ket DNA shows links with Native American populations<small>evidence from genetics</small></button>
+      </div>
+      <div class="weigh" id="weigh"><div class="wbar"></div><div class="wbar"></div><div class="wbar"></div><div class="wbar"></div><div class="wbar"></div></div>
+      <p id="emsg" aria-live="polite">Click each one to see how linguists rate it.</p>
+    </div>
+  </div>
+</section>
+
+<!-- 5. Strange for Siberia -->
+<section class="slide" data-tr="left" style="--accent: var(--ice)">
+  <div class="text">
+    <p class="kicker in">Language lab</p>
+    <h2 class="in" style="--d:1">Nothing like its neighbours</h2>
+    <div class="bar in" style="--d:2"></div>
+    <ul class="dots">
+      <li class="in" style="--d:3"><strong>It has tone.</strong> Ket uses pitch to distinguish words — a feature of Chinese or Yoruba, and essentially unheard of among the languages of northern Siberia. Specialists describe four main tones, though whether to call Ket "tonal" at all has been argued over for decades.</li>
+      <li class="in" style="--d:4"><strong>Its verbs are prefixing.</strong> Every language around Ket builds words by adding endings. Ket builds its verbs by stacking pieces at the <em>front</em>, in fixed numbered slots — and the stem itself can be split in half, with other material inserted between the two halves.</li>
+      <li class="in" style="--d:5"><strong>Its nouns have classes</strong> — masculine, feminine and inanimate — and the class shows up on the verb, not just the noun.</li>
+      <li class="in" style="--d:6">Linguists call this verb type "templatic polysynthesis," and Vajda notes it has <strong>no parallel anywhere else in northern Eurasia</strong>. It does have one across the Pacific: in Na-Dene.</li>
+    </ul>
+    <p class="note in" style="--d:7">Centuries of intermarriage with neighbouring peoples pushed some Ket structures toward the suffixing pattern around it — but the old prefixing verb is still underneath.</p>
+  </div>
+  <div class="stage">
+    <div class="panel in" style="--d:3; width:35vw">
+      <strong>Build a Ket-style verb.</strong> Click the slots in any order.
+      <div class="slots" id="slots">
+        <button class="slot" data-s="0">who<br>does it</button>
+        <button class="slot" data-s="1">to<br>whom</button>
+        <button class="slot" data-s="2">how<br>often</button>
+        <button class="slot" data-s="3">where<br>to</button>
+        <button class="slot stem" data-s="4">STEM</button>
+        <button class="slot" data-s="5">when</button>
+      </div>
+      <div class="built" id="built">—</div>
+      <p id="vbmsg" aria-live="polite">English needs a whole sentence for this. Ket needs one word.</p>
+      <hr style="border:0; border-top:1px solid var(--line); margin:.6rem 0">
+      <strong>Four tones:</strong> click a shape.
+      <div class="tones" id="tones">
+        <div class="tone on" data-t="0"><svg viewBox="0 0 60 30"><path d="M6 15 H54" stroke="var(--ice)" stroke-width="3" fill="none"/></svg><small>even</small></div>
+        <div class="tone" data-t="1"><svg viewBox="0 0 60 30"><path d="M6 14 H24 M36 16 H54" stroke="var(--ice)" stroke-width="3" fill="none"/></svg><small>creaky</small></div>
+        <div class="tone" data-t="2"><svg viewBox="0 0 60 30"><path d="M6 24 Q30 2 54 24" stroke="var(--ice)" stroke-width="3" fill="none"/></svg><small>rising–falling</small></div>
+        <div class="tone" data-t="3"><svg viewBox="0 0 60 30"><path d="M8 6 L52 26" stroke="var(--ice)" stroke-width="3" fill="none"/></svg><small>sharp fall</small></div>
+      </div>
+      <p id="tnmsg" aria-live="polite"></p>
+    </div>
+  </div>
+</section>
+
+<!-- 6. The river cosmology -->
+<section class="slide" data-tr="zoom" style="--accent: var(--drum)">
+  <div class="text">
+    <p class="kicker in">Cultural significance</p>
+    <h2 class="in" style="--d:1">The universe runs north</h2>
+    <div class="bar in" style="--d:2"></div>
+    <p class="in" style="--d:3">The Yenisei flows north to the Arctic. In Ket belief that direction is not neutral: the river <strong>is</strong> the map of the world, and where you are on it tells you what kind of place you are in.</p>
+    <ul class="dots">
+      <li class="in" style="--d:4">Upriver, to the <strong>south</strong>, lies <span class="hl">Tomam</span>, "mother of heat" — warmth, spring, and the birds that return with it.</li>
+      <li class="in" style="--d:5">Downriver, to the <strong>north</strong>, lies <span class="hl">Hosedam</span>, mistress of the underworld, who sends illness, bad weather and death and devours souls.</li>
+      <li class="in" style="--d:6">Above everything is <span class="hl">Es</span>, both "sky" and "god." The sky itself is described in Ket as <em>Es's skin</em>.</li>
+      <li class="in" style="--d:7">Shamans fought Hosedam with the help of spirit helpers. Ket belief also held that a person has <strong>seven souls</strong>, each with its own name.</li>
+    </ul>
+    <p class="note in" style="--d:8">Notice what this means for the language: direction words in Ket are not abstract. "Downriver" and "north" and "toward death" sit on the same axis.</p>
+  </div>
+  <div class="stage">
+    <div class="panel in" style="--d:3; width:34vw">
+      <strong>The river as a map of the world:</strong>
+      <div class="cosmo" id="cosmo">
+        <div class="flow"></div>
+        <button class="cband" data-c="0" style="top:8%">north · downriver</button>
+        <button class="cband" data-c="1" style="top:32%">the Ket villages</button>
+        <button class="cband" data-c="2" style="top:58%">upriver</button>
+        <button class="cband" data-c="3" style="top:84%">south · the source</button>
+      </div>
+      <p id="comsg" aria-live="polite">Click a stretch of the river.</p>
+    </div>
+  </div>
+</section>
+
+<!-- 7. Life in the taiga -->
+<section class="slide" style="--accent: var(--fir)">
+  <div class="text">
+    <p class="kicker in">How people lived</p>
+    <h2 class="in" style="--d:1">Birch bark, iron and dogs</h2>
+    <div class="bar in" style="--d:2"></div>
+    <ul class="dots">
+      <li class="in" style="--d:3">The Ket moved with the seasons: fishing camps in summer, hunting grounds in autumn and winter. The travelling home was a <strong>conical tent of poles covered in birch bark</strong>, and the travelling boat was a big covered river craft that could carry a family and its gear.</li>
+      <li class="in" style="--d:4">Women worked skins — of animals, birds and fish — and birch bark, which became containers, canoes and roofing. Men worked wood, bone and <strong>iron</strong>: Ket bows, knives and scrapers were known up and down the Yenisei and traded widely.</li>
+      <li class="in" style="--d:5">Dogs were partners rather than livestock, valued for hunting and for the household.</li>
+      <li class="in" style="--d:6">A blacksmith tradition in the taiga is a clue to deeper history: metalworking and the conical tent point south, toward the Altai and Sayan mountains, where the genetic and toponymic evidence says Yeniseian speakers came from.</li>
+    </ul>
+  </div>
+  <div class="stage">
+    <div class="cards in" style="--d:3; grid-template-columns:1fr; width:34vw">
+      <div class="card" style="--cardc: var(--drum)"><div class="word">Why birch bark?</div><div class="meaning">Boiled and sewn, birch bark is light, waterproof and free, and the taiga is full of it. A people who move eight times a year cannot carry heavy houses — so the house is bark and poles, and the poles can be cut again at the next camp.</div><div class="tap">click to reveal</div></div>
+      <div class="card" style="--cardc: var(--aurora)"><div class="word">Why so few loanwords?</div><div class="meaning">Scattered hunting groups in a huge forest met outsiders rarely. Ket borrowed grammatical habits from neighbouring languages through intermarriage, but remarkably little vocabulary — which is lucky, because it makes the deep history easier to reconstruct.</div><div class="tap">click to reveal</div></div>
+      <div class="card" style="--cardc: var(--ice)"><div class="word">Where did they come from?</div><div class="meaning">A 2016 genetic study places Yeniseian origins near the Altai Mountains or Lake Baikal, far to the south. River names agree. The Ket of today live at the far northern end of a long migration downriver — and Russian records show that migration was still going on in the 1600s.</div><div class="tap">click to reveal</div></div>
+    </div>
+  </div>
+</section>
+
+<!-- 8. Timeline -->
+<section class="slide" data-tr="zoom" style="--accent: var(--ice)">
+  <div class="text wide">
+    <p class="kicker in">History</p>
+    <h2 class="in" style="--d:1">From half of Siberia to six villages</h2>
+    <div class="bar in" style="--d:2"></div>
+    <p class="in" style="--d:3">Click each moment to explore it.</p>
+    <div class="tl in" id="tl" style="--d:4">
+      <button class="ev" style="--ec: var(--aurora)"><span class="yr">before 1600</span><small>A family across Siberia</small></button>
+      <button class="ev" style="--ec: #a9e6c6"><span class="yr">1600s–1700s</span><small>Fur tribute and debt</small></button>
+      <button class="ev" style="--ec: var(--drum)"><span class="yr">1700s–1840s</span><small>Word lists and last speakers</small></button>
+      <button class="ev" style="--ec: #e8b58a"><span class="yr">1930s–70s</span><small>Settled by decree</small></button>
+      <button class="ev" style="--ec: #c0b6e0"><span class="yr">1980s</span><small>A primer, at last</small></button>
+      <button class="ev" style="--ec: var(--ice)"><span class="yr">2008 →</span><small>The Alaska question</small></button>
+    </div>
+    <div class="panel in" id="tltext" style="--d:5" aria-live="polite"></div>
+  </div>
+</section>
+
+<!-- 9. The numbers -->
+<section class="slide" data-tr="left" style="--accent: var(--ember)">
+  <div class="text">
+    <p class="kicker in">Why it matters now</p>
+    <h2 class="in" style="--d:1">The arithmetic</h2>
+    <div class="bar in" style="--d:2"></div>
+    <p class="in" style="--d:3">Ket is not merely endangered. It is the <strong>last branch of an entire family</strong>. When a language like Spanish loses ground, its family survives in twenty other languages. When Ket goes, Yeniseian goes with it, and a whole independent way of building a human language stops existing.</p>
+    <ul class="dots">
+      <li class="in" style="--d:4">And the Dene–Yeniseian question gets harder to answer, permanently. You cannot run new fieldwork on a language with no speakers.</li>
+      <li class="in" style="--d:5">The causes are familiar from across Siberia: <strong>collectivization</strong>, forced settlement in a few villages, <strong>boarding schools</strong> in Russian, and an economy with no place for the taiga hunting life.</li>
+      <li class="in" style="--d:6">One grim detail of scale: a researcher documenting the Ket verb in 2021 did it through <strong>weekly video calls with a single fluent speaker</strong>.</li>
+    </ul>
+  </div>
+  <div class="stage">
+    <div class="panel in" style="--d:3; width:34vw">
+      <strong>Ket speakers</strong>
+      <div class="colchart">
+        <div class="col"><div class="n">1,225</div><div class="colbar" style="--h:96%; --c: var(--aurora)"></div><div class="y">1926</div></div>
+        <div class="col"><div class="n">537</div><div class="colbar" style="--h:42%; --c: var(--drum)"></div><div class="y">1989</div></div>
+        <div class="col"><div class="n">153</div><div class="colbar" style="--h:12%; --c: var(--ember)"></div><div class="y">2020</div></div>
+        <div class="col"><div class="n">&lt;30</div><div class="colbar" style="--h:3%; --c: var(--rose)"></div><div class="y">est. 2024</div></div>
+      </div>
+      <p class="note" style="margin:.3rem 0 0">In 1926 about 86% of Ket people spoke Ket. Census figures for 2005 and 2020 are widely thought to be inflated, since they count people who report some knowledge rather than fluent speakers.</p>
+    </div>
+    <div class="panel in" style="--d:5; width:34vw">
+      <strong>Your turn:</strong> if you could fund exactly one thing for Ket — a dictionary, a school programme, recordings of elders, or paying young adults to live with speakers for a year — which would you choose, and what would you be giving up?
+    </div>
+  </div>
+</section>
+
+<!-- 10. Now -->
+<section class="slide" style="--accent: var(--aurora)">
+  <div class="text">
+    <p class="kicker in">What is being done</p>
+    <h2 class="in" style="--d:1">Songs, grammars, and a conference in Tomsk</h2>
+    <div class="bar in" style="--d:2"></div>
+    <ul class="dots">
+      <li class="in" style="--d:3"><strong>Alexander Kotusov</strong> (1955–2019) was a Ket folk singer and composer who wrote songs in the language — which matters more than it sounds, because a song is a reason to use a language that no longer has a workplace.</li>
+      <li class="in" style="--d:4">Ket now has what most small Siberian languages never got: a <strong>full descriptive grammar</strong>, dictionaries, a Cyrillic alphabet and a school primer produced in the Soviet period, and a steady stream of research publications.</li>
+      <li class="in" style="--d:5">Researchers gather at the <strong>Dul'zon Readings</strong>, named for Andrey Dul'zon, the linguist who first mapped Yeniseian river names across Siberia and proved how far the family once reached.</li>
+      <li class="in" style="--d:6">The hard truth is the same one as everywhere in this course: documentation is going well, and transmission to children is not.</li>
+    </ul>
+    <p class="note in" style="--d:7">Worth remembering: the first published observations of Ket were made by a travelling naturalist, Peter Simon Pallas, in the 1700s. Nearly three centuries of outside study, and the language is down to a few dozen speakers.</p>
+  </div>
+  <div class="stage">
+    <div class="panel in" style="--d:3; width:34vw">
+      <strong>What makes Ket worth the trouble?</strong>
+      <p style="margin:.3rem 0 0">Every language is a working experiment in how to encode a world. Ket's experiment is unusually different from the ones around it: tone where no neighbour has tone, prefixes where every neighbour uses suffixes, nouns sorted by animacy, verbs that split in half.</p>
+      <p style="margin:.5rem 0 0">And it may be the clue that connects two continents. The question of whether Yeniseian and Na-Dene are one family is a question about <em>human history</em> — who went where, and when — and Ket is the only living witness left on the Siberian side.</p>
+    </div>
+    <div class="panel in" style="--d:5; width:34vw">
+      <strong>Discuss:</strong> a hypothesis that could be proved or disproved by a language with twenty speakers. What does that tell you about how much of human history is stored in places nobody is funding?
+    </div>
+  </div>
+</section>
+
+<!-- 11. Quiz -->
+<section class="slide" style="--accent: var(--drum)">
+  <div class="text wide center">
+    <p class="kicker in">Review by the fire</p>
+    <h2 class="in" style="--d:1">Quick quiz!</h2>
+    <div class="bar in" style="--d:2"></div>
+    <div class="quizgrid">
+      <div class="quiz panel in" style="--d:3" data-right="Yes — Yugh, Kott, Arin, Assan and Pumpokol are all gone." data-wrong="Hint: think about the family, not the language.">
+        <div class="q">What makes Ket's situation different from most endangered languages?</div>
+        <div class="options"><button class="opt">It has no writing system</button><button class="opt" data-correct>It is the last of its whole family</button><button class="opt">It is spoken only by children</button></div>
+        <div class="feedback"></div>
+      </div>
+      <div class="quiz panel in" style="--d:4" data-right="Right — shared verb structure, not a list of lookalike words." data-wrong="Hint: similar-sounding words are the weakest kind of evidence.">
+        <div class="q">The strongest evidence for the Dene–Yeniseian link is…</div>
+        <div class="options"><button class="opt">similar-sounding words</button><button class="opt" data-correct>shared verb machinery</button><button class="opt">similar alphabets</button></div>
+        <div class="feedback"></div>
+      </div>
+      <div class="quiz panel in" style="--d:5" data-right="Correct — river names preserve Yeniseian words for 'river' across a huge area." data-wrong="Hint: what outlives the people who named it?">
+        <div class="q">How do we know Yeniseian languages once covered much of Siberia?</div>
+        <div class="options"><button class="opt">Ancient books</button><button class="opt" data-correct>River names</button><button class="opt">Roman records</button></div>
+        <div class="feedback"></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- 12. Closing -->
+<section class="slide end" style="--accent: var(--aurora)">
+  <div class="text">
+    <h1 class="in cyr" style="font-size:4.8rem">деӈ</h1>
+    <p class="lead in" style="--d:1; margin-top:.8rem">"People." Thank you! Questions?</p>
+    <p class="quote in" style="--d:2">Across half of Siberia the rivers still answer to Yeniseian names, spoken by nobody. On one stretch of one river, a few dozen people can still say them and mean them.</p>
+  </div>
+  <details class="fine in" style="--d:3">
+    <summary>Sources &amp; image credits</summary>
+    <div class="box">
+      <h4>Sources</h4>
+      <ul>
+        <li><a href="https://en.wikipedia.org/wiki/Ket_language">Ket language (Wikipedia)</a> — speaker figures, tone, phonology</li>
+        <li><a href="https://en.wikipedia.org/wiki/Ket_people">Ket people (Wikipedia)</a> — census history, Kotusov, Pallas</li>
+        <li><a href="https://en.wikipedia.org/wiki/Yeniseian_languages">Yeniseian languages (Wikipedia)</a> — the family tree, Dene–Yeniseian</li>
+        <li><a href="https://en.wikipedia.org/wiki/Yeniseian_peoples">Yeniseian peoples (Wikipedia)</a> — Kott, Arin, Assan, Pumpokol; river-name evidence</li>
+        <li><a href="https://en.wikipedia.org/wiki/Ket_mythology">Ket mythology (Wikipedia)</a> — Es, Hosedam, Tomam, the levels of the cosmos</li>
+        <li><a href="https://en.wikipedia.org/wiki/Yugh_people">Yugh people (Wikipedia)</a></li>
+        <li>Vajda, "A Siberian link with Na-Dene languages," in <em>The Dene–Yeniseian Connection</em> (2010)</li>
+        <li><a href="https://www.academia.edu/168802293/The_Yeniseian_Language_Family">Vajda, "The Yeniseian Language Family," in <em>The Languages and Linguistics of Northern Asia</em> (De Gruyter Mouton, 2024)</a></li>
+        <li><a href="https://journals.linguisticsociety.org/proceedings/index.php/BLS/article/download/3930/3625/5160">Vajda, "Metathesis and Reanalysis in Ket"</a> — tone, prefixing verb, typological accommodation</li>
+        <li><a href="https://www.researchgate.net/publication/271644376_Ket_Shamanism">Vajda, "Ket Shamanism"</a></li>
+        <li><a href="https://web.archive.org/web/20211120135541/https://scholarspace.manoa.hawaii.edu/bitstream/10125/24847/ldc-sp17-10-vajda.pdf">Vajda, "Yeniseian and Dene hydronyms"</a></li>
+        <li><a href="https://www.academia.edu/112922076/The_Ket_Verb_Morphological_Complexity_in_Old_Polysynthesis">"The Ket Verb: Morphological Complexity in Old Polysynthesis"</a> — fieldwork by video call, 2021 speaker estimate</li>
+        <li><a href="https://theswissbay.ch/pdf/Books/Linguistics/Mega%20linguistics%20pack/Paleosiberian/Yeniseian/Ket,%20A%20Descriptive%20Grammar%20of%20-%20Part%201%20(Georg).pdf">Georg, <em>A Descriptive Grammar of Ket</em></a> — hydronym elements, material culture, tone</li>
+        <li><a href="https://arxiv.org/pdf/1508.03097">Flegontov et al., "Genomic study of the Ket" (2016)</a> — Altai/Baikal origins, toponymic extent, Na-Dene links</li>
+        <li><a href="https://en.wikipedia.org/wiki/Proto-Yeniseian_language">Proto-Yeniseian (Wikipedia)</a></li>
+        <li><a href="https://joshuaproject.net/people_groups/print/16023/RS">Ket people group profile</a> — birch-bark tents, river boats, smithing, trade</li>
+      </ul>
+      <h4>Images (Wikimedia Commons)</h4>
+      <ul id="credits"></ul>
+    </div>
+  </details>
+</section>
+
+</main>
+
+<nav class="controls">
+  <button id="prev" aria-label="Previous slide">‹</button>
+  <span id="counter">1 / 12</span>
+  <button id="next" aria-label="Next slide">›</button>
+  <button id="fs" aria-label="Fullscreen">⤢</button>
+</nav>
+<p class="hint">Use ← → to move. Press F for fullscreen.</p>
+
+<!-- Ket effects: the arc to Alaska, ghost rivers, evidence weigher, verb builder, tones, river cosmology -->
+<script>
+(function () {
+  /* ---------- Background ---------- */
+  var stars = document.querySelector("#taiga .stars");
+  for (var k = 0; k < 80; k++) {
+    var s = document.createElement("i");
+    s.style.left = Math.random() * 100 + "%";
+    s.style.top = (Math.random() * 56) + "%";
+    s.style.animationDelay = (-Math.random() * 4) + "s";
+    if (Math.random() < .18) { s.style.width = "3px"; s.style.height = "3px"; }
+    stars.appendChild(s);
+  }
+  document.addEventListener("slidechange", function (e) {
+    document.body.style.setProperty("--t", e.detail.index / (e.detail.total - 1));
+  });
+
+  function single(selector, callback) {
+    var grp = document.querySelectorAll(selector);
+    grp.forEach(function (b) {
+      b.addEventListener("click", function () {
+        grp.forEach(function (x) { x.classList.remove("on"); });
+        b.classList.add("on");
+        callback(b);
+      });
+    });
+  }
+
+  /* ---------- Ghost rivers ---------- */
+  var GHOSTS = [
+    ["Ket", "Alive — just. The northernmost Yeniseian language and the only one left, spoken in a handful of villages on the middle Yenisei. Everything we can still <em>hear</em> of this family comes from here.", true],
+    ["Yugh", "Gone in the 1970s. Spoken along the Yenisei south of the Ket, and long assumed to be a dialect of Ket until linguists separated it out in the 1960s — by which point there was almost no one left to ask. The 2020 census counted seven ethnic Yugh.", false],
+    ["Pumpokol", "Gone in the 1700s. Known from word lists collected by 18th-century travellers, plus river names in the Ob and Ket' river basins to the west.", false],
+    ["Arin", "Gone in the 1700s. Spoken around what is now the city of Krasnoyarsk. The area is full of river names nobody there can translate any more.", false],
+    ["Assan", "Gone in the 1700s. A small people of the Kan and Angara region in the south, recorded briefly and then absorbed.", false],
+    ["Kott", "Gone in the mid-1800s — the last Yeniseian language of the south. The Finnish linguist M. A. Castrén recorded it in the 1840s from a handful of remaining speakers. Kott <em>šet</em> means \"river,\" and that syllable survives in dozens of river names across southern Siberia.", false]
+  ];
+  var gmsg = document.getElementById("gmsg");
+  function setGhost(i) {
+    document.querySelectorAll(".gspot").forEach(function (x, k) { x.classList.toggle("on", k === i); });
+    gmsg.innerHTML = "<b>" + GHOSTS[i][0] + "</b> — " + GHOSTS[i][1];
+  }
+  document.querySelectorAll(".gspot").forEach(function (b, i) { b.addEventListener("click", function () { setGhost(i); }); });
+  setGhost(0);
+
+  /* ---------- Evidence weigher ---------- */
+  var EVID = [
+    [2, "Suggestive, but weak on its own.", "Ket <em>deʼŋ</em> and Proto-Athabaskan <em>*dəne·</em> do look alike, and people noticed it more than a century ago. The problem: with thousands of languages and a few dozen common sounds, lookalike words turn up by pure chance all the time. Vajda himself treats this one cautiously — possibly coincidence."],
+    [5, "This is the real argument.", "Both families build verbs out of a rigid template of numbered slots, and Vajda argues that specific pieces of the Yeniseian template correspond to specific pieces of the Na-Dene one — including how action nominals are formed. Grammar that detailed is very hard to borrow and very hard to invent twice. This is why the proposal was taken seriously when earlier guesses were not."],
+    [3, "Relevant, but it is a different question.", "Genetics tells you about ancestors of <em>people</em>; linguistics tells you about ancestors of <em>languages</em>. The two often travel together, but not always — plenty of populations have switched languages entirely. Genetic links between Ket and Native American groups make the linguistic story more plausible, but they cannot prove it."]
+  ];
+  var emsg = document.getElementById("emsg");
+  single("#evid .ebtn", function (b) {
+    var E = EVID[Number(b.dataset.e)];
+    document.querySelectorAll("#weigh .wbar").forEach(function (x, i) { x.classList.toggle("fill", i < E[0]); });
+    emsg.innerHTML = "<span class='strength'>" + E[1] + "</span><br>" + E[2];
+  });
+
+  /* ---------- Verb builder ---------- */
+  var PIECES = [
+    ["I", "The subject is marked inside the verb — no separate word for \"I\" needed."],
+    ["him", "So is the object. Ket verbs can carry both at once."],
+    ["again-and-again", "Repetition gets its own slot, like a built-in adverb."],
+    ["riverward", "Direction is part of the verb, not a separate preposition."],
+    ["CARRY", "The stem — the actual action. In Ket it can be split in two, with other pieces sitting between the halves. English cannot do that at all."],
+    ["yesterday", "Tense and time, at the end."]
+  ];
+  var on = [], builtEl = document.getElementById("built"), vbmsg = document.getElementById("vbmsg");
+  document.querySelectorAll("#slots .slot").forEach(function (sl) {
+    sl.addEventListener("click", function () {
+      var i = Number(sl.dataset.s);
+      var at = on.indexOf(i);
+      if (at >= 0) { on.splice(at, 1); sl.classList.remove("on"); }
+      else { on.push(i); sl.classList.add("on"); }
+      on.sort(function (a, b) { return a - b; });
+      builtEl.textContent = on.length ? on.map(function (x) { return PIECES[x][0]; }).join("-") : "—";
+      vbmsg.innerHTML = on.length
+        ? PIECES[i][1] + (on.length >= 5 ? "<br><strong>That is one word in Ket, and a whole English sentence.</strong>" : "")
+        : "English needs a whole sentence for this. Ket needs one word.";
+    });
+  });
+
+  /* ---------- Tones ---------- */
+  var TONES = [
+    "An even, half-long tone — the pitch stays flat across the word.",
+    "A creaky or laryngealized tone, with a catch in the throat in the middle. Several languages of the Pacific Rim do this; almost nothing else in Siberia does.",
+    "A long rising–falling tone: the pitch climbs and then drops over a doubled vowel.",
+    "A short, sharply falling tone on a single short vowel."
+  ];
+  var tnmsg = document.getElementById("tnmsg");
+  single("#tones .tone", function (b) {
+    tnmsg.innerHTML = TONES[Number(b.dataset.t)] + "<br><span class='note'>Ket uses one tone per word, not one per syllable. Whether to call the system \"tone\" at all has been debated for decades — Vajda and Georg argue that it is.</span>";
+  });
+
+  /* ---------- River cosmology ---------- */
+  var COSMO = [
+    ["The north, downriver", "The mouth of the Yenisei and the Arctic beyond it. This is the realm of <strong>Hosedam</strong>, mistress of the underworld, who sends illness, storms and death and consumes the souls of the dead. In Ket thought, \"downriver\" and \"toward death\" point the same way."],
+    ["The Ket villages", "The middle Yenisei — the human world, between the powers. Shamans worked here, calling on spirit helpers to fight off what came from the north. Above everything sits <strong>Es</strong>, whose name means both \"sky\" and \"god\"; the visible sky is described as Es's skin."],
+    ["Upriver", "Travelling south means travelling toward warmth. The migratory birds that arrive each spring come from this direction, and in Ket stories they come from a particular place and a particular mother."],
+    ["The south, the source", "<strong>Tomam</strong>, \"mother of heat\" — associated with the sun, with spring, and with the birds. She is the counterweight to Hosedam at the other end of the river. The whole cosmology is organised along one axis: the one the water actually flows down."]
+  ];
+  var comsg = document.getElementById("comsg");
+  single(".cband", function (b) {
+    var C = COSMO[Number(b.dataset.c)];
+    comsg.innerHTML = "<strong style='color:var(--drum); font-size:1.1rem'>" + C[0] + "</strong><br>" + C[1];
+  });
+
+  /* ---------- Timeline ---------- */
+  var EVENTS = [
+    ["A family across Siberia", "Before the 1600s, Yeniseian languages were spoken across an enormous area: from northern Mongolia in the south to the middle Yenisei in the north, and from the Irtysh in the west to the Angara in the east. We know this almost entirely from river names, because the speakers left no writing and most left no descendants who kept the language."],
+    ["Fur tribute and debt", "Russian expansion reached the Yenisei in the 1600s. Indigenous peoples were taxed in furs, and Ket families ran up debts with Russian traders. Disease and displacement followed, and the southern Yeniseian peoples — Arin, Assan, Pumpokol — disappeared as distinct groups within about a century."],
+    ["Word lists and last speakers", "Almost everything known about the extinct Yeniseian languages comes from travelling scholars who wrote down vocabularies in the 1700s, and from M. A. Castrén, who recorded Kott in the 1840s from its last speakers. Peter Simon Pallas published the first observations of Ket itself. Those notebooks are now the only evidence that five languages existed."],
+    ["Settled by decree", "Soviet policy ended the nomadic hunting life. Families were settled in a few villages, children were sent to Russian-language boarding schools, and the taiga economy was replaced by state enterprises. Ket speakers born after this period are rare."],
+    ["A primer, at last", "A Latin alphabet was devised in the 1930s, then abandoned; a Cyrillic alphabet and a school primer were produced in the Soviet period, and Ket began — very late and on a very small scale — to be taught as a subject in local schools."],
+    ["The Alaska question", "Edward Vajda's Dene–Yeniseian paper in 2008 turned this small Siberian language into a central piece of evidence about the peopling of the Americas. Researchers still meet annually at the Dul'zon Readings to work on Yeniseian — while the number of people who speak it keeps falling."]
+  ];
+  var tlText = document.getElementById("tltext");
+  var evs = document.querySelectorAll("#tl .ev");
+  function setEvent(i) {
+    evs.forEach(function (e, k) { e.classList.toggle("on", k === i); });
+    tlText.innerHTML = '<strong style="color:var(--aurora); font-size:1.2rem">' + EVENTS[i][0] + "</strong><br>" + EVENTS[i][1];
+  }
+  evs.forEach(function (e, i) { e.addEventListener("click", function () { setEvent(i); }); });
+  setEvent(0);
+})();
+</script>
+<script src="../assets/deck.js"></script>
+</body>
+</html>
