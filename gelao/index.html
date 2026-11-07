@@ -1,0 +1,672 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Gelao: Half a Million People, Three Thousand Speakers</title>
+<link rel="stylesheet" href="../assets/deck.css">
+<style>
+@import url("https://fonts.googleapis.com/css2?family=Arvo:wght@700&family=Nunito+Sans:wght@400;600;700;900&display=swap");
+
+/* ---------- Gelao theme: Guizhou karst, terraces ripening, indigo and Nuo red ---------- */
+:root {
+  --bg: #0c181c;
+  --ink: #f3f1e6;
+  --muted: #c2d2cf;
+  --line: rgba(243, 241, 230, .22);
+  --panel: rgba(10, 30, 34, .85);
+  --karst: #3a5a68;
+  --green: #6aa84f;
+  --gold: #e3b23c;
+  --indigo: #3a5f9e;
+  --nuo: #cf3b2f;
+  --bamboo: #8db87a;
+  --rose: #cf3b2f;
+  --accent: var(--gold);
+  --serif: "Arvo", Georgia, serif;
+  --sans: "Nunito Sans", "Noto Sans SC", system-ui, sans-serif;
+  --t: 0;
+  font-size: clamp(12px, 1.3vw, 28px);
+}
+h1 { font-family: var(--serif); font-size: 5.4rem; line-height: 1.04; }
+h2 { font-family: var(--serif); font-size: 2.5rem; line-height: 1.14; }
+.slide { padding: 7vh 4vw 8vh 6vw; }
+.text { max-width: 44vw; }
+.text.wide { max-width: 86vw; width: 86vw; }
+.stage {
+  right: 5vw; top: 6vh; bottom: 10vh; width: 38vw;
+  display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 1.1rem;
+}
+ul.dots li { font-size: 1.04rem; }
+.speak .line, .card .word { font-family: var(--sans); font-weight: 900; }
+.card.revealed .meaning { max-height: 15rem; }
+.btn { background: var(--gold); color: #2b2008; }
+.syl.on { background: var(--gold); color: #2b2008; }
+.loc .disc { border-color: var(--gold); box-shadow: 0 0 0 .55rem rgba(227,178,60,.16), 0 22px 40px rgba(0,0,0,.55); }
+.loc .tint { background: #cfe0bb; }
+.loc .sea { background: #123c4c; }
+.loc .tag { background: #0a2228; border-color: var(--gold); }
+.note { font-size: .82rem; color: var(--muted); }
+.quote { font-family: var(--serif); font-size: 1.6rem; line-height: 1.36; color: var(--gold); }
+.han { font-family: var(--serif); }
+
+/* ---------- Background: karst peaks and ripening terraces ---------- */
+#karst { position: fixed; inset: 0; z-index: 0; overflow: hidden; pointer-events: none;
+  background: linear-gradient(180deg, #081419 0%, #10303a 44%, #1a4a4a 72%, #11302a 100%); }
+#karst .peaks { position: absolute; left: 0; right: 0; bottom: 34vh; height: 34vh; opacity: .8; }
+#karst .peaks svg, #karst .terr svg, #karst .bamb svg { width: 100%; height: 100%; display: block; }
+#karst .terr { position: absolute; left: 0; right: 0; bottom: 0; height: 40vh; }
+#karst .terr.g { opacity: calc(1 - var(--t)); transition: opacity 1.7s ease; }
+#karst .terr.y { opacity: var(--t); transition: opacity 1.7s ease; }
+#karst .bamb { position: absolute; right: 2vw; bottom: 0; width: 22vw; height: 62vh;
+  transform-origin: bottom center; animation: sway 9s ease-in-out infinite alternate; }
+@keyframes sway { to { transform: rotate(1.6deg); } }
+#karst .mistband { position: absolute; left: -10%; right: -10%; height: 14vh;
+  background: linear-gradient(180deg, rgba(220,235,235,0), rgba(220,235,235,.4), rgba(220,235,235,0));
+  filter: blur(9px); animation: drift 36s linear infinite alternate; }
+#karst .mistband.m1 { bottom: 40vh; }
+#karst .mistband.m2 { bottom: 54vh; animation-duration: 50s; animation-direction: alternate-reverse; }
+@keyframes drift { to { transform: translateX(9%); } }
+#karst .shade { position: absolute; inset: 0;
+  background: linear-gradient(90deg, rgba(3,10,12,.95) 0%, rgba(3,10,12,.78) 50%, rgba(3,10,12,.28) 100%); }
+
+/* ---------- Photos ---------- */
+.board { position: relative; margin: 0; width: var(--w, 19vw); padding: .6rem .6rem .5rem;
+  background: #ece7d5; border-radius: .2rem; box-shadow: 0 18px 34px rgba(0,0,0,.6);
+  transform: rotate(var(--r, 0deg)); transition: transform .9s cubic-bezier(.2,.8,.2,1), opacity .7s ease; }
+.slide:not(.active) .board { opacity: 0; transform: translateY(46px) rotate(var(--r, 0deg)); }
+.slide.active .board { transition-delay: calc(.4s + var(--d, 0) * .16s); }
+.board img { display: block; width: 100%; aspect-ratio: var(--ar, 4 / 3); object-fit: cover; background: #c9c4ae; }
+.board figcaption { color: #23261c; font-size: .73rem; font-weight: 700; line-height: 1.25; margin: .4rem .1rem 0; font-family: var(--serif); }
+
+/* ---------- Shared controls ---------- */
+.switch { display: flex; gap: .4rem; margin: .4rem 0 .6rem; flex-wrap: wrap; }
+.sbtn { font: inherit; font-weight: 700; font-size: .92rem; color: var(--ink); background: var(--panel);
+  border: 2px solid var(--line); border-radius: .3rem; padding: .25em .9em; cursor: pointer; transition: transform .2s; }
+.sbtn:hover { transform: translateY(-2px); }
+.sbtn.on { background: var(--gold); border-color: var(--gold); color: #2b2008; }
+.out { min-height: 3.2em; margin-top: .5rem; }
+
+/* ---------- The 1% crowd ---------- */
+.crowd { display: flex; flex-wrap: wrap; gap: 2px; justify-content: center; margin: .5rem 0; }
+.crowd i { width: .36rem; height: .36rem; border-radius: 50%; background: rgba(255,255,255,.22); }
+.crowd i.sp { background: var(--gold); box-shadow: 0 0 6px var(--gold); }
+.bigfig { font-family: var(--serif); font-size: 2.3rem; color: var(--gold); text-align: center; line-height: 1.1; }
+#cwmsg { min-height: 4.6em; }
+
+/* ---------- Colour varieties ---------- */
+.cols { display: grid; grid-template-columns: repeat(2, 1fr); gap: .4rem; }
+.colv { font: inherit; text-align: left; font-weight: 700; font-size: .88rem; color: var(--ink); background: var(--panel);
+  border: 2px solid var(--line); border-left: 8px solid var(--cc); border-radius: .3rem; padding: .45em .7em; cursor: pointer; }
+.colv:hover { transform: translateX(3px); }
+.colv small { display: block; font-weight: 400; font-size: .74rem; color: var(--muted); }
+.meter2 { height: .9rem; border-radius: .2rem; background: rgba(255,255,255,.12); margin-top: .4rem; overflow: hidden; }
+.meter2 b { display: block; height: 100%; width: 0; background: var(--gold); transition: width 1.1s cubic-bezier(.2,.8,.2,1); }
+#colmsg { min-height: 5.4em; margin-top: .4rem; }
+
+/* ---------- Family scale ---------- */
+.famrow { display: grid; gap: .35rem; }
+.fr { display: grid; grid-template-columns: 6.5rem 1fr; gap: .4rem; align-items: center; cursor: pointer; }
+.fr span { font-size: .82rem; font-weight: 700; }
+.fr .fb { height: 1rem; border-radius: .2rem; background: var(--indigo); transition: background .3s; }
+.fr.on .fb { background: var(--gold); }
+.fr.tiny .fb { background: var(--nuo); min-width: 3px; }
+#famsg { min-height: 5em; margin-top: .4rem; }
+
+/* ---------- Forgery test ---------- */
+.clues { display: grid; gap: .4rem; }
+.clue { font: inherit; text-align: left; font-weight: 600; font-size: .86rem; color: var(--ink); background: var(--panel);
+  border: 2px solid var(--line); border-radius: .3rem; padding: .45em .7em; cursor: pointer; }
+.clue:hover { border-color: var(--nuo); }
+.clue.on { border-color: var(--nuo); background: rgba(207,59,47,.14); }
+.gauge { height: 1.1rem; border-radius: 999px; background: linear-gradient(90deg, var(--green), var(--gold), var(--nuo));
+  position: relative; margin: .5rem 0 .2rem; }
+.gauge i { position: absolute; top: -4px; bottom: -4px; width: 4px; background: #fff; border-radius: 2px;
+  left: 4%; transition: left 1s cubic-bezier(.2,.8,.2,1); }
+.gaugelbl { display: flex; justify-content: space-between; font-size: .72rem; color: var(--muted); }
+#fgmsg { min-height: 5em; margin-top: .4rem; }
+
+/* ---------- Festival steps ---------- */
+.fsteps { display: grid; gap: .35rem; }
+.fst { font: inherit; text-align: left; font-weight: 700; font-size: .86rem; color: var(--ink); background: var(--panel);
+  border: 2px solid var(--line); border-left: 6px solid var(--green); border-radius: .3rem; padding: .4em .75em; cursor: pointer; }
+.fst:hover { transform: translateX(3px); }
+#fsmsg { min-height: 5.6em; margin-top: .4rem; }
+
+/* ---------- Timeline ---------- */
+.tl { display: grid; grid-template-columns: repeat(6, 1fr); gap: .55rem; margin-top: 1rem; position: relative; padding-bottom: 1.4rem; }
+.tl::after { content: ""; position: absolute; left: 0; right: 0; bottom: .45rem; height: 3px; border-radius: 3px;
+  background: linear-gradient(90deg, var(--green), var(--gold), var(--nuo)); }
+.ev { font: inherit; text-align: left; color: #171f14; background: var(--ec); border: 0; border-radius: .3rem;
+  padding: .65rem .75rem; cursor: pointer; transition: transform .25s, box-shadow .25s; }
+.ev:hover { transform: translateY(-4px); }
+.ev.on { box-shadow: 0 0 0 3px #fff, 0 10px 24px rgba(0,0,0,.4); transform: translateY(-6px); }
+.ev .yr { font-family: var(--serif); font-size: 1.2rem; line-height: 1; display: block; }
+.ev small { display: block; font-weight: 700; font-size: .76rem; margin-top: .3rem; }
+#tltext { min-height: 5.4rem; margin-top: .4rem; }
+
+/* ---------- Quiz tint ---------- */
+.opt.right { background: var(--green); }
+.opt.wrong { background: var(--nuo); }
+
+@media (max-width: 820px) {
+  .slide { padding: 6vh 6vw 12vh; }
+  h1 { font-size: 3.1rem; }
+  .text, .text.wide { max-width: none; width: auto; }
+  .stage { position: relative; inset: auto; width: 100%; margin-top: 1.5rem; }
+  .board { width: 74vw; }
+  .stage .panel, .stage .speak { width: 100% !important; max-width: none !important; }
+  .tl { grid-template-columns: repeat(2, 1fr); }
+  .cols { grid-template-columns: 1fr; }
+  #karst .bamb { width: 40vw; opacity: .5; }
+}
+</style>
+</head>
+<body data-map="BlankMap-Equirectangular.svg">
+
+<div id="karst" aria-hidden="true">
+  <div class="peaks">
+    <svg viewBox="0 0 1600 300" preserveAspectRatio="none">
+      <path d="M0 300 V210 Q60 110 120 206 Q190 70 260 204 Q330 120 400 202 Q480 60 560 200 Q640 110 720 202 Q800 50 880 198 Q960 120 1040 202 Q1130 80 1220 200 Q1300 130 1380 204 Q1480 90 1600 206 V300 Z" fill="#20414c"/>
+    </svg>
+  </div>
+  <div class="terr g">
+    <svg viewBox="0 0 1600 400" preserveAspectRatio="none">
+      <path d="M0 400 V40 Q400 10 800 48 Q1200 86 1600 44 V400 Z" fill="#3e6b36"/>
+      <g stroke="#588a44" stroke-width="5" fill="none"><path d="M0 90 Q400 60 800 98 Q1200 136 1600 94"/><path d="M0 150 Q400 120 800 158 Q1200 196 1600 154"/><path d="M0 214 Q400 184 800 222 Q1200 260 1600 218"/><path d="M0 282 Q400 252 800 290 Q1200 328 1600 286"/><path d="M0 350 Q400 320 800 358 Q1200 396 1600 354"/></g>
+    </svg>
+  </div>
+  <div class="terr y">
+    <svg viewBox="0 0 1600 400" preserveAspectRatio="none">
+      <path d="M0 400 V40 Q400 10 800 48 Q1200 86 1600 44 V400 Z" fill="#8a6f1e"/>
+      <g stroke="#e3b23c" stroke-width="5" fill="none"><path d="M0 90 Q400 60 800 98 Q1200 136 1600 94"/><path d="M0 150 Q400 120 800 158 Q1200 196 1600 154"/><path d="M0 214 Q400 184 800 222 Q1200 260 1600 218"/><path d="M0 282 Q400 252 800 290 Q1200 328 1600 286"/><path d="M0 350 Q400 320 800 358 Q1200 396 1600 354"/></g>
+    </svg>
+  </div>
+  <div class="bamb">
+    <svg viewBox="0 0 220 620">
+      <g stroke="#2f5a2c" stroke-width="9" stroke-linecap="round"><path d="M40 620 V40"/><path d="M96 620 V90"/><path d="M152 620 V20"/></g>
+      <g stroke="#3f7038" stroke-width="5" fill="none">
+        <path d="M40 150 q40 -34 74 -14"/><path d="M96 230 q-42 -30 -70 -10"/><path d="M152 120 q40 -30 60 -6"/><path d="M40 330 q44 -26 78 -4"/><path d="M152 300 q-44 -28 -74 -6"/>
+      </g>
+    </svg>
+  </div>
+  <div class="mistband m1"></div><div class="mistband m2"></div>
+  <div class="shade"></div>
+</div>
+<div class="progress"></div>
+
+<main>
+
+<!-- 1. Title -->
+<section class="slide" style="--accent: var(--gold)">
+  <div class="text">
+    <p class="kicker in">Rare Languages of the Asia-Pacific · Module 27</p>
+    <h1 class="in" style="--d:1">Gelao</h1>
+    <p class="in han" style="--d:2; font-size:1.35rem; font-weight:700; color:var(--gold)">Kláo · 仡佬语 · Cờ Lao — Guizhou, China &amp; Hà Giang, Vietnam</p>
+    <div class="bar in" style="--d:3"></div>
+    <p class="lead in" style="--d:4">Around half a million people identify as Gelao. Perhaps three thousand can speak Gelao. That gap — about one in two hundred — may be the widest of any people on earth</p>
+    <p class="muted in" style="--d:5">Watch the terraces: the rice is ripening toward harvest.</p>
+  </div>
+  <div class="stage">
+    <figure class="board" style="--w:24vw; --r:1.5deg; --d:0">
+      <img data-wiki="Guizhou" data-width="1200" alt="Karst mountains and terraces in Guizhou, China">
+      <figcaption>Guizhou — karst mountains, terraces, and more ethnic groups than almost any other Chinese province</figcaption>
+    </figure>
+  </div>
+</section>
+
+<!-- 2. Where and who -->
+<section class="slide" data-tr="left" style="--accent: var(--karst)">
+  <div class="text">
+    <p class="kicker in">Where and who</p>
+    <h2 class="in" style="--d:1">The first people of Guizhou</h2>
+    <div class="bar in" style="--d:2"></div>
+    <ul class="dots">
+      <li class="in" style="--d:3">The Gelao call themselves <span class="hl">Kláo</span>. They are one of China's 56 officially recognised ethnic groups, and they are widely regarded as among the <strong>original inhabitants of Guizhou</strong> — linked in Chinese records to the ancient Pu and Lao peoples and to the old kingdom of Yelang.</li>
+      <li class="in" style="--d:4">Over <strong>90%</strong> live in the Zunyi region of northern Guizhou, including two autonomous counties named for them — <strong>Wuchuan</strong> and <strong>Daozhen</strong> — where about half the population is Gelao.</li>
+      <li class="in" style="--d:5">Smaller communities live in Guangxi, Yunnan, Sichuan and across the border in <strong>Hà Giang</strong>, Vietnam, where the Cờ Lao are one of the country's smallest recognised peoples.</li>
+      <li class="in" style="--d:6">The ethnic population recorded in China's 2000 census was <strong>579,357</strong>. The language is a different story entirely.</li>
+    </ul>
+    <p class="note in" style="--d:7">The Gelao homeland is west-central Guizhou; the communities in Guangxi, Yunnan and Vietnam are the result of later migrations out of that core.</p>
+  </div>
+  <div class="stage">
+    <div class="loc" data-lat="27.7" data-lon="107.9" data-zoom="5" style="--s:13vw; --d:0">
+      <div class="disc"><div class="lmap"></div><div class="tint"></div><div class="sea"></div><span class="pinpt"></span></div>
+      <span class="tag">Zunyi, Guizhou, China</span>
+    </div>
+    <div class="panel in" style="--d:4; width:34vw">
+      <strong>Why Guizhou?</strong>
+      <p class="note" style="margin:.3rem 0 0">Guizhou is a province of limestone karst: steep towers, sinkholes, narrow valleys and very little flat land. For centuries that terrain made it hard to govern from outside, which is a large part of why so many distinct peoples and languages survived here when they did not survive elsewhere.</p>
+      <p class="note" style="margin:.4rem 0 0">The same terrain made the province poor, which in the 20th century pushed people toward roads, cities, schools and the language that works in all three: Mandarin.</p>
+    </div>
+  </div>
+</section>
+
+<!-- 3. The one percent -->
+<section class="slide" data-tr="zoom" style="--accent: var(--gold)">
+  <div class="text">
+    <p class="kicker in">The gap</p>
+    <h2 class="in" style="--d:1">A people without its language</h2>
+    <div class="bar in" style="--d:2"></div>
+    <p class="in" style="--d:3">Most endangered-language stories are also stories of a shrinking people. Gelao is not. The Gelao are <strong>numerous, recognised, and growing</strong>. They have autonomous counties, festivals, officially protected status and a seat in China's list of nationalities.</p>
+    <p class="in" style="--d:4">And roughly <strong>99%</strong> of them cannot speak Gelao.</p>
+    <ul class="dots">
+      <li class="in" style="--d:5">Estimates of speakers range from about <strong>3,000</strong> to about <strong>7,900</strong>, out of more than half a million Gelao. Around 500 were recorded as monolingual in the late 1990s; almost certainly fewer now.</li>
+      <li class="in" style="--d:6">Nobody banned it. What happened was slower: Gelao communities are scattered among much larger Han, Miao and Yi populations, Southwestern Mandarin became the language everyone shared, and Gelao had no writing, no schooling and no official role.</li>
+    </ul>
+    <p class="note in" style="--d:7">This is worth sitting with. An ethnic identity can survive almost completely intact while the language attached to it disappears — which means you cannot measure a language's health by counting the people who claim it.</p>
+  </div>
+  <div class="stage">
+    <div class="panel in" style="--d:3; width:34vw">
+      <div class="bigfig" id="bigfig">579,357</div>
+      <div class="note" style="text-align:center" id="figlbl">people identified as Gelao (2000 census)</div>
+      <div class="crowd" id="crowd"></div>
+      <div class="switch" style="justify-content:center">
+        <button class="sbtn on" data-c="0">the people</button>
+        <button class="sbtn" data-c="1">the speakers</button>
+        <button class="sbtn" data-c="2">monolinguals</button>
+      </div>
+      <p id="cwmsg" aria-live="polite">Each dot is roughly 2,000 people. Press the buttons.</p>
+    </div>
+  </div>
+</section>
+
+<!-- 4. Four colours -->
+<section class="slide" style="--accent: var(--nuo)">
+  <div class="text">
+    <p class="kicker in">Inside the name</p>
+    <h2 class="in" style="--d:1">"Gelao" is not one language</h2>
+    <div class="bar in" style="--d:2"></div>
+    <p class="in" style="--d:3">Here is the second surprise. What gets written in censuses as "the Gelao language" is actually a cluster of varieties that are <strong>not mutually intelligible</strong>. Two Gelao people from different counties may have no shared language except Mandarin.</p>
+    <p class="in" style="--d:4">They are traditionally distinguished by colour names — White, Red, Green — plus a central variety. Click through them, and watch the speaker numbers.</p>
+    <p class="note in" style="--d:5">Confusingly, "Red Gelao" refers to two different things: A'ou in Guizhou, and Vandu across the border in Vietnam. Both are down to a few dozen speakers, and they are not the same language.</p>
+  </div>
+  <div class="stage">
+    <div class="panel in" style="--d:3; width:35vw">
+      <strong>Four ways of being Gelao:</strong>
+      <div class="cols" id="cols" style="margin-top:.5rem">
+        <button class="colv" data-v="0" style="--cc: var(--indigo)">Hagei<small>Green Gelao, 青仡佬</small></button>
+        <button class="colv" data-v="1" style="--cc: var(--gold)">Qau<small>Central Gelao, 汉仡佬</small></button>
+        <button class="colv" data-v="2" style="--cc: #e8e4d6">Duoluo<small>White Gelao, 多罗</small></button>
+        <button class="colv" data-v="3" style="--cc: var(--nuo)">A'ou / Vandu<small>Red Gelao, 红仡佬</small></button>
+      </div>
+      <div class="meter2"><b id="colbar"></b></div>
+      <p id="colmsg" aria-live="polite">Pick one. The bar shows speakers, scaled against the largest variety.</p>
+    </div>
+  </div>
+</section>
+
+<!-- 5. The family -->
+<section class="slide" data-tr="left" style="--accent: var(--indigo)">
+  <div class="text">
+    <p class="kicker in">The family</p>
+    <h2 class="in" style="--d:1">Distant cousins of Thai</h2>
+    <div class="bar in" style="--d:2"></div>
+    <p class="in" style="--d:3">Gelao belongs to <strong>Kra–Dai</strong>, the family that includes <strong>Thai</strong> and <strong>Lao</strong> — national languages with tens of millions of speakers — and <strong>Zhuang</strong>, the largest minority language in China.</p>
+    <p class="in" style="--d:4">Gelao sits on the <strong>Kra</strong> branch: one of the family's deepest and most divergent splits, far from the Thai–Lao end. And that is exactly why linguists care so much about it.</p>
+    <ul class="dots">
+      <li class="in" style="--d:5">To reconstruct the history of a language family, you need its <em>oldest</em> branches, not its biggest ones. A thousand Thai speakers tell you less about proto-Kra–Dai than one Gelao elder does.</li>
+      <li class="in" style="--d:6">The Kra branch is also where nearly all the endangerment is. The family's giants are thriving. Its deep roots are the part dying.</li>
+    </ul>
+    <p class="note in" style="--d:7">Gelao also shows exceptional internal diversity — which has made it, in one researcher's framing, a top priority for fieldwork in the whole family.</p>
+  </div>
+  <div class="stage">
+    <div class="panel in" style="--d:3; width:34vw">
+      <strong>The Kra–Dai family by size:</strong>
+      <div class="famrow" id="famrow" style="margin-top:.5rem">
+        <div class="fr" data-f="0"><span>Thai</span><div class="fb" style="--w:100%"></div></div>
+        <div class="fr" data-f="1"><span>Zhuang</span><div class="fb" style="--w:40%"></div></div>
+        <div class="fr" data-f="2"><span>Lao</span><div class="fb" style="--w:26%"></div></div>
+        <div class="fr" data-f="3"><span>Buyi</span><div class="fb" style="--w:8%"></div></div>
+        <div class="fr tiny" data-f="4"><span>Buyang</span><div class="fb" style="--w:0.3%"></div></div>
+        <div class="fr tiny" data-f="5"><span>Gelao</span><div class="fb" style="--w:0.3%"></div></div>
+      </div>
+      <p id="famsg" aria-live="polite">Click a language. Bars are approximate.</p>
+    </div>
+  </div>
+</section>
+
+<!-- 6. Eating New Rice -->
+<section class="slide" style="--accent: var(--green)">
+  <div class="text">
+    <p class="kicker in">Cultural significance</p>
+    <h2 class="in" style="--d:1">The festival with no date</h2>
+    <div class="bar in" style="--d:2"></div>
+    <ul class="dots">
+      <li class="in" style="--d:3">The great Gelao festival is <span class="hl han">吃新节</span> — <strong>Eating New Rice</strong>. It has no fixed date on any calendar. It happens when the first grain ripens, usually in the seventh or eighth lunar month, so the harvest decides.</li>
+      <li class="in" style="--d:4">There is a custom in it worth pausing on: during the festival a Gelao person may walk into <strong>any family's field</strong> — Gelao, Han, Miao or Yi — cut a sheaf of ripening grain for the ancestor offering, and no one will stop them.</li>
+      <li class="in" style="--d:5">The Gelao also hold ancestor ceremonies, a Cattle King festival honouring the animals that work the fields, and performances of <strong>Nuo</strong> masked opera — one of the oldest masked ritual theatre traditions in China.</li>
+      <li class="in" style="--d:6">And they revere <strong>bamboo</strong>. Gelao tradition treats bamboo as ancestral, and it runs through daily life: houses, tools, flutes, ritual objects.</li>
+    </ul>
+    <p class="note in" style="--d:7">All of this is alive and well. Festivals, masks, medicine and bamboo craft are being documented, funded and promoted. The language is the piece that has not come along with them.</p>
+  </div>
+  <div class="stage">
+    <div class="panel in" style="--d:3; width:35vw">
+      <strong>Eating New Rice, step by step:</strong>
+      <div class="fsteps" id="fsteps" style="margin-top:.5rem">
+        <button class="fst" data-f="0">1 · Wait for the grain</button>
+        <button class="fst" data-f="1">2 · Cut the first sheaf</button>
+        <button class="fst" data-f="2">3 · Offer to the ancestors</button>
+        <button class="fst" data-f="3">4 · Feast, games and release</button>
+      </div>
+      <p id="fsmsg" aria-live="polite">Click a step.</p>
+    </div>
+  </div>
+</section>
+
+<!-- 7. The forged book -->
+<section class="slide" data-tr="zoom" style="--accent: var(--nuo)">
+  <div class="text">
+    <p class="kicker in">Think like a scholar</p>
+    <h2 class="in" style="--d:1">The book that wasn't</h2>
+    <div class="bar in" style="--d:2"></div>
+    <p class="in" style="--d:3">In 2009 a book surfaced in Guizhou, written — it was claimed — in an ancient <strong>Gelao script</strong>, recording the deep history of the Gelao people. For a people with no traditional writing system, this would have been extraordinary.</p>
+    <p class="in" style="--d:4">Scholars examined it. It is a <strong>forgery</strong>.</p>
+    <p class="in" style="--d:5">The interesting question is not "who faked it." It is <em>why this keeps happening</em>. When a community loses its language but keeps its identity, the pressure to produce proof of an ancient heritage becomes enormous — and somebody always obliges.</p>
+    <p class="note in" style="--d:6">Work through the clues in the panel the way a historian would, and watch the needle move.</p>
+  </div>
+  <div class="stage">
+    <div class="panel in" style="--d:3; width:35vw">
+      <strong>Is it genuine?</strong> Click the clues.
+      <div class="clues" id="clues" style="margin-top:.4rem">
+        <button class="clue" data-c="0">No earlier source mentions any Gelao script</button>
+        <button class="clue" data-c="1">Its account matches material published in the 1980s</button>
+        <button class="clue" data-c="2">It appeared suddenly, with no chain of custody</button>
+        <button class="clue" data-c="3">It tells a flattering, very tidy origin story</button>
+      </div>
+      <div class="gauge"><i id="needle"></i></div>
+      <div class="gaugelbl"><span>probably genuine</span><span>probably forged</span></div>
+      <p id="fgmsg" aria-live="polite">The needle starts at "no reason to doubt it."</p>
+    </div>
+  </div>
+</section>
+
+<!-- 8. Timeline -->
+<section class="slide" style="--accent: var(--karst)">
+  <div class="text wide">
+    <p class="kicker in">History</p>
+    <h2 class="in" style="--d:1">From first inhabitants to one percent</h2>
+    <div class="bar in" style="--d:2"></div>
+    <p class="in" style="--d:3">Click each moment to explore it.</p>
+    <div class="tl in" id="tl" style="--d:4">
+      <button class="ev" style="--ec: var(--bamboo)"><span class="yr">ancient</span><small>Pu, Lao and Yelang</small></button>
+      <button class="ev" style="--ec: #cfe0b8"><span class="yr">Ming–Qing</span><small>Surrounded</small></button>
+      <button class="ev" style="--ec: var(--gold)"><span class="yr">1950s</span><small>Recognised as a nationality</small></button>
+      <button class="ev" style="--ec: #e9c48c"><span class="yr">1980s–90s</span><small>First real description</small></button>
+      <button class="ev" style="--ec: var(--nuo)"><span class="yr">2000s</span><small>Counting what's left</small></button>
+      <button class="ev" style="--ec: var(--green)"><span class="yr">today</span><small>Culture up, language down</small></button>
+    </div>
+    <div class="panel in" id="tltext" style="--d:5" aria-live="polite"></div>
+  </div>
+</section>
+
+<!-- 9. Mechanisms -->
+<section class="slide" data-tr="left" style="--accent: var(--gold)">
+  <div class="text">
+    <p class="kicker in">How it happened</p>
+    <h2 class="in" style="--d:1">Four ordinary pressures</h2>
+    <div class="bar in" style="--d:2"></div>
+    <p class="in" style="--d:3">No single villain explains Gelao. What explains it is four unremarkable facts, each individually reasonable, stacking up over a few generations.</p>
+    <ul class="dots">
+      <li class="in" style="--d:4"><strong>Being outnumbered.</strong> Gelao villages are scattered among far larger Han, Miao and Yi populations. In a mixed village the shared language wins, and it is never the smallest one.</li>
+      <li class="in" style="--d:5"><strong>No writing.</strong> Gelao was never written. A language with no script is absent from every sign, textbook and document, and so becomes invisible in exactly the places that confer prestige.</li>
+      <li class="in" style="--d:6"><strong>Internal division.</strong> Because the varieties are mutually unintelligible, there was never one "Gelao language" to standardise, teach or broadcast. Even a well-funded revival would have to choose which Gelao.</li>
+      <li class="in" style="--d:7"><strong>Mobility.</strong> Roads, schools and work in the cities all run in Mandarin, and a family that wants its children to do well chooses accordingly. That is not a failure of loyalty; it is a rational decision made half a million times.</li>
+    </ul>
+  </div>
+  <div class="stage">
+    <div class="cards in" style="--d:3; grid-template-columns:1fr; width:34vw">
+      <div class="card" style="--cardc: var(--gold)"><div class="word">Could it be reversed?</div><div class="meaning">Partly — but the arithmetic is brutal. With fewer than 50 speakers in most varieties, almost all elderly, a full revival would require teaching materials for several separate languages, trained teachers, and a reason for children to use it. The honest assessment of researchers is that fieldwork is urgent precisely because revival may not be possible for most varieties.</div><div class="tap">click to reveal</div></div>
+      <div class="card" style="--cardc: var(--green)"><div class="word">Does recognition help?</div><div class="meaning">It helps the culture enormously — the autonomous counties, festival funding and heritage listings are real. It has not yet saved the language, which shows that official status for a <em>people</em> is not the same thing as support for a <em>language</em>.</div><div class="tap">click to reveal</div></div>
+      <div class="card" style="--cardc: var(--indigo)"><div class="word">What about Vietnam?</div><div class="meaning">The Cờ Lao of Hà Giang number only a few thousand, and across all three Gelao varieties there, one estimate put the total at about 350 speakers. Red Gelao (Vandu) is down to roughly 50 — one of the most endangered languages anywhere in Southeast Asia.</div><div class="tap">click to reveal</div></div>
+    </div>
+  </div>
+</section>
+
+<!-- 10. Now -->
+<section class="slide" style="--accent: var(--green)">
+  <div class="text">
+    <p class="kicker in">What is being done</p>
+    <h2 class="in" style="--d:1">A race measured in elders</h2>
+    <div class="bar in" style="--d:2"></div>
+    <ul class="dots">
+      <li class="in" style="--d:3">Chinese linguists have done the heavy lifting. <strong>Zhang Jimin</strong> published a study of Gelao in 1993; <strong>Li Jinfang</strong> has led surveys of endangered languages across southwest China and studied the linguistic ecology of the Gelao people.</li>
+      <li class="in" style="--d:4">International work has run alongside it: <strong>Jerold Edmondson</strong> documented Red Gelao, the most endangered form, and reconstructed parts of proto-Kra; later researchers have mapped the varieties and recorded audio word lists.</li>
+      <li class="in" style="--d:5">The scale of what is left is stark. One study reported just <strong>three speakers</strong> of Shuicheng Gelao. A single elderly speaker of one Red Gelao dialect was located in 2013, and that variety is now probably gone.</li>
+      <li class="in" style="--d:6">Meanwhile Gelao <em>culture</em> is thriving and visible: festivals, Nuo opera, traditional medicine, tourism in Wuchuan and Daozhen. Both things are true at the same time.</li>
+    </ul>
+    <p class="note in" style="--d:7">That split — culture rising while language falls — is the thing to take away from this module. They are not automatically connected, and assuming they are is how a language gets lost while everyone is celebrating.</p>
+  </div>
+  <div class="stage">
+    <div class="panel in" style="--d:3; width:34vw">
+      <strong>Two trend lines for the same people</strong>
+      <div style="margin-top:.5rem">
+        <div style="display:grid; grid-template-columns:8rem 1fr; gap:.4rem; align-items:center; margin-bottom:.35rem">
+          <span style="font-size:.8rem; font-weight:700">ethnic population</span><div style="height:1rem; border-radius:.2rem; background:var(--green); width:92%"></div>
+        </div>
+        <div style="display:grid; grid-template-columns:8rem 1fr; gap:.4rem; align-items:center; margin-bottom:.35rem">
+          <span style="font-size:.8rem; font-weight:700">cultural funding</span><div style="height:1rem; border-radius:.2rem; background:var(--green); width:70%"></div>
+        </div>
+        <div style="display:grid; grid-template-columns:8rem 1fr; gap:.4rem; align-items:center; margin-bottom:.35rem">
+          <span style="font-size:.8rem; font-weight:700">documentation</span><div style="height:1rem; border-radius:.2rem; background:var(--gold); width:46%"></div>
+        </div>
+        <div style="display:grid; grid-template-columns:8rem 1fr; gap:.4rem; align-items:center">
+          <span style="font-size:.8rem; font-weight:700">speakers</span><div style="height:1rem; border-radius:.2rem; background:var(--nuo); width:4%"></div>
+        </div>
+      </div>
+      <p class="note" style="margin:.4rem 0 0">An illustrative comparison, not a measured index — but every researcher cited in this module describes the same shape.</p>
+    </div>
+    <div class="panel in" style="--d:5; width:34vw">
+      <strong>Your turn:</strong> your town gets funding to celebrate its heritage — food, costumes, a festival, a museum. None of it is in the heritage language. Is that a win, a loss, or both? Argue it.
+    </div>
+  </div>
+</section>
+
+<!-- 11. Quiz -->
+<section class="slide" style="--accent: var(--gold)">
+  <div class="text wide center">
+    <p class="kicker in">Review at harvest</p>
+    <h2 class="in" style="--d:1">Quick quiz!</h2>
+    <div class="bar in" style="--d:2"></div>
+    <div class="quizgrid">
+      <div class="quiz panel in" style="--d:3" data-right="Yes — over half a million Gelao, only a few thousand speakers." data-wrong="Hint: compare the census figure with the speaker figure.">
+        <div class="q">What is unusual about the Gelao situation?</div>
+        <div class="options"><button class="opt">The people are nearly gone</button><button class="opt" data-correct>The people are many, the speakers few</button><button class="opt">The language has no grammar</button></div>
+        <div class="feedback"></div>
+      </div>
+      <div class="quiz panel in" style="--d:4" data-right="Right — Thai, Lao and Zhuang are cousins on the same family tree." data-wrong="Hint: think of a Southeast Asian national language.">
+        <div class="q">Which widely spoken language is related to Gelao?</div>
+        <div class="options"><button class="opt">Mandarin</button><button class="opt" data-correct>Thai</button><button class="opt">Vietnamese</button></div>
+        <div class="feedback"></div>
+      </div>
+      <div class="quiz panel in" style="--d:5" data-right="Correct — it happens when the first grain ripens, so the harvest sets the date." data-wrong="Hint: it depends on the fields, not the calendar.">
+        <div class="q">When is the Eating New Rice festival held?</div>
+        <div class="options"><button class="opt">1 January</button><button class="opt">The spring equinox</button><button class="opt" data-correct>Whenever the grain ripens</button></div>
+        <div class="feedback"></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- 12. Closing -->
+<section class="slide end" style="--accent: var(--gold)">
+  <div class="text">
+    <h1 class="in" style="font-size:4.6rem">Kláo</h1>
+    <p class="lead in" style="--d:1; margin-top:.8rem">The name half a million people still use for themselves. Thank you! Questions?</p>
+    <p class="quote in" style="--d:2">The Gelao did not lose their identity, their land, their festivals or their official standing. They lost the thing nobody thought to protect, because everybody assumed it came with the rest.</p>
+  </div>
+  <details class="fine in" style="--d:3">
+    <summary>Sources &amp; image credits</summary>
+    <div class="box">
+      <h4>Sources</h4>
+      <ul>
+        <li><a href="https://en.wikipedia.org/wiki/Gelao_languages">Gelao languages (Wikipedia)</a> — varieties, speaker estimates, distribution</li>
+        <li><a href="https://en.wikipedia.org/wiki/Gelao_people">Gelao people (Wikipedia)</a> — autonomous counties, indigenous status, the forged <em>Record of the Nine Heavens</em></li>
+        <li><a href="https://en.wikipedia.org/wiki/A%27ou_language">A'ou (Red Gelao) language (Wikipedia)</a> — dialects and the 2013 last speaker</li>
+        <li><a href="https://en.wikipedia.org/wiki/Vandu_language">Vandu (Red Gelao of Vietnam) (Wikipedia)</a></li>
+        <li><a href="https://en.wikipedia.org/wiki/Hagei_language">Hagei (Green Gelao) (Wikipedia)</a></li>
+        <li><a href="https://en.wikipedia.org/wiki/Qau_language">Qau (Central Gelao) (Wikipedia)</a></li>
+        <li><a href="http://jseals.org/seals23/hsiu2013gelaop.pdf">Hsiu, "The Gelao languages: preliminary classification and state of the art" (SEALS 23, 2013)</a> — the 500,000 vs &lt;6,000 figures, the urgency of Red Gelao fieldwork</li>
+        <li><a href="https://web.archive.org/web/20120315001752/http://ling.uta.edu/~jerry/rg.pdf">Edmondson, "Red Gelao, the most endangered form of the Gelao language"</a></li>
+        <li>Zhang Jimin, <em>仡佬语研究 A Study of Gelao</em> (Guizhou Nationalities Publishing House, 1993)</li>
+        <li>Li Jinfang, <em>西南地区濒危语言调查研究 Studies on Endangered Languages in Southwest China</em>; and <em>仡佬族母語生态研究 Studies on the Linguistic Ecology of the Gelao People</em></li>
+        <li><a href="https://elp.colo.hawaii.edu/language/1511/">Endangered Languages Project: Gao Gelao</a> — the roughly 1% speaker figure</li>
+        <li><a href="https://www.frontiersin.org/journals/pharmacology/articles/10.3389/fphar.2023.1217599/full">"Ethnobotanical study of Gelao medicinal herbs in north Guizhou," <em>Frontiers in Pharmacology</em> (2023)</a> — Zunyi concentration, Nuo culture, festivals</li>
+        <li><a href="https://pdfs.semanticscholar.org/9c2a/5e94e12f21bd044a9a688780750c64c335cb.pdf">"Study on the traditional ecological culture of the Gelao nationality in Wuchuan, Guizhou"</a> — bamboo worship, Eating New Festival</li>
+        <li><a href="https://www.yunnanexploration.com/chixin-changxin-festival-of-buyi-ethnic-minority.html">Chixin (Eating New) Festival</a></li>
+        <li><a href="https://en.wikipedia.org/wiki/Buyang_people">Buyang people (Wikipedia)</a> — the other Kra group, and migration out of Guizhou</li>
+      </ul>
+      <h4>Images (Wikimedia Commons)</h4>
+      <ul id="credits"></ul>
+    </div>
+  </details>
+</section>
+
+</main>
+
+<nav class="controls">
+  <button id="prev" aria-label="Previous slide">‹</button>
+  <span id="counter">1 / 12</span>
+  <button id="next" aria-label="Next slide">›</button>
+  <button id="fs" aria-label="Fullscreen">⤢</button>
+</nav>
+<p class="hint">Use ← → to move. Press F for fullscreen.</p>
+
+<!-- Gelao effects: ripening terraces, the 1% crowd, colour varieties, family scale, forgery gauge, festival -->
+<script>
+(function () {
+  document.addEventListener("slidechange", function (e) {
+    document.body.style.setProperty("--t", e.detail.index / (e.detail.total - 1));
+  });
+
+  function single(selector, callback) {
+    var grp = document.querySelectorAll(selector);
+    grp.forEach(function (b) {
+      b.addEventListener("click", function () {
+        grp.forEach(function (x) { x.classList.remove("on"); });
+        b.classList.add("on");
+        callback(b);
+      });
+    });
+  }
+
+  /* ---------- The 1% crowd ---------- */
+  var crowd = document.getElementById("crowd");
+  for (var k = 0; k < 290; k++) crowd.appendChild(document.createElement("i"));
+  var CW = [
+    ["579,357", "people identified as Gelao (2000 census)", 0,
+     "Every dot is about 2,000 people. This is a substantial nation — bigger than the population of several countries represented at the UN."],
+    ["about 3,000", "people who can speak a Gelao language", 2,
+     "Now only the lit dots count. Estimates run from about 3,000 up to around 7,900 depending on who is counting and what counts as speaking it. Either way: a rounding error against the first number."],
+    ["about 500", "monolingual speakers, late 1990s", 1,
+     "People who spoke only Gelao — recorded at around 500 in the late 1990s, and almost certainly far fewer today. Everyone else lives their public life in Mandarin."]
+  ];
+  var cwmsg = document.getElementById("cwmsg");
+  function setCrowd(i) {
+    var C = CW[i];
+    document.getElementById("bigfig").textContent = C[0];
+    document.getElementById("figlbl").textContent = C[1];
+    crowd.querySelectorAll("i").forEach(function (d, n) { d.className = n < C[2] ? "sp" : ""; });
+    cwmsg.textContent = C[3];
+  }
+  single("[data-c]", function (b) { setCrowd(Number(b.dataset.c)); });
+  setCrowd(0);
+
+  /* ---------- Colour varieties ---------- */
+  var VAR = [
+    ["Hagei — Green Gelao", 100,
+     "Around 2,000 speakers scattered across southwestern Guizhou, with communities also in Guangxi, Yunnan and Vietnam. One of the two least-endangered varieties — which tells you something about the state of the rest. The Green Gelao of northern Guizhou, around Zunyi, are already extinct as speakers."],
+    ["Qau — Central Gelao", 50,
+     "Around 1,000 speakers in central Guizhou, in places like Anshun and Pingba. Its Chinese name, 汉仡佬, literally means \u201cSinicized Gelao\u201d — a name that records what happened to the community in the act of naming it."],
+    ["Duoluo — White Gelao", 60,
+     "The southwestern varieties, spread across west-central Guizhou, western Guangxi, southeastern Yunnan and northern Vietnam. Estimates around 1,200 speakers, heavily fragmented, with individual villages down to single figures — one study found just three speakers of Shuicheng Gelao."],
+    ["A'ou and Vandu — Red Gelao", 3,
+     "The most endangered. A'ou in Guizhou has fewer than 100 speakers across two surviving dialects, each with a few dozen. A third dialect is extinct; a fourth had one elderly speaker in 2013. Across the border, Vandu in Vietnam has about 50. These are different languages that happen to share a colour name."]
+  ];
+  var colmsg = document.getElementById("colmsg");
+  single("#cols .colv", function (b) {
+    var V = VAR[Number(b.dataset.v)];
+    document.getElementById("colbar").style.width = V[1] + "%";
+    colmsg.innerHTML = "<strong>" + V[0] + "</strong><br>" + V[2];
+  });
+
+  /* ---------- Family scale ---------- */
+  var FAM = [
+    ["Thai", "Tens of millions of speakers and the national language of Thailand, with a thousand-year-old script and a vast literature."],
+    ["Zhuang", "The largest minority language of China, with over ten million speakers in Guangxi — and itself under pressure from Mandarin, which shows that size is no guarantee."],
+    ["Lao", "The national language of Laos, closely related to Thai and to the Isan speech of northeastern Thailand."],
+    ["Buyi", "Spoken in Guizhou alongside Gelao, by a few million people — and they share the Eating New Rice festival with the Gelao, even though their languages sit on different branches."],
+    ["Buyang", "The other main Kra group: a few thousand speakers in Yunnan and Guangxi, not officially recognised as a separate nationality. They may have migrated south out of Guizhou, from the region the Gelao still occupy."],
+    ["Gelao", "A few thousand speakers across four mutually unintelligible varieties. On this chart it is a sliver — and on the family tree it is one of the deepest branches, which makes it worth more to historical linguistics than its size suggests."]
+  ];
+  var famsg = document.getElementById("famsg");
+  document.querySelectorAll(".fr[data-f]").forEach(function (r) {
+    var bar = r.querySelector(".fb");
+    bar.style.width = bar.style.getPropertyValue("--w");
+    r.addEventListener("click", function () {
+      document.querySelectorAll(".fr[data-f]").forEach(function (x) { x.classList.remove("on"); });
+      r.classList.add("on");
+      var F = FAM[Number(r.dataset.f)];
+      famsg.innerHTML = "<strong>" + F[0] + "</strong> — " + F[1];
+    });
+  });
+
+  /* ---------- Forgery gauge ---------- */
+  var CLUES = [
+    [30, "<strong>No earlier source mentions a Gelao script.</strong> Writing systems leave traces: inscriptions, other manuscripts, references by neighbours, officials or missionaries. A script that appears for the first time in a single modern book, with no ancestors, is a problem — though not yet proof."],
+    [80, "<strong>The content matches 1980s publications.</strong> This is the decisive kind of clue. The book's account of where the Gelao lived lines up with information that circulated locally in the mid-1980s — which is to say, it knows exactly what a modern reader would already have read, and nothing a modern reader wouldn't."],
+    [60, "<strong>No chain of custody.</strong> Genuine old documents usually have a history: who owned it, where it was kept, who saw it before. A manuscript that simply appears is not automatically fake, but it cannot be authenticated either."],
+    [70, "<strong>A tidy, flattering story.</strong> Real historical sources are messy, partial and full of material nobody today cares about. A document that conveniently answers the exact questions a modern community is asking about itself should raise your eyebrows."]
+  ];
+  var score = 4, fired = {};
+  var fgmsg = document.getElementById("fgmsg");
+  document.querySelectorAll("#clues .clue").forEach(function (b) {
+    b.addEventListener("click", function () {
+      var i = Number(b.dataset.c);
+      b.classList.add("on");
+      if (!fired[i]) { fired[i] = true; score = Math.max(score, CLUES[i][0]); }
+      document.getElementById("needle").style.left = score + "%";
+      var all = Object.keys(fired).length === 4;
+      fgmsg.innerHTML = CLUES[i][1] + (all
+        ? "<br><br><strong style='color:var(--nuo)'>Verdict: a forgery.</strong> That is where the scholarship landed. Note that the Gelao people did not fake anything — a book was produced and promoted, and a community that badly wanted proof of its past was the audience for it."
+        : "");
+    });
+  });
+
+  /* ---------- Festival ---------- */
+  var FEST = [
+    ["Wait for the grain", "There is no date. The festival happens when the first rice is ready, usually in the seventh or eighth lunar month — late August into September. A festival scheduled by a plant rather than a calendar tells you what the year was organised around."],
+    ["Cut the first sheaf", "A Gelao person may enter any family's field — their own or a Han, Miao or Yi neighbour's — and cut a sheaf of ripening grain for the offering, without being stopped. Think about what that custom assumes: a shared right to the first harvest that crosses ethnic lines."],
+    ["Offer to the ancestors", "The new grain goes first to the ancestors, on the household altar, before anyone eats. The festival is a harvest celebration and an ancestor rite at the same time — you thank the dead before you feed the living."],
+    ["Feast, games and release", "Then the eating, the firecrackers and the games. In some communities the day includes releasing captured wild animals and fish — a deliberate act of giving something back at the moment of taking a harvest."]
+  ];
+  var fsmsg = document.getElementById("fsmsg");
+  document.querySelectorAll("#fsteps .fst").forEach(function (b) {
+    b.addEventListener("click", function () {
+      var F = FEST[Number(b.dataset.f)];
+      fsmsg.innerHTML = "<strong style='color:var(--green); font-size:1.1rem'>" + F[0] + "</strong><br>" + F[1];
+    });
+  });
+
+  /* ---------- Timeline ---------- */
+  var EVENTS = [
+    ["Pu, Lao and Yelang", "Chinese records from the Han and Tang periods describe peoples called the Pu and the Lao in what is now Guizhou, and link the region to the old kingdom of Yelang. The Gelao are generally considered their descendants — which makes them, by most accounts, the indigenous people of the province."],
+    ["Surrounded", "Over centuries of Ming and Qing expansion, Han settlement and the migrations of the Miao and Yi, the Gelao went from being the region's established population to being a scattered minority inside it. You can lose a language this way without a single hostile policy: by simply being outnumbered in your own villages."],
+    ["Recognised as a nationality", "In the 1950s the People's Republic of China carried out its great ethnic classification project, and the Gelao were recognised as one of the official nationalities. Autonomous counties followed. Recognition brought real protections for Gelao identity — and arrived at a point when most Gelao already spoke Mandarin."],
+    ["First real description", "Serious linguistic work began late. Zhang Jimin's study of Gelao appeared in 1993; Li Jinfang and others surveyed the endangered languages of southwest China through the 1990s and 2000s. By the time the language was properly described, it had a few thousand speakers left."],
+    ["Counting what's left", "Fieldwork in the 2000s and 2010s mapped how little remained: Red Gelao varieties with fewer than 50 speakers each, three speakers of one White Gelao variety, a single speaker of one Red Gelao dialect found in 2013. In 2009 a forged \u201cancient Gelao book\u201d appeared — a symptom of how badly a community can want evidence of its own past."],
+    ["Culture up, language down", "Today Gelao culture is more visible than it has been in a century: festivals, Nuo opera, traditional medicine, heritage tourism in Wuchuan and Daozhen. The speaker numbers have continued to fall. Both of those sentences describe the same decade."]
+  ];
+  var tlText = document.getElementById("tltext");
+  var evs = document.querySelectorAll("#tl .ev");
+  function setEvent(i) {
+    evs.forEach(function (e, k) { e.classList.toggle("on", k === i); });
+    tlText.innerHTML = '<strong style="color:var(--gold); font-size:1.2rem">' + EVENTS[i][0] + "</strong><br>" + EVENTS[i][1];
+  }
+  evs.forEach(function (e, i) { e.addEventListener("click", function () { setEvent(i); }); });
+  setEvent(0);
+})();
+</script>
+<script src="../assets/deck.js"></script>
+</body>
+</html>
