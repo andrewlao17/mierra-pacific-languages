@@ -1,0 +1,753 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Nivkh: The Language With No Relatives</title>
+<link rel="stylesheet" href="../assets/deck.css">
+<style>
+@import url("https://fonts.googleapis.com/css2?family=PT+Serif:wght@700&family=PT+Sans:wght@400;700&display=swap");
+
+/* ---------- Nivkh theme: the Amur in break-up, ice, salmon, firelight ---------- */
+:root {
+  --bg: #08131c;
+  --ink: #eef3f6;
+  --muted: #b6c9d4;
+  --line: rgba(238, 243, 246, .22);
+  --panel: rgba(10, 30, 44, .84);
+  --ice: #9fd3e8;
+  --river: #2f7496;
+  --salmon: #e8795f;
+  --amber: #f0a93c;
+  --birch: #e8dec8;
+  --pine: #5e9a74;
+  --rose: #e8795f;
+  --accent: var(--ice);
+  --serif: "PT Serif", Georgia, serif;
+  --sans: "PT Sans", system-ui, sans-serif;
+  --t: 0;
+  font-size: clamp(12px, 1.3vw, 28px);
+}
+h1 { font-family: var(--serif); font-size: 5.8rem; line-height: 1; }
+h2 { font-family: var(--serif); font-size: 2.8rem; line-height: 1.1; }
+.slide { padding: 7vh 4vw 8vh 6vw; }
+.text { max-width: 44vw; }
+.text.wide { max-width: 86vw; width: 86vw; }
+.stage {
+  right: 5vw; top: 6vh; bottom: 10vh; width: 39vw;
+  display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 1.1rem;
+}
+ul.dots li { font-size: 1.04rem; }
+.speak .line, .card .word { font-family: var(--sans); font-weight: 700; }
+.card.revealed .meaning { max-height: 14rem; }
+.btn { background: var(--ice); color: #0a2230; }
+.syl.on { background: var(--ice); color: #0a2230; }
+.loc .disc { border-color: var(--ice); box-shadow: 0 0 0 .55rem rgba(159,211,232,.16), 0 22px 40px rgba(0,0,0,.55); }
+.loc .tint { background: #cfe0d6; }
+.loc .sea { background: #10415c; }
+.loc .tag { background: #0a2030; border-color: var(--ice); }
+.note { font-size: .82rem; color: var(--muted); }
+.quote { font-family: var(--serif); font-size: 1.7rem; line-height: 1.3; color: var(--ice); }
+.cyr { font-family: var(--serif); }
+
+/* ---------- Background: the river ice breaking up ---------- */
+#amur { position: fixed; inset: 0; z-index: 0; overflow: hidden; pointer-events: none;
+  background: linear-gradient(180deg, #06101a 0%, #0d2740 46%, #15465f 70%, #0b2a3c 100%); }
+#amur .lowsun { position: absolute; left: 62vw; width: 7vw; height: 7vw; border-radius: 50%;
+  top: calc(26vh - var(--t) * 8vh);
+  background: radial-gradient(circle at 46% 44%, #ffe9b8, #f0a93c 60%, rgba(240,169,60,0) 72%);
+  opacity: calc(.35 + var(--t) * .65); transition: top 1.5s ease, opacity 1.5s ease; }
+#amur .water { position: absolute; left: 0; right: 0; bottom: 0; height: 40vh;
+  background: linear-gradient(180deg, #123b55 0%, #061a28 100%); }
+#amur .water::before { content: ""; position: absolute; inset: 0;
+  background: repeating-linear-gradient(180deg, rgba(159,211,232,.08) 0 2px, transparent 2px 15px);
+  animation: ripple 9s ease-in-out infinite alternate; }
+@keyframes ripple { to { transform: translateY(7px); } }
+#amur .floe { position: absolute; background: #dceaf1; border-radius: 3px;
+  box-shadow: 0 4px 0 rgba(120,160,180,.5);
+  transition: transform 1.6s cubic-bezier(.3,.8,.3,1); animation: bobf 11s ease-in-out infinite alternate; }
+@keyframes bobf { to { transform: translate(var(--dx), calc(var(--dy) + 4px)) rotate(var(--rr)); } }
+#amur .salmon { position: absolute; width: 4vw; height: 1.4vw; opacity: 0; transition: opacity 1.5s ease;
+  animation: swim 13s linear infinite; }
+@keyframes swim { from { transform: translateX(8vw) scaleX(1); } to { transform: translateX(-16vw) scaleX(1); } }
+#amur .rack { position: absolute; left: 1vw; bottom: 30vh; width: 22vw; height: 13vh; opacity: .9; }
+#amur .rack svg { width: 100%; height: 100%; }
+#amur .snow i { position: absolute; width: 3px; height: 3px; border-radius: 50%; background: #fff; opacity: .7;
+  animation: fall linear infinite; }
+@keyframes fall { from { transform: translate(0, -12vh); } to { transform: translate(-4vw, 104vh); } }
+#amur .snowwrap { position: absolute; inset: 0; opacity: calc(1 - var(--t) * .8); transition: opacity 1.6s ease; }
+#amur .shade { position: absolute; inset: 0;
+  background: linear-gradient(90deg, rgba(4,10,16,.94) 0%, rgba(4,10,16,.76) 50%, rgba(4,10,16,.24) 100%); }
+
+/* ---------- Photos as frosted plates ---------- */
+.board { position: relative; margin: 0; width: var(--w, 19vw); padding: .6rem .6rem .5rem;
+  background: var(--birch); border-radius: .25rem; box-shadow: 0 18px 34px rgba(0,0,0,.6);
+  transform: rotate(var(--r, 0deg)); transition: transform .9s cubic-bezier(.2,.8,.2,1), opacity .7s ease; }
+.slide:not(.active) .board { opacity: 0; transform: translateY(46px) rotate(var(--r, 0deg)); }
+.slide.active .board { transition-delay: calc(.4s + var(--d, 0) * .16s); }
+.slide.active .board:hover { transform: rotate(0deg) scale(1.04); transition-delay: 0s; }
+.board img { display: block; width: 100%; aspect-ratio: var(--ar, 4 / 3); object-fit: cover; background: #c6c0ab; }
+.board figcaption { color: #241f16; font-size: .73rem; font-weight: 700; line-height: 1.25; margin: .4rem .1rem 0; font-family: var(--serif); }
+
+/* ---------- Shared controls ---------- */
+.switch { display: flex; gap: .4rem; margin: .4rem 0 .6rem; flex-wrap: wrap; }
+.sbtn { font: inherit; font-weight: 700; font-size: .92rem; color: var(--ink); background: var(--panel);
+  border: 2px solid var(--line); border-radius: .3rem; padding: .25em .9em; cursor: pointer; transition: transform .2s; }
+.sbtn:hover { transform: translateY(-2px); }
+.sbtn.on { background: var(--ice); border-color: var(--ice); color: #0a2230; }
+.out { min-height: 3.2em; margin-top: .5rem; }
+
+/* ---------- Isolate: proposed relatives ---------- */
+.relmap { display: grid; grid-template-columns: repeat(2, 1fr); gap: .4rem; }
+.rel { font: inherit; text-align: left; font-weight: 700; font-size: .88rem; color: var(--ink); background: var(--panel);
+  border: 2px solid var(--line); border-radius: .35rem; padding: .4em .7em; cursor: pointer; }
+.rel:hover { border-color: var(--ice); }
+.rel.on { border-color: var(--amber); background: rgba(240,169,60,.14); }
+.rel small { display: block; font-weight: 400; font-size: .74rem; color: var(--muted); }
+#relmsg { min-height: 5.4em; margin-top: .5rem; }
+.verdict { font-family: var(--serif); font-size: 1.05rem; color: var(--amber); }
+
+/* ---------- Alternation lab ---------- */
+.phrase { text-align: center; padding: .5rem 0; }
+.phrase .cy { font-family: var(--serif); font-size: 2.6rem; line-height: 1.1; }
+.phrase .cy em { font-style: normal; color: var(--salmon); transition: color .4s; }
+.phrase .cy em.flash { animation: pop .6s ease; }
+@keyframes pop { 0% { transform: scale(1); } 40% { transform: scale(1.5); color: var(--amber); } }
+.phrase .ipa { font-family: var(--sans); color: var(--ice); font-size: 1rem; }
+.phrase .gl { color: var(--muted); font-size: .9rem; }
+.ruleline { display: flex; gap: .3rem; justify-content: center; margin-top: .5rem; flex-wrap: wrap; }
+.rpill { font-size: .74rem; font-weight: 700; padding: .2em .7em; border-radius: 999px; border: 2px solid var(--line); color: var(--muted); }
+.rpill.on { border-color: var(--pine); background: rgba(94,154,116,.2); color: var(--ink); }
+#amsg { min-height: 4.4em; margin-top: .4rem; }
+
+/* ---------- Classifier grid ---------- */
+.clgrid { display: grid; grid-template-columns: repeat(3, 1fr); gap: .4rem; }
+.cl { font: inherit; font-weight: 700; font-size: .84rem; color: var(--ink); background: var(--panel);
+  border: 2px solid var(--line); border-radius: .35rem; padding: .5rem .3rem; cursor: pointer; text-align: center; }
+.cl .ic { display: block; font-size: 1.5rem; line-height: 1.2; }
+.cl.yes { border-color: var(--pine); background: rgba(94,154,116,.18); }
+.cl.no { border-color: var(--salmon); background: rgba(232,121,95,.14); opacity: .75; }
+#clmsg { min-height: 4.6em; margin-top: .4rem; }
+.boxes { display: flex; flex-wrap: wrap; gap: 3px; margin: .4rem 0; }
+.boxes i { width: .9rem; height: .9rem; background: var(--ice); border-radius: 2px; transition: opacity .5s, background .5s; }
+.boxes i.gone { opacity: .16; background: var(--muted); }
+
+/* ---------- Bear festival stages ---------- */
+.stages { display: grid; gap: .35rem; }
+.stg { font: inherit; text-align: left; font-weight: 700; font-size: .88rem; color: var(--ink); background: var(--panel);
+  border: 2px solid var(--line); border-left: 6px solid var(--sc, var(--amber)); border-radius: .35rem;
+  padding: .4em .8em; cursor: pointer; transition: transform .2s; }
+.stg:hover { transform: translateX(4px); }
+#smsg { min-height: 6em; margin-top: .4rem; }
+
+/* ---------- Decline chart ---------- */
+.colchart { display: flex; align-items: flex-end; gap: 1rem; height: 20vh; padding: .5rem .6rem 0; }
+.col { flex: 1; height: 100%; display: flex; flex-direction: column; align-items: center; justify-content: flex-end; }
+.col .n { font-family: var(--serif); font-size: 1.1rem; }
+.col .colbar { width: 100%; max-width: 4rem; height: 0; border-radius: .3rem .3rem 0 0; background: var(--c);
+  transition: height 1.5s cubic-bezier(.2,.8,.2,1) .6s; }
+.slide.active .col .colbar { height: var(--h); }
+.col .y { color: var(--muted); font-size: .76rem; margin-top: .3rem; }
+
+/* ---------- Archive cards ---------- */
+.shelf { display: grid; grid-template-columns: repeat(5, 1fr); gap: .45rem; }
+.vol { font: inherit; color: var(--ink); background: var(--panel); border: 2px solid var(--line); border-radius: .35rem;
+  padding: .5rem .25rem; cursor: pointer; text-align: center; }
+.vol .ic { display: block; font-size: 1.6rem; line-height: 1.15; }
+.vol small { display: block; font-size: .72rem; font-weight: 700; }
+.vol.on { border-color: var(--ice); background: rgba(159,211,232,.14); }
+#vmsg { min-height: 5.6em; }
+
+/* ---------- Timeline ---------- */
+.tl { display: grid; grid-template-columns: repeat(6, 1fr); gap: .55rem; margin-top: 1rem; position: relative; padding-bottom: 1.4rem; }
+.tl::after { content: ""; position: absolute; left: 0; right: 0; bottom: .45rem; height: 3px; border-radius: 3px;
+  background: linear-gradient(90deg, var(--ice), var(--salmon), var(--pine)); }
+.ev { font: inherit; text-align: left; color: #10202a; background: var(--ec); border: 0; border-radius: .35rem;
+  padding: .65rem .75rem; cursor: pointer; transition: transform .25s, box-shadow .25s; }
+.ev:hover { transform: translateY(-4px); }
+.ev.on { box-shadow: 0 0 0 3px #fff, 0 10px 24px rgba(0,0,0,.4); transform: translateY(-6px); }
+.ev .yr { font-family: var(--serif); font-size: 1.35rem; line-height: 1; display: block; }
+.ev small { display: block; font-weight: 700; font-size: .78rem; margin-top: .3rem; }
+#tltext { min-height: 5.4rem; margin-top: .4rem; }
+
+/* ---------- Quiz tint ---------- */
+.opt.right { background: var(--pine); }
+.opt.wrong { background: var(--salmon); }
+
+@media (max-width: 820px) {
+  .slide { padding: 6vh 6vw 12vh; }
+  h1 { font-size: 3.3rem; }
+  .text, .text.wide { max-width: none; width: auto; }
+  .stage { position: relative; inset: auto; width: 100%; margin-top: 1.5rem; }
+  .board { width: 74vw; }
+  .stage .panel, .stage .speak { width: 100% !important; max-width: none !important; }
+  .tl { grid-template-columns: repeat(2, 1fr); }
+  .relmap { grid-template-columns: 1fr; }
+  .shelf { grid-template-columns: repeat(3, 1fr); }
+  .phrase .cy { font-size: 1.8rem; }
+}
+</style>
+</head>
+<body data-map="BlankMap-Equirectangular.svg">
+
+<div id="amur" aria-hidden="true">
+  <div class="lowsun"></div>
+  <div class="water"></div>
+  <div class="floes"></div>
+  <div class="fishes"></div>
+  <div class="rack">
+    <svg viewBox="0 0 300 160"><path d="M20 160 V40 M100 160 V34 M180 160 V38 M260 160 V44" stroke="#2a2016" stroke-width="7"/><path d="M10 44 H276" stroke="#2a2016" stroke-width="7"/>
+      <g fill="#e8795f"><path d="M34 52 q16 -8 30 0 q-6 22 -15 34 q-9 -12 -15 -34 z"/><path d="M78 52 q16 -8 30 0 q-6 22 -15 34 q-9 -12 -15 -34 z"/><path d="M122 52 q16 -8 30 0 q-6 22 -15 34 q-9 -12 -15 -34 z"/><path d="M166 52 q16 -8 30 0 q-6 22 -15 34 q-9 -12 -15 -34 z"/><path d="M210 52 q16 -8 30 0 q-6 22 -15 34 q-9 -12 -15 -34 z"/></g>
+    </svg>
+  </div>
+  <div class="snowwrap"><div class="snow"></div></div>
+  <div class="shade"></div>
+</div>
+<div class="progress"></div>
+
+<main>
+
+<!-- 1. Title -->
+<section class="slide" style="--accent: var(--ice)">
+  <div class="text">
+    <p class="kicker in">Rare Languages of the Asia-Pacific · Module 22</p>
+    <h1 class="in" style="--d:1">Nivkh</h1>
+    <p class="in cyr" style="--d:2; font-size:1.45rem; font-weight:700; color:var(--ice)">Нивхгу диф · Nivhgu dif · Amur &amp; Sakhalin</p>
+    <div class="bar in" style="--d:3"></div>
+    <p class="lead in" style="--d:4">A language with no known relatives on earth — and a word for "house" that changes its first sound depending on who owns it</p>
+    <p class="muted in" style="--d:5">Watch the river: the ice is breaking up and starting to move.</p>
+  </div>
+  <div class="stage">
+    <figure class="board" style="--w:25vw; --r:1.5deg; --d:0">
+      <img data-wiki="Amur River" data-width="1200" alt="The Amur River">
+      <figcaption>The lower Amur, the river whose mouth and island the Nivkh have fished for thousands of years</figcaption>
+    </figure>
+  </div>
+</section>
+
+<!-- 2. Where and who -->
+<section class="slide" data-tr="left" style="--accent: var(--river)">
+  <div class="text">
+    <p class="kicker in">Where and who</p>
+    <h2 class="in" style="--d:1">River mouth and island</h2>
+    <div class="bar in" style="--d:2"></div>
+    <ul class="dots">
+      <li class="in" style="--d:3">The Nivkh live where the <strong>Amur River</strong> meets the sea, and on the northern half of <strong>Sakhalin Island</strong>, in the Russian Far East. Winters are long; the river freezes solid and then breaks up with a roar every spring.</li>
+      <li class="in" style="--d:4">They call themselves <span class="hl">nivhgu</span>, "people," and their language <span class="hl">nivhgu dif</span>. Outsiders long called them <em>Gilyak</em>, a borrowed name.</li>
+      <li class="in" style="--d:5">Here is the striking part. The number of Nivkh people has barely changed in 120 years — about <strong>4,500</strong> in 1897 and about <strong>4,650</strong> in 2010. The number of <em>speakers</em> collapsed from essentially everyone to <strong>198</strong>.</li>
+      <li class="in" style="--d:6">The people are still here. The language is the thing that is disappearing — and those are not the same problem.</li>
+    </ul>
+    <p class="note in" style="--d:7">Counts vary by what is measured. Some specialists put the number of genuinely fluent speakers today at <strong>fewer than 30</strong>.</p>
+  </div>
+  <div class="stage">
+    <div class="loc" data-lat="53.15" data-lon="141.0" data-zoom="5" style="--s:13vw; --d:0">
+      <div class="disc"><div class="lmap"></div><div class="tint"></div><div class="sea"></div><span class="pinpt"></span></div>
+      <span class="tag">Lower Amur &amp; northern Sakhalin, Russia</span>
+    </div>
+    <div class="speak panel compact in" data-tempo="540" style="--d:4; width:33vw">
+      <div class="line" data-syl="nivh·gu dif"></div><p class="gloss">the Nivkh language — "people's speech"</p>
+      <div class="line" data-syl="təf"></div><p class="gloss">house — remember this word</p>
+      <button class="btn play">▶ Say them</button>
+    </div>
+  </div>
+</section>
+
+<!-- 3. The isolate -->
+<section class="slide" data-tr="zoom" style="--accent: var(--amber)">
+  <div class="text">
+    <p class="kicker in">How languages are related</p>
+    <h2 class="in" style="--d:1">A branch with no tree</h2>
+    <div class="bar in" style="--d:2"></div>
+    <p class="in" style="--d:3">Most languages have cousins. English has German and Dutch; Japanese has the Ryukyuan languages; Tagalog has hundreds of Austronesian relatives. Nivkh has <strong>none that anyone can prove</strong>. Linguists call this a <span class="hl">language isolate</span>.</p>
+    <p class="in" style="--d:4">That is not for lack of trying. Nivkh has been linked to Tungusic, Korean, Chukotko-Kamchatkan, Mongolic, Ainu, and even languages of North America. Click each proposal to see how it has fared.</p>
+    <p class="note in" style="--d:5">Resemblances alone are not evidence. To prove relatedness you need <strong>regular sound correspondences</strong> — a pattern where a sound in one language matches a specific sound in the other, again and again, across hundreds of words. Nobody has found that for Nivkh.</p>
+    <p class="note in" style="--d:6">Isolates matter enormously. Each one is an independent sample of what a human language can be. There are only a few dozen left.</p>
+  </div>
+  <div class="stage">
+    <div class="panel in" style="--d:3; width:35vw">
+      <strong>Proposed relatives of Nivkh:</strong>
+      <div class="relmap" id="relmap" style="margin-top:.5rem">
+        <button class="rel" data-r="0">Chukotko-Kamchatkan<small>Fortescue, 2011</small></button>
+        <button class="rel" data-r="1">Algic &amp; Wakashan<small>Nikolaev, 2015–16</small></button>
+        <button class="rel" data-r="2">Korean<small>several scholars</small></button>
+        <button class="rel" data-r="3">Ainu<small>shared vocabulary</small></button>
+        <button class="rel" data-r="4">Mongolic &amp; Tungusic<small>computational study</small></button>
+        <button class="rel" data-r="5">"Eurasiatic"<small>Greenberg</small></button>
+      </div>
+      <p id="relmsg" aria-live="polite">Pick one to see the evidence and the verdict.</p>
+    </div>
+  </div>
+</section>
+
+<!-- 4. Consonant alternation -->
+<section class="slide" style="--accent: var(--salmon)">
+  <div class="text">
+    <p class="kicker in">Language lab</p>
+    <h2 class="in" style="--d:1">The word that changes shape</h2>
+    <div class="bar in" style="--d:2"></div>
+    <p class="in" style="--d:3">The Nivkh word for house is <span class="hl cyr">тыф</span> (<em>təf</em>). But you will almost never hear it that way, because the moment you put another word in front of it, <strong>its first sound changes</strong> — and which change you get depends on how the previous word ends.</p>
+    <p class="in" style="--d:4">Welsh and Irish do something similar; almost nothing else does. Try all five in the panel and watch the <span style="color:var(--salmon)"><strong>т</strong></span> transform.</p>
+    <ul class="dots">
+      <li class="in" style="--d:5">Previous word ends in a <strong>vowel</strong> → the hard stop <em>softens</em>: т → р</li>
+      <li class="in" style="--d:6">Previous word ends in a <strong>fricative or trill</strong> → it <em>stays hard</em>: т → т</li>
+      <li class="in" style="--d:7">Previous word ends in a <strong>nasal</strong> (sometimes one you can't even hear any more) → it becomes <em>voiced</em>: т → д</li>
+    </ul>
+    <p class="note in" style="--d:8">This is why the language is hard to learn from a dictionary. A dictionary lists <em>təf</em> — but in real speech the word mostly isn't <em>təf</em>.</p>
+  </div>
+  <div class="stage">
+    <div class="panel in" style="--d:3; width:35vw">
+      <strong>Put a word in front of "house":</strong>
+      <div class="switch" id="altsw" style="justify-content:center">
+        <button class="sbtn on" data-a="0">(nothing)</button>
+        <button class="sbtn" data-a="1">ӈа — animal</button>
+        <button class="sbtn" data-a="2">ӿемар — old man</button>
+        <button class="sbtn" data-a="3">ӄан — dog</button>
+        <button class="sbtn" data-a="4">ӿы — that</button>
+        <button class="sbtn" data-a="5">нь- — my</button>
+      </div>
+      <div class="phrase">
+        <div class="cy" id="pcy"></div>
+        <div class="ipa" id="pipa"></div>
+        <div class="gl" id="pgl"></div>
+      </div>
+      <div class="ruleline">
+        <span class="rpill" id="r1">softened</span>
+        <span class="rpill" id="r2">stays hard</span>
+        <span class="rpill" id="r3">voiced</span>
+      </div>
+      <p id="amsg" aria-live="polite"></p>
+    </div>
+  </div>
+</section>
+
+<!-- 5. Classifiers -->
+<section class="slide" data-tr="left" style="--accent: var(--pine)">
+  <div class="text">
+    <p class="kicker in">Counting</p>
+    <h2 class="in" style="--d:1">Thirty-three ways to say "two"</h2>
+    <div class="bar in" style="--d:2"></div>
+    <p class="in" style="--d:3">Nivkh does not have one set of numbers. It has <strong>at least thirty-three</strong>. The number word takes a different ending depending on what you are counting — and the categories tell you exactly what mattered in life on the Amur.</p>
+    <p class="in" style="--d:4">English has a faint echo of this: a <em>pair</em> of shoes, a <em>head</em> of cattle, a <em>sheet</em> of paper. Nivkh built it into the numerals themselves, mostly for the numbers one to five.</p>
+    <p class="note in" style="--d:5">Classifier counts from Gruzdeva's description of the language. The exact number varies by variety and by researcher — which is itself a sign of how complicated the system is.</p>
+    <p class="in" style="--d:6; margin-top:.5rem"><strong>And then it collapsed.</strong> Fieldwork in 2014 found that most remaining speakers use a single generic classifier for nearly everything, and that the full system now survives mainly in old recordings and in the memory of the oldest speakers.</p>
+  </div>
+  <div class="stage">
+    <div class="panel in" style="--d:3; width:35vw">
+      <strong>Which of these would get its own number set?</strong> Click to find out.
+      <div class="clgrid" id="clgrid" style="margin-top:.5rem">
+        <button class="cl" data-y="1"><span class="ic">🧍</span>people</button>
+        <button class="cl" data-y="1"><span class="ic">🛶</span>boats</button>
+        <button class="cl" data-y="1"><span class="ic">🛷</span>sledges</button>
+        <button class="cl" data-y="1"><span class="ic">🕸️</span>nets</button>
+        <button class="cl" data-y="1"><span class="ic">🐟</span>fish</button>
+        <button class="cl" data-y="1"><span class="ic">📏</span>long things</button>
+      </div>
+      <p id="clmsg" aria-live="polite">Guess before you click.</p>
+      <hr style="border:0; border-top:1px solid var(--line); margin:.6rem 0">
+      <strong>The system, then and now:</strong>
+      <div class="boxes" id="boxes"></div>
+      <div class="switch" style="justify-content:center">
+        <button class="sbtn on" id="thenb">around 1900</button><button class="sbtn" id="nowb">today</button>
+      </div>
+      <p class="note" id="attrit" style="margin:.2rem 0 0">33 separate classifier sets, in everyday use.</p>
+    </div>
+  </div>
+</section>
+
+<!-- 6. Fish, dogs, skin -->
+<section class="slide" style="--accent: var(--salmon)">
+  <div class="text">
+    <p class="kicker in">Cultural significance</p>
+    <h2 class="in" style="--d:1">Clothes made of salmon</h2>
+    <div class="bar in" style="--d:2"></div>
+    <ul class="dots">
+      <li class="in" style="--d:3">A Nivkh summer robe could be sewn from <strong>around a hundred pieces of fish skin</strong> — salmon, scraped, pounded soft, and stitched with thread cut from more fish skin. It is light, tough and nearly waterproof.</li>
+      <li class="in" style="--d:4">The technique was so striking to outsiders that Chinese sources called the peoples of the Amur the <strong>"Fish Skin Tatars."</strong> An imperial Manchu scroll of 1751 describes their summer clothing in exactly those terms.</li>
+      <li class="in" style="--d:5">Almost nothing from a salmon run was wasted. Dried fish fed the <strong>sled dogs</strong> through winter; skins became clothes and boots; and pounded dried fish mixed with seal fat and berries made <span class="hl">mos'</span>, a dish still eaten today.</li>
+      <li class="in" style="--d:6">The decoration matters too: bold spirals, fish-skin appliqué, dyed birch bark, trade silk from Chinese merchants. Nivkh patterns are recognisably Nivkh and not those of their neighbours.</li>
+    </ul>
+    <p class="note in" style="--d:7">Every one of these techniques carries its own vocabulary. When a craft stops, a whole region of the dictionary stops with it.</p>
+  </div>
+  <div class="stage">
+    <div class="cards in" style="--d:3; grid-template-columns:1fr; width:34vw">
+      <div class="card" style="--cardc: var(--salmon)"><div class="word">Why fish skin?</div><div class="meaning">On the lower Amur there were no sheep, no cotton and little trade cloth — but there were millions of salmon every year. People built a textile industry out of the one material the river gave them in bulk.</div><div class="tap">click to reveal</div></div>
+      <div class="card" style="--cardc: var(--ice)"><div class="word">Why dogs?</div><div class="meaning">Dog teams were the winter transport system of the Amur, and dried fish was their fuel. A family's wealth could be counted in dogs — which may be part of why counting things properly mattered so much.</div><div class="tap">click to reveal</div></div>
+      <div class="card" style="--cardc: var(--pine)"><div class="word">Is it still made?</div><div class="meaning">Yes, mostly by a small number of artists and in museum and festival contexts. Fish-skin work has had a revival across the Amur peoples in recent decades, and it has become one of the most visible markers of Nivkh identity.</div><div class="tap">click to reveal</div></div>
+    </div>
+  </div>
+</section>
+
+<!-- 7. Bear festival -->
+<section class="slide" data-tr="zoom" style="--accent: var(--amber)">
+  <div class="text">
+    <p class="kicker in">The winter ceremony</p>
+    <h2 class="in" style="--d:1">The bear festival</h2>
+    <div class="bar in" style="--d:2"></div>
+    <p class="in" style="--d:3">Held in deep winter, usually January or February, the bear festival was the largest event in Nivkh life — and it was not really about the bear.</p>
+    <ul class="dots">
+      <li class="in" style="--d:4">It was held by relatives to mark the <strong>death of a kinsman</strong>. A death broke the ties between two clans — the one that gives wives and the one that takes them — and the festival was how those ties were publicly repaired.</li>
+      <li class="in" style="--d:5">So the ceremony was simultaneously a funeral rite, a diplomatic summit between clans, a feast, and a message sent to the mountain gods. Shamans presided.</li>
+      <li class="in" style="--d:6">Women performed a dance honouring the bear, imitating how it walks, charges and rears — and, in older accounts, wearing fish-skin clothing to do it.</li>
+    </ul>
+    <p class="note in" style="--d:7">The ceremony involved killing a bear that had been raised in the village, something many students will find hard. It is worth sitting with that rather than skipping it: the ritual treated the animal as an honoured guest being sent home to the gods, which is a genuinely different idea about animals from the one most of us grew up with.</p>
+  </div>
+  <div class="stage">
+    <div class="panel in" style="--d:3; width:35vw">
+      <strong>What the festival was doing:</strong> click each layer.
+      <div class="stages" id="stages" style="margin-top:.5rem">
+        <button class="stg" data-s="0" style="--sc: var(--amber)">A funeral<small>marking the death of a kinsman</small></button>
+        <button class="stg" data-s="1" style="--sc: var(--ice)">A treaty<small>repairing ties between two clans</small></button>
+        <button class="stg" data-s="2" style="--sc: var(--salmon)">A message<small>sending the bear's spirit to the mountain gods</small></button>
+        <button class="stg" data-s="3" style="--sc: var(--pine)">A performance<small>dances, songs and a feast</small></button>
+      </div>
+      <p id="smsg" aria-live="polite">Pick a layer.</p>
+    </div>
+  </div>
+</section>
+
+<!-- 8. Timeline -->
+<section class="slide" data-tr="zoom" style="--accent: var(--ice)">
+  <div class="text wide">
+    <p class="kicker in">History</p>
+    <h2 class="in" style="--d:1">How the speakers went quiet</h2>
+    <div class="bar in" style="--d:2"></div>
+    <p class="in" style="--d:3">Click each moment to explore it.</p>
+    <div class="tl in" id="tl" style="--d:4">
+      <button class="ev" style="--ec: var(--ice)"><span class="yr">pre-1600s</span><small>Trade on the Amur</small></button>
+      <button class="ev" style="--ec: #bfdcea"><span class="yr">1873–90</span><small>Convicts and Chekhov</small></button>
+      <button class="ev" style="--ec: var(--salmon)"><span class="yr">1930s</span><small>Collectivization</small></button>
+      <button class="ev" style="--ec: #e9b7a4"><span class="yr">1950s–70s</span><small>Boarding schools</small></button>
+      <button class="ev" style="--ec: var(--amber)"><span class="yr">1979–90</span><small>An alphabet, a newspaper</small></button>
+      <button class="ev" style="--ec: var(--pine)"><span class="yr">today</span><small>Oil, gas and archives</small></button>
+    </div>
+    <div class="panel in" id="tltext" style="--d:5" aria-live="polite"></div>
+  </div>
+</section>
+
+<!-- 9. The numbers -->
+<section class="slide" data-tr="left" style="--accent: var(--salmon)">
+  <div class="text">
+    <p class="kicker in">The mechanism</p>
+    <h2 class="in" style="--d:1">A population that held, a language that didn't</h2>
+    <div class="bar in" style="--d:2"></div>
+    <p class="in" style="--d:3">Language loss is usually blamed on something vague — "modernity," "progress." The Nivkh case is unusually clear, because you can name the specific machinery.</p>
+    <ul class="dots">
+      <li class="in" style="--d:4"><strong>Collectivization</strong> in the 1930s replaced family fishing with wage labour in state enterprises, run in Russian.</li>
+      <li class="in" style="--d:5"><strong>Village consolidation</strong> moved people out of small settlements into larger towns like Nogliki. The small villages were where the language actually lived.</li>
+      <li class="in" style="--d:6"><strong>Boarding schools</strong> took children away from the speakers who would have taught them, and taught them in Russian.</li>
+      <li class="in" style="--d:7">Then <strong>oil and gas</strong> arrived on Sakhalin, bringing an economy that operates entirely in Russian.</li>
+    </ul>
+    <p class="note in" style="--d:8">Notice that nobody had to ban the language. Four ordinary administrative decisions were enough.</p>
+  </div>
+  <div class="stage">
+    <div class="panel in" style="--d:3; width:34vw">
+      <strong>First-language Nivkh speakers</strong>
+      <div class="colchart">
+        <div class="col"><div class="n">~4,500</div><div class="colbar" style="--h:96%; --c: var(--ice)"></div><div class="y">1897</div></div>
+        <div class="col"><div class="n">1,079</div><div class="colbar" style="--h:24%; --c: var(--amber)"></div><div class="y">1989</div></div>
+        <div class="col"><div class="n">198</div><div class="colbar" style="--h:6%; --c: var(--salmon)"></div><div class="y">2010</div></div>
+        <div class="col"><div class="n">&lt;30?</div><div class="colbar" style="--h:2%; --c: var(--rose)"></div><div class="y">fluent now</div></div>
+      </div>
+      <p class="note" style="margin:.3rem 0 0">In 1897 essentially every Nivkh person spoke Nivkh. The ethnic population has stayed almost exactly the same size throughout.</p>
+    </div>
+    <div class="panel in" style="--d:5; width:34vw">
+      <strong>Your turn:</strong> pick one of the four mechanisms above. What could a government have done differently, at that moment, that would not have required anyone to give anything up?
+    </div>
+  </div>
+</section>
+
+<!-- 10. Now -->
+<section class="slide" style="--accent: var(--pine)">
+  <div class="text">
+    <p class="kicker in">Why it matters now</p>
+    <h2 class="in" style="--d:1">What exists, and what it would take</h2>
+    <div class="bar in" style="--d:2"></div>
+    <ul class="dots">
+      <li class="in" style="--d:3">Nivkh got a written form late. A Latin alphabet was devised around 1931, replaced by Cyrillic, and the modern alphabet was adopted by Soviet decree in <strong>1979</strong>, with the writer <strong>Vladimir Sangi</strong> among its creators.</li>
+      <li class="in" style="--d:4">Sangi, born in 1935 in a nomadic settlement on Sakhalin, is the founder of Nivkh literature: primers, school textbooks, orthography rules, and in <strong>2024</strong> a collection of Nivkh legends with an audiobook so people can hear the language as well as read it.</li>
+      <li class="in" style="--d:5">A monthly newspaper, <span class="hl">Nivkh dif</span>, has published since 1990. The language is taught in the first three school grades in parts of Sakhalin and Khabarovsk Krai.</li>
+      <li class="in" style="--d:6">And there is one of the largest online sound archives of any endangered language — recordings of stories and songs, freely available, made with speakers while they were still here.</li>
+    </ul>
+    <p class="note in" style="--d:7">None of this has yet produced a new generation of children speaking Nivkh at home. That is the honest state of play — and it is the gap every revival project in the world is trying to close.</p>
+  </div>
+  <div class="stage">
+    <div class="panel in" style="--d:3; width:35vw">
+      <strong>What exists today:</strong> click an item.
+      <div class="shelf" id="shelf">
+        <button class="vol" data-v="0"><span class="ic">🔤</span><small>Alphabet</small></button>
+        <button class="vol" data-v="1"><span class="ic">📰</span><small>Newspaper</small></button>
+        <button class="vol" data-v="2"><span class="ic">🎧</span><small>Sound archive</small></button>
+        <button class="vol" data-v="3"><span class="ic">📚</span><small>Textbooks</small></button>
+        <button class="vol" data-v="4"><span class="ic">📖</span><small>Literature</small></button>
+      </div>
+      <p id="vmsg" aria-live="polite">A language can be well documented and still be in trouble. Documentation preserves; only speakers continue.</p>
+    </div>
+  </div>
+</section>
+
+<!-- 11. Quiz -->
+<section class="slide" style="--accent: var(--ice)">
+  <div class="text wide center">
+    <p class="kicker in">Review on the ice</p>
+    <h2 class="in" style="--d:1">Quick quiz!</h2>
+    <div class="bar in" style="--d:2"></div>
+    <div class="quizgrid">
+      <div class="quiz panel in" style="--d:3" data-right="Yes — no proven relatives anywhere, despite many attempts." data-wrong="Hint: think about what makes Nivkh unusual on a family tree.">
+        <div class="q">What does it mean that Nivkh is a <em>language isolate</em>?</div>
+        <div class="options"><button class="opt">It has no writing</button><button class="opt" data-correct>It has no proven relatives</button><button class="opt">It is spoken on an island</button></div>
+        <div class="feedback"></div>
+      </div>
+      <div class="quiz panel in" style="--d:4" data-right="Right — тыф, рыф or дыф, depending on how the previous word ends." data-wrong="Hint: it depends on the word in front of it.">
+        <div class="q">Why does the Nivkh word for "house" have several forms?</div>
+        <div class="options"><button class="opt">Houses have genders</button><button class="opt">It changes with the seasons</button><button class="opt" data-correct>Its first sound alternates</button></div>
+        <div class="feedback"></div>
+      </div>
+      <div class="quiz panel in" style="--d:5" data-right="Correct — around 33 classifier sets, now reduced to roughly one in everyday speech." data-wrong="Hint: more than you would ever guess.">
+        <div class="q">Roughly how many different number-sets did Nivkh have?</div>
+        <div class="options"><button class="opt">2</button><button class="opt">7</button><button class="opt" data-correct>33</button></div>
+        <div class="feedback"></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- 12. Closing -->
+<section class="slide end" style="--accent: var(--ice)">
+  <div class="text">
+    <h1 class="in cyr" style="font-size:4.6rem">Нивхгу диф</h1>
+    <p class="lead in" style="--d:1; margin-top:.8rem">Thank you! Questions?</p>
+    <p class="quote in" style="--d:2">Four thousand Nivkh people are alive today — about as many as in 1897. Almost none of them can say "the dog's house" the way their great-grandparents did. The people stayed; the grammar left.</p>
+  </div>
+  <details class="fine in" style="--d:3">
+    <summary>Sources &amp; image credits</summary>
+    <div class="box">
+      <h4>Sources</h4>
+      <ul>
+        <li><a href="https://en.wikipedia.org/wiki/Nivkh_languages">Nivkh languages (Wikipedia)</a> — consonant alternation examples, grammar, census figures, classification debates</li>
+        <li><a href="https://en.wikipedia.org/wiki/Nivkh_people">Nivkh people (Wikipedia)</a> — clothing, bear festival, Nivkh Dif</li>
+        <li><a href="https://en.wikipedia.org/wiki/Nivkh_alphabets">Nivkh alphabets (Wikipedia)</a> — 1931 Latin, 1979 Cyrillic reform, primers</li>
+        <li><a href="https://en.wikipedia.org/wiki/Vladimir_Sangi">Vladimir Sangi (Wikipedia)</a></li>
+        <li><a href="https://www.omniglot.com/writing/nivkh.htm">Omniglot: Nivkh</a></li>
+        <li>Gruzdeva, <em>Nivkh</em> (Lincom Europa, 1998) — the standard grammatical description</li>
+        <li><a href="https://ext-web.edu.sgu.ac.jp/hidetos/HTML/nivkhcaa4.pdf">Shiraishi, "Nivkh Consonant Alternation Does Not Involve Hardening" (2000)</a></li>
+        <li><a href="https://ext-web.edu.sgu.ac.jp/hidetos/">Sound Materials of the Nivkh Language (Shiraishi &amp; Lok)</a> — the online sound archive</li>
+        <li><a href="https://www.academia.edu/30378763/ATTRITIONAL_PHENOMENA_IN_THE_NIVKH_LANGUAGE_ON_SAKHALIN">Gruzdeva &amp; Janhunen, "Attritional phenomena in the Nivkh language on Sakhalin"</a> — the collapse of the classifier system</li>
+        <li><a href="https://www.academia.edu/43902803/Nivkh_toponyms_in_the_Amur_Sakhalin_region_of_the_Russian_Far_East">"Nivkh toponyms in the Amur–Sakhalin region"</a> — fewer than 30 fluent speakers</li>
+        <li><a href="https://doi.org/10.1016/j.lingua.2011.03.001">Fortescue, "The relationship of Nivkh to Chukotko-Kamchatkan revisited," <em>Lingua</em> (2011)</a></li>
+        <li><a href="https://glottolog.org/resource/languoid/id/nivk1234">Glottolog: Nivkh</a> — "insufficient" evidence for proposed relationships</li>
+        <li><a href="https://www.ncbi.nlm.nih.gov/pmc/articles/PMC10427439">Hudson &amp; Robbeets, "Archaeolinguistic evidence for the farming/language dispersal of Koreanic" (2020)</a></li>
+        <li><a href="https://thingsthattalk.net/en/t/ttt:TNTDex/stories/traveling-on-fish-skin-to-meet-the-nivkh/wearing-fish-skin">"Wearing fish skin" — a Nivkh fish-skin robe</a> — the hundred pieces, the "Fish Skin Tatars," the 1751 Manchu scroll</li>
+        <li><a href="https://dice.missouri.edu/assets/docs/asia-other/Nivkh.pdf">University of Missouri DICE: Nivkh society profile</a> — <em>mos'</em>, dog feeding, ornament</li>
+        <li><a href="http://www.eki.ee/books/redbook/nivkhs.shtml">The Red Book of the Peoples of the Russian Empire: the Nivkhs</a></li>
+        <li><a href="https://lingsib.iea.ras.ru/en/languages/nivkh.shtml">Endangered Languages of Siberia: Nivkh</a></li>
+        <li>Grant, <em>In the Soviet House of Culture</em> (Princeton, 1995) — collectivization and resettlement</li>
+        <li>Reid, <em>The Shaman's Coat</em> (2002) — the Ainu, Nivkh and Uilta of Sakhalin</li>
+      </ul>
+      <h4>Images (Wikimedia Commons)</h4>
+      <ul id="credits"></ul>
+    </div>
+  </details>
+</section>
+
+</main>
+
+<nav class="controls">
+  <button id="prev" aria-label="Previous slide">‹</button>
+  <span id="counter">1 / 12</span>
+  <button id="next" aria-label="Next slide">›</button>
+  <button id="fs" aria-label="Fullscreen">⤢</button>
+</nav>
+<p class="hint">Use ← → to move. Press F for fullscreen.</p>
+
+<!-- Nivkh effects: ice break-up, isolate verdicts, alternation lab, classifiers, bear festival, timeline -->
+<script>
+(function () {
+  /* ---------- Background: ice floes, snow, salmon ---------- */
+  var floebox = document.querySelector("#amur .floes");
+  var FLOES = [];
+  for (var k = 0; k < 16; k++) {
+    var f = document.createElement("div");
+    f.className = "floe";
+    var w = 6 + Math.random() * 14;
+    f.style.width = w + "vw";
+    f.style.height = (1.6 + Math.random() * 2.6) + "vh";
+    f.style.left = (Math.random() * 96 - 4) + "%";
+    f.style.bottom = (2 + Math.random() * 34) + "vh";
+    f.style.setProperty("--dx", (Math.random() * 2 - 1).toFixed(2) + "vw");
+    f.style.setProperty("--dy", "0px");
+    f.style.setProperty("--rr", (Math.random() * 4 - 2).toFixed(1) + "deg");
+    f.style.animationDelay = (-Math.random() * 11) + "s";
+    f.dataset.drift = (Math.random() * 16 - 8).toFixed(1);
+    floebox.appendChild(f);
+    FLOES.push(f);
+  }
+  var snow = document.querySelector("#amur .snow");
+  for (var s = 0; s < 60; s++) {
+    var p = document.createElement("i");
+    p.style.left = Math.random() * 100 + "%";
+    p.style.animationDuration = (7 + Math.random() * 10) + "s";
+    p.style.animationDelay = (-Math.random() * 14) + "s";
+    snow.appendChild(p);
+  }
+  var fishbox = document.querySelector("#amur .fishes");
+  var SALMON = [];
+  for (var n = 0; n < 5; n++) {
+    var sf = document.createElement("div");
+    sf.className = "salmon";
+    sf.style.left = (20 + Math.random() * 70) + "%";
+    sf.style.bottom = (4 + Math.random() * 18) + "vh";
+    sf.style.animationDelay = (-Math.random() * 13) + "s";
+    sf.innerHTML = '<svg viewBox="0 0 120 40"><path d="M6 20 Q40 2 84 12 Q110 18 116 20 Q110 24 84 30 Q40 40 6 20 Z" fill="#e8795f" opacity=".85"/><path d="M6 20 l-6 -12 v24 z" fill="#e8795f" opacity=".85"/></svg>';
+    fishbox.appendChild(sf);
+    SALMON.push(sf);
+  }
+  function tune(t) {
+    FLOES.forEach(function (f) {
+      var d = parseFloat(f.dataset.drift);
+      f.style.marginLeft = (d * t) + "vw";
+      f.style.opacity = String(1 - t * 0.45);
+    });
+    SALMON.forEach(function (x) { x.style.opacity = String(Math.max(0, (t - 0.45) * 1.6)); });
+  }
+  document.addEventListener("slidechange", function (e) {
+    var t = e.detail.index / (e.detail.total - 1);
+    document.body.style.setProperty("--t", t);
+    tune(t);
+  });
+  tune(0);
+
+  function single(selector, callback) {
+    var grp = document.querySelectorAll(selector);
+    grp.forEach(function (b) {
+      b.addEventListener("click", function () {
+        grp.forEach(function (x) { x.classList.remove("on"); });
+        b.classList.add("on");
+        callback(b);
+      });
+    });
+  }
+
+  /* ---------- Isolate: proposed relatives ---------- */
+  var RELS = [
+    ["Chukotko-Kamchatkan", "Michael Fortescue argued in 2011 that Nivkh is related to the languages of Chukotka and Kamchatka, proposing a family he called Chukotko-Kamchatkan–Amuric.", "Not accepted. Glottolog calls the evidence insufficient."],
+    ["Algic and Wakashan", "In 2015–16 Sergei Nikolaev argued for a systematic relationship between Nivkh and the Algic languages of North America, and more distantly the Wakashan languages of British Columbia. Fortescue had earlier floated a North American link too.", "Not accepted, though the idea of an ancient Pacific Rim connection keeps resurfacing."],
+    ["Korean", "Several scholars have suggested a Nivkh-like language was once spoken in Korea and left traces beneath Korean. Juha Janhunen notes that Korean and Nivkh have similarly structured consonant systems, which could come from ancient contact.", "Unproven, and contact would explain it as well as common ancestry."],
+    ["Ainu", "The Ainu and the Nivkh were neighbours on Sakhalin for centuries, and they share vocabulary.", "Borrowing, not inheritance — the usual verdict when two neighbouring peoples share words but not grammar."],
+    ["Mongolic and Tungusic", "An automated computer comparison of world vocabularies in 2013 found lexical similarities between Nivkh, Mongolic and Tungusic.", "Most likely loanwords. Nivkh traded with Tungusic-speaking neighbours for centuries."],
+    ["\"Eurasiatic\"", "Joseph Greenberg placed Nivkh inside a vast proposed super-family stretching across Eurasia.", "Widely rejected. Greenberg's method of mass comparison is not accepted by most historical linguists."]
+  ];
+  var relmsg = document.getElementById("relmsg");
+  single("#relmap .rel", function (b) {
+    var R = RELS[Number(b.dataset.r)];
+    relmsg.innerHTML = "<strong>" + R[0] + "</strong><br>" + R[1] + "<br><span class='verdict'>Verdict: " + R[2] + "</span>";
+  });
+
+  /* ---------- Consonant alternation lab ---------- */
+  var ALT = [
+    { cy: ["", "т", "ыф"], ipa: "/təf/", gl: "a house", rule: 0,
+      msg: "The dictionary form. On its own, the word begins with a hard т." },
+    { cy: ["ӈа ", "р", "ыф"], ipa: "/ŋa‿rəf/", gl: "the animal's house", rule: 1,
+      msg: "ӈа ends in a vowel, so the hard т <strong>softens</strong> all the way to р. Same word, different opening sound." },
+    { cy: ["ӿемар ", "т", "ыф"], ipa: "/hemar‿təf/", gl: "the old man's house", rule: 2,
+      msg: "ӿемар ends in a trill, so the т <strong>stays hard</strong>. Nothing changes here." },
+    { cy: ["ӄан ", "д", "ыф"], ipa: "/qan‿dəf/", gl: "the dog's house", rule: 3,
+      msg: "ӄан ends in a nasal, so the т becomes <strong>voiced</strong>: д." },
+    { cy: ["ӿы ", "д", "ыф"], ipa: "/həⁿ‿dəf/", gl: "that house", rule: 3,
+      msg: "This one is sneaky. ӿы looks vowel-final — but it once ended in a nasal that has since dropped out of the pronunciation. The nasal is gone and <em>its effect is still there</em>, which is how linguists know it used to exist." },
+    { cy: ["нь", "р", "ыф"], ipa: "/ɲ‿rəf/", gl: "my house", rule: 1,
+      msg: "Possession works the same way. \"My\" is just a prefix нь-, and it softens the т to р exactly like \"animal\" did." }
+  ];
+  function setAlt(i) {
+    var A = ALT[i];
+    document.getElementById("pcy").innerHTML = A.cy[0] + "<em class='flash'>" + A.cy[1] + "</em>" + A.cy[2];
+    document.getElementById("pipa").textContent = A.ipa;
+    document.getElementById("pgl").textContent = "\u201c" + A.gl + "\u201d";
+    document.getElementById("r1").classList.toggle("on", A.rule === 1);
+    document.getElementById("r2").classList.toggle("on", A.rule === 2);
+    document.getElementById("r3").classList.toggle("on", A.rule === 3);
+    document.getElementById("amsg").innerHTML = A.msg;
+  }
+  single("#altsw .sbtn", function (b) { setAlt(Number(b.dataset.a)); });
+  setAlt(0);
+
+  /* ---------- Classifiers ---------- */
+  var CLNOTE = [
+    "People get their own numbers in most classifier languages — and in Nivkh too.",
+    "Boats. A fishing people on a river counts boats often enough to give them their own numerals.",
+    "Sledges. Winter transport, counted separately from everything else.",
+    "Nets. The tool that feeds the village, with its own set of numbers.",
+    "Fish — of course. Including, in some descriptions, separate treatment for dried fish.",
+    "Long thin objects, as a shape category. Many classifier languages worldwide do this one."
+  ];
+  var clmsg = document.getElementById("clmsg"), found = 0;
+  document.querySelectorAll("#clgrid .cl").forEach(function (c, i) {
+    c.addEventListener("click", function () {
+      if (!c.classList.contains("yes")) { c.classList.add("yes"); found++; }
+      clmsg.innerHTML = "<strong style='color:var(--pine)'>Yes — its own set.</strong> " + CLNOTE[i] +
+        (found === 6 ? "<br><br>All six, and that is only six of about thirty-three. The grammar is a list of what this society handled every day." : "");
+    });
+  });
+  var boxes = document.getElementById("boxes");
+  for (var b2 = 0; b2 < 33; b2++) boxes.appendChild(document.createElement("i"));
+  function setAttr(now) {
+    boxes.querySelectorAll("i").forEach(function (x, i) { x.classList.toggle("gone", now && i > 0); });
+    document.getElementById("attrit").innerHTML = now
+      ? "<strong style='color:var(--salmon)'>One generic classifier</strong> covers almost everything for most remaining speakers, and classifiers are used actively only with \"one,\" \"two\" and sometimes \"three.\""
+      : "33 separate classifier sets, in everyday use.";
+  }
+  document.getElementById("thenb").addEventListener("click", function () {
+    this.classList.add("on"); document.getElementById("nowb").classList.remove("on"); setAttr(false);
+  });
+  document.getElementById("nowb").addEventListener("click", function () {
+    this.classList.add("on"); document.getElementById("thenb").classList.remove("on"); setAttr(true);
+  });
+  setAttr(false);
+
+  /* ---------- Bear festival ---------- */
+  var STG = [
+    ["A funeral", "The festival was arranged by relatives to honour a kinsman who had died. Everything else in the ceremony hangs off that fact — this is a mourning rite on a very large scale, held in the depth of winter."],
+    ["A treaty", "Nivkh society was organised into clans linked by marriage: one clan gives wives, another takes them. A death breaks a link in that chain. The bear festival was the public occasion on which the two clans met, feasted and repaired the relationship. In other words, it is a piece of diplomacy performed as ritual."],
+    ["A message", "The bear's spirit was understood to return to the gods of the mountain, and to report on how it had been treated. Treated well, it would send the forest's abundance back. The animal was a guest and a messenger, not simply prey."],
+    ["A performance", "Shamans presided. Women performed a dance imitating the bear's walk, its charge, the way it raises its paws. There was feasting, song, and clan storehouses opened for the occasion. For a scattered, small-scale society, this was the biggest gathering of the year."]
+  ];
+  var smsg = document.getElementById("smsg");
+  document.querySelectorAll("#stages .stg").forEach(function (b) {
+    b.addEventListener("click", function () {
+      var S = STG[Number(b.dataset.s)];
+      smsg.innerHTML = "<strong style='color:var(--amber); font-size:1.1rem'>" + S[0] + "</strong><br>" + S[1];
+    });
+  });
+
+  /* ---------- Timeline ---------- */
+  var EVENTS = [
+    ["Trade on the Amur", "Long before Russian contact, the Nivkh traded with the Ainu to the south, with Japanese merchants, and with Chinese and Manchu officials. Manchu records of 1751 describe them by their fish-skin clothing. They were not isolated — they were a hub."],
+    ["Convicts and Chekhov", "Russia began sending convicts to Sakhalin in 1873, and the island filled with a prison population. Smallpox swept through. In 1890 Anton Chekhov travelled to Sakhalin and wrote about the Gilyak, as the Nivkh were then called — one of the earliest widely read accounts, and a deeply uncomfortable one."],
+    ["Collectivization", "Stalin's collectivization pushed Nivkh families out of their own fishing economy and into wage labour in state enterprises. Almost every Nivkh speaker recorded in the modern era was born in the 1920s–40s, which is exactly when this happened."],
+    ["Boarding schools", "Children were sent to Russian-language boarding schools, and small settlements were consolidated into larger towns such as Nogliki. Both policies separated children from the people who spoke Nivkh, during the years when a person learns a first language."],
+    ["An alphabet, a newspaper", "A reformed Cyrillic alphabet was adopted by Soviet decree in 1979. Primers followed in 1981 and 1982 — one for each main variety — written by Vladimir Sangi, Galina Otaina, Chuner Taksami and others. The newspaper Nivkh dif began in 1990."],
+    ["Oil, gas and archives", "Sakhalin's oil and gas industry runs in Russian and has reshaped the island's economy. Meanwhile scholars and Nivkh speakers have built dictionaries, grammars, textbooks and one of the world's largest online sound archives for an endangered language. Both things are true at once."]
+  ];
+  var tlText = document.getElementById("tltext");
+  var evs = document.querySelectorAll("#tl .ev");
+  function setEvent(i) {
+    evs.forEach(function (e, k) { e.classList.toggle("on", k === i); });
+    tlText.innerHTML = '<strong style="color:var(--ice); font-size:1.2rem">' + EVENTS[i][0] + "</strong><br>" + EVENTS[i][1];
+  }
+  evs.forEach(function (e, i) { e.addEventListener("click", function () { setEvent(i); }); });
+  setEvent(0);
+
+  /* ---------- Archive shelf ---------- */
+  var VOLS = [
+    "<strong>An alphabet.</strong> Latin in the 1930s, then Cyrillic, with the current version adopted in 1979. It needs extra letters — ӄ, ӈ, ӽ, ӻ and others — for sounds Russian does not have, which for decades made Nivkh hard to typeset and later hard to type.",
+    "<strong>A newspaper.</strong> <em>Nivkh dif</em>, monthly since 1990, published from the village of Nekrasovka on Sakhalin. It is one of very few newspapers anywhere published in a language with a few hundred speakers.",
+    "<strong>A sound archive.</strong> Hidetoshi Shiraishi and Galina Lok's <em>Sound Materials of the Nivkh Language</em> puts folktales and songs online with transcriptions. A learner today can hear native speakers who are no longer alive.",
+    "<strong>Textbooks.</strong> Primers for both the Amur and Sakhalin varieties, plus newer school textbooks by Marina Temina. Nivkh is taught in grades 1–3 in several schools.",
+    "<strong>Literature.</strong> Vladimir Sangi, born 1935, founded Nivkh written literature and in 2024 published a collection of Nivkh legends — with an audiobook, so the sound comes with the text."
+  ];
+  var vmsg = document.getElementById("vmsg");
+  single("#shelf .vol", function (b) { vmsg.innerHTML = VOLS[Number(b.dataset.v)]; });
+})();
+</script>
+<script src="../assets/deck.js"></script>
+</body>
+</html>
