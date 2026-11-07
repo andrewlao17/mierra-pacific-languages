@@ -1,0 +1,806 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Yonaguni: The Language at Japan's Last Sunset</title>
+<link rel="stylesheet" href="../assets/deck.css">
+<style>
+@import url("https://fonts.googleapis.com/css2?family=Shippori+Mincho+B1:wght@600;800&family=M+PLUS+Rounded+1c:wght@400;500;700;800&display=swap");
+
+/* ---------- Yonaguni theme: the last sunset in Japan, seen from Cape Irizaki ---------- */
+:root {
+  --bg: #120f24;
+  --ink: #fff7ec;
+  --muted: #e2d6cf;
+  --line: rgba(255, 247, 236, .22);
+  --panel: rgba(24, 18, 44, .8);
+  --sun: #ffb454;
+  --coral: #ff7a59;
+  --sea: #5cc4cc;
+  --leaf: #a6d98a;
+  --dusk: #b4a7ff;
+  --wood: #8a5a35;
+  --accent: var(--sun);
+  --serif: "Shippori Mincho B1", "Hiragino Mincho ProN", Georgia, serif;
+  --sans: "M PLUS Rounded 1c", "Hiragino Maru Gothic ProN", system-ui, sans-serif;
+  --t: 0;
+  font-size: clamp(12px, 1.3vw, 28px);
+}
+h1 { font-size: 6.2rem; font-weight: 800; line-height: 1; }
+h2 { font-size: 2.9rem; font-weight: 800; line-height: 1.08; }
+.slide { padding: 7vh 3vw 8vh 6vw; }
+.text { max-width: 45vw; }
+.text.wide { max-width: 86vw; width: 86vw; }
+.stage {
+  right: 7vw; top: 6vh; bottom: 10vh; width: 38vw;
+  display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 1.3rem;
+}
+.stage .loc { position: relative; }
+ul.dots li { font-size: 1.05rem; }
+.speak .line, .card .word { font-family: var(--sans); font-weight: 800; }
+.card.revealed .meaning { max-height: 12rem; }
+.btn { background: var(--sun); color: #2a1608; }
+.syl.on { background: var(--sun); color: #2a1608; }
+.loc .disc { border-color: var(--sun); box-shadow: 0 0 0 .6rem rgba(255,180,84,.16), 0 22px 40px rgba(0,0,0,.55); }
+.loc .tint { background: #e9d2b4; }
+.loc .sea { background: #2c4a78; }
+.loc .tag { background: #1b1533; border-color: var(--sun); }
+.note { font-size: .82rem; color: var(--muted); }
+.jp { font-family: var(--serif); }
+
+/* ---------- The sky: afternoon on slide 1, night on the last slide ---------- */
+#sky { position: fixed; inset: 0; z-index: 0; overflow: hidden; pointer-events: none; background: #120f24; }
+#sky .layer { position: absolute; inset: 0; transition: opacity 1.6s ease; }
+#sky .day { background: linear-gradient(180deg, #4b7fb8 0%, #9cb8cf 45%, #f4d3a0 78%); opacity: calc(1 - var(--t) * 2); }
+#sky .dusk { background: linear-gradient(180deg, #3a2a6b 0%, #b04f6b 45%, #ff9a52 78%); opacity: calc(1 - max(0, var(--t) - .5) * 2.4); }
+#sky .night { background: linear-gradient(180deg, #070716 0%, #15123a 55%, #2b2251 78%); }
+#sky .stars { position: absolute; inset: 0 0 30% 0; opacity: calc((var(--t) - .62) * 3); transition: opacity 1.6s ease; }
+#sky .stars i { position: absolute; width: 2px; height: 2px; border-radius: 50%; background: #fff; animation: twinkle 3s ease-in-out infinite; }
+@keyframes twinkle { 50% { opacity: .25; } }
+#sky .sun {
+  position: absolute; right: 18vw; width: 13vw; height: 13vw; border-radius: 50%;
+  top: calc(10vh + var(--t) * 72vh);
+  background: radial-gradient(circle at 50% 45%, #fff3c9 0%, #ffc56b 45%, #ff7a3d 100%);
+  box-shadow: 0 0 80px 30px rgba(255,150,70,.45);
+  transition: top 1.6s cubic-bezier(.65,0,.25,1);
+}
+#sky .sea {
+  position: absolute; left: 0; right: 0; bottom: 0; height: 24vh;
+  background: linear-gradient(180deg, #2c3f6e 0%, #172449 100%);
+}
+#sky .sea::before {
+  content: ""; position: absolute; inset: 0;
+  background: repeating-linear-gradient(180deg, rgba(255,255,255,.07) 0 2px, transparent 2px 14px);
+  animation: swell 6s ease-in-out infinite alternate;
+}
+@keyframes swell { to { transform: translateY(6px); } }
+#sky .glow {
+  position: absolute; bottom: 0; right: calc(18vw + 3vw); width: 7vw; height: 24vh;
+  background: linear-gradient(180deg, rgba(255,190,110,.75), rgba(255,190,110,0));
+  -webkit-mask-image: repeating-linear-gradient(180deg, #000 0 4px, transparent 4px 11px);
+          mask-image: repeating-linear-gradient(180deg, #000 0 4px, transparent 4px 11px);
+  opacity: calc(1 - var(--t) * 1.2); transition: opacity 1.6s ease;
+}
+/* Taiwan's mountains on the horizon: only on a clear day */
+#sky .taiwan { position: absolute; left: 0; right: 0; bottom: 24vh; height: 9vh; opacity: 0; transition: opacity 1.4s ease; }
+#sky .taiwan svg { width: 100%; height: 100%; }
+body.clear #sky .taiwan { opacity: 1; }
+#sky .shade { position: absolute; inset: 0; background: linear-gradient(90deg, rgba(14,10,30,.9) 0%, rgba(14,10,30,.72) 48%, rgba(14,10,30,.2) 100%); }
+#sky .cliff { position: absolute; left: 0; bottom: 0; width: 34vw; height: 36vh; }
+
+/* ---------- Photos as wooden tally boards ---------- */
+.board {
+  position: relative; margin: 0; width: var(--w, 19vw); padding: 1.1rem .55rem .55rem;
+  background: var(--wood); border-radius: .6rem;
+  box-shadow: inset 0 0 0 2px rgba(0,0,0,.25), 0 18px 34px rgba(0,0,0,.55);
+  transform: rotate(var(--r, 0deg)); transition: transform .9s cubic-bezier(.2,.8,.2,1), opacity .7s ease;
+}
+.board::before {
+  content: ""; position: absolute; left: .7rem; right: .7rem; top: .35rem; height: .45rem;
+  background: repeating-linear-gradient(90deg, #f3dcb8 0 3px, transparent 3px 11px);
+  opacity: .8;
+}
+.slide:not(.active) .board { opacity: 0; transform: translateY(50px) rotate(var(--r, 0deg)); }
+.slide.active .board { transition-delay: calc(.4s + var(--d, 0) * .16s); }
+.slide.active .board:hover { transform: rotate(0deg) scale(1.04); transition-delay: 0s; }
+.board img { display: block; width: 100%; aspect-ratio: var(--ar, 4 / 3); object-fit: cover; border-radius: .3rem; background: #c9a983; }
+.board figcaption { color: #fff3e0; font-size: .75rem; font-weight: 700; line-height: 1.25; margin: .4rem .15rem 0; }
+
+/* ---------- Shared controls ---------- */
+.switch { display: flex; gap: .45rem; margin: .45rem 0 .65rem; flex-wrap: wrap; }
+.sbtn { font: inherit; font-weight: 700; font-size: .95rem; color: var(--ink); background: var(--panel); border: 2px solid var(--line); border-radius: 999px; padding: .25em 1em; cursor: pointer; transition: transform .2s; }
+.sbtn:hover { transform: translateY(-2px); }
+.sbtn.on { background: var(--sun); border-color: var(--sun); color: #2a1608; }
+.out { min-height: 3.2em; margin-top: .5rem; }
+
+/* Clear-day toggle */
+.weather { display: flex; gap: .5rem; justify-content: center; }
+
+/* ---------- Sound-change machine ---------- */
+.machine { display: grid; grid-template-columns: 1.1fr 1fr; gap: 1.6vw; margin-top: .7rem; text-align: left; }
+.wordbox { text-align: center; padding: 1.2rem 1rem; }
+.letters { display: flex; justify-content: center; gap: .2rem; min-height: 5.2rem; flex-wrap: wrap; }
+.letters span {
+  display: inline-grid; place-items: center; min-width: 3.1rem; height: 4.6rem; padding: 0 .3rem;
+  font: 800 3.3rem/1 var(--sans); border-radius: .6rem; background: rgba(255,255,255,.08);
+  transition: background .4s, color .4s, transform .4s;
+}
+.letters span.flash { background: var(--coral); color: #2a1206; transform: translateY(-8px) scale(1.06); }
+.letters span.done { background: var(--leaf); color: #142a10; }
+.gloss2 { color: var(--sea); font-weight: 700; margin-top: .4rem; }
+.rules { display: grid; gap: .5rem; }
+.rule { font: inherit; text-align: left; font-weight: 700; color: var(--ink); background: var(--panel); border: 2px solid var(--line); border-left: 6px solid var(--rc, var(--sun)); border-radius: .7rem; padding: .45em .9em; cursor: pointer; transition: transform .2s; }
+.rule:hover { transform: translateX(4px); }
+.rule small { display: block; font-weight: 500; color: var(--muted); font-size: .78rem; }
+#mmsg { min-height: 2.6em; font-weight: 700; color: var(--sun); }
+
+/* ---------- Counting and classifiers ---------- */
+.count3 { display: flex; gap: .7rem; justify-content: center; margin: .5rem 0; }
+.count3 .c { min-width: 7rem; background: var(--panel); border: 1px solid var(--line); border-radius: .8rem; padding: .5rem .8rem; text-align: center; }
+.count3 .c b { display: block; font-family: var(--serif); color: var(--sun); font-size: 1.6rem; line-height: 1; }
+.count3 .c > span { display: block; font-weight: 800; font-size: 1.3rem; }
+.count3 .c .line { font-size: 1.7rem; margin: .25rem 0 0; white-space: nowrap; }
+.items { display: grid; grid-template-columns: repeat(5, 1fr); gap: .55rem; margin: .5rem 0; }
+.item { font: inherit; color: var(--ink); background: var(--panel); border: 2px solid var(--line); border-radius: .8rem; padding: .5rem .2rem; cursor: pointer; text-align: center; }
+.item .ic { display: block; font-size: 2rem; line-height: 1.1; }
+.item small { display: block; font-size: .78rem; font-weight: 700; }
+.item.on { border-color: var(--sun); background: rgba(255,180,84,.18); }
+.item.solved { border-color: var(--leaf); }
+.item.solved small::after { content: " ✓"; color: var(--leaf); }
+
+/* ---------- Kaida tally board ---------- */
+.ledger { display: grid; gap: .6rem; margin-top: .5rem; }
+.lrow { display: grid; grid-template-columns: 4.2rem 1fr auto; gap: .8rem; align-items: center; background: #f3e3c6; color: #2a1608; border-radius: .7rem; padding: .45rem .7rem; }
+.lrow svg { width: 3.4rem; height: 3.4rem; }
+.tally { display: flex; gap: .55rem; flex-wrap: wrap; align-items: center; min-height: 2.6rem; }
+.tally .grp { position: relative; display: flex; gap: .3rem; }
+.tally .grp i { width: .28rem; height: 2.3rem; border-radius: 2px; background: #2a1608; }
+.tally .grp.five::after { content: ""; position: absolute; left: -.3rem; right: -.3rem; top: 50%; height: .28rem; background: #b3261e; transform: rotate(-18deg); border-radius: 2px; }
+.lbtns { display: flex; gap: .3rem; }
+.lbtns button { width: 2.2rem; height: 2.2rem; border-radius: 50%; border: 0; background: #2a1608; color: #f3e3c6; font: 800 1.2rem var(--sans); cursor: pointer; }
+.order { font-size: 1.05rem; }
+.order b { color: var(--sun); }
+#kmsg { min-height: 2.6em; font-weight: 700; }
+
+/* ---------- Timeline ---------- */
+.tl { display: grid; grid-template-columns: repeat(6, 1fr); gap: .6rem; margin-top: 1rem; position: relative; padding-bottom: 1.4rem; }
+.tl::after { content: ""; position: absolute; left: 0; right: 0; bottom: .45rem; height: 3px; border-radius: 3px; background: linear-gradient(90deg, var(--sun), var(--coral), var(--dusk)); }
+.ev { font: inherit; text-align: left; color: #2a1608; background: var(--ec); border: 0; border-radius: .9rem; padding: .7rem .8rem; cursor: pointer; transition: transform .25s, box-shadow .25s; }
+.ev:hover { transform: translateY(-4px); }
+.ev.on { box-shadow: 0 0 0 3px #fff, 0 10px 24px rgba(0,0,0,.4); transform: translateY(-6px); }
+.ev .yr { font-family: var(--serif); font-weight: 800; font-size: 1.55rem; line-height: 1; display: block; }
+.ev small { display: block; font-weight: 700; font-size: .8rem; margin-top: .3rem; }
+#tltext { min-height: 5.4rem; margin-top: .4rem; }
+
+/* ---------- Horse chart and moth ---------- */
+.colchart { display: flex; align-items: flex-end; gap: 2rem; height: 22vh; padding: .6rem 1.4rem 0; }
+.col { flex: 1; height: 100%; display: flex; flex-direction: column; align-items: center; justify-content: flex-end; }
+.col .n { font-family: var(--serif); font-size: 1.7rem; font-weight: 800; }
+.col .colbar { width: 100%; max-width: 6rem; height: 0; border-radius: .7rem .7rem 0 0; background: var(--c); transition: height 1.5s cubic-bezier(.2,.8,.2,1) .8s; }
+.slide.active .col .colbar { height: var(--h); }
+.col .y { color: var(--muted); font-size: .82rem; margin-top: .3rem; }
+.moth { position: relative; width: 17vw; height: 11vw; cursor: pointer; border: 0; background: none; padding: 0; }
+.moth .wing { position: absolute; top: 0; width: 50%; height: 100%; transition: transform .8s cubic-bezier(.3,1.4,.5,1); }
+.moth .wing.l { left: 0; transform-origin: right center; }
+.moth .wing.r { right: 0; transform-origin: left center; }
+.moth:not(.open) .wing.l { transform: scaleX(.18); }
+.moth:not(.open) .wing.r { transform: scaleX(.18); }
+.moth .body { position: absolute; left: 50%; top: 22%; width: 1.1vw; height: 60%; margin-left: -.55vw; border-radius: 1vw; background: #5a2e16; }
+#mothname { min-height: 4.6rem; text-align: center; }
+
+/* ---------- Underwater mystery ---------- */
+.vote { display: flex; gap: .7rem; justify-content: center; margin: .6rem 0; flex-wrap: wrap; }
+.vote .sbtn { font-size: 1.1rem; padding: .45em 1.3em; }
+.meter { height: 1.3rem; border-radius: 999px; background: rgba(255,255,255,.14); overflow: hidden; display: flex; max-width: 46vw; margin: .4rem auto 0; }
+.meter b { height: 100%; transition: width .8s ease; }
+.meter .nat { background: var(--sea); width: 50%; }
+.meter .hum { background: var(--coral); width: 50%; }
+.meterlbl { display: flex; justify-content: space-between; max-width: 46vw; margin: .25rem auto 0; font-size: .8rem; color: var(--muted); }
+
+/* ---------- Quiz tint ---------- */
+.opt.right { background: var(--leaf); }
+.opt.wrong { background: var(--coral); }
+
+.quote { font-family: var(--serif); font-size: 1.85rem; font-weight: 800; line-height: 1.2; color: var(--sun); }
+
+@media (max-width: 820px) {
+  .slide { padding: 6vh 6vw 12vh; }
+  h1 { font-size: 3.8rem; }
+  .text, .text.wide { max-width: none; width: auto; }
+  .stage { position: relative; inset: auto; width: 100%; margin-top: 1.5rem; }
+  .board { width: 76vw; }
+  .stage .panel, .stage .speak { width: 100% !important; max-width: none !important; }
+  .machine { grid-template-columns: 1fr; }
+  .items { grid-template-columns: repeat(3, 1fr); }
+  .tl { grid-template-columns: repeat(2, 1fr); }
+  .moth { width: 50vw; height: 32vw; }
+  .meter, .meterlbl { max-width: 100%; }
+  #sky .sun { width: 26vw; height: 26vw; right: 8vw; }
+}
+</style>
+</head>
+<body data-map="BlankMap-Equirectangular.svg">
+
+<div id="sky" aria-hidden="true">
+  <div class="layer night"></div>
+  <div class="layer dusk"></div>
+  <div class="layer day"></div>
+  <div class="stars"></div>
+  <div class="sun"></div>
+  <div class="taiwan">
+    <svg viewBox="0 0 1600 100" preserveAspectRatio="none"><path d="M0 100 L0 92 L120 86 L260 70 L340 58 L420 64 L520 40 L600 52 L690 22 L760 38 L850 18 L930 44 L1020 36 L1120 60 L1240 70 L1380 84 L1600 92 L1600 100 Z" fill="#8a7fc4"/></svg>
+  </div>
+  <div class="sea"></div>
+  <div class="glow"></div>
+  <svg class="cliff" viewBox="0 0 500 300" preserveAspectRatio="none"><path d="M0 300 V60 L80 40 L170 70 L260 90 L330 130 L380 170 L420 230 L450 300 Z" fill="#0f0b1f"/><path d="M300 112 h8 v-26 h-8 z M296 86 h16 l-8 -10 z" fill="#0f0b1f"/></svg>
+  <div class="shade"></div>
+</div>
+<div class="progress"></div>
+
+<main>
+
+<!-- 1. Title -->
+<section class="slide" style="--accent: var(--sun)">
+  <div class="text">
+    <p class="kicker in">Rare Languages of the Asia-Pacific · Module 17</p>
+    <h1 class="in" style="--d:1">Yonaguni</h1>
+    <p class="in jp" style="--d:2; font-size:1.6rem; font-weight:800; color:var(--sun)">Dunan munui · ドゥナンムヌイ</p>
+    <div class="bar in" style="--d:3"></div>
+    <p class="lead in" style="--d:4">The language of the island where Japan sees its last sunset</p>
+    <p class="muted in" style="--d:5">Watch the sky: the sun sets a little more with every slide.</p>
+  </div>
+  <div class="stage">
+    <figure class="board" style="--w:27vw; --r:-1.5deg; --d:0">
+      <img data-wiki="Yonaguni" data-width="1200" alt="Yonaguni Island">
+      <figcaption>Yonaguni Island, at the far western edge of Japan</figcaption>
+    </figure>
+  </div>
+</section>
+
+<!-- 2. Where and who -->
+<section class="slide" data-tr="left" style="--accent: var(--sea)">
+  <div class="text">
+    <p class="kicker in">Where and who</p>
+    <h2 class="in" style="--d:1">An island at the edge of the map</h2>
+    <div class="bar in" style="--d:2"></div>
+    <ul class="dots">
+      <li class="in" style="--d:3">Yonaguni is Japan's <strong>westernmost inhabited island</strong>. Islanders call it <span class="hl">Dunan</span>, and their language <span class="hl">Dunan munui</span>, "Dunan words."</li>
+      <li class="in" style="--d:4">It is a <strong>Ryukyuan</strong> language. It is related to Japanese, but Japanese speakers can't understand it. Japan's government still calls it a "dialect."</li>
+      <li class="in" style="--d:5">About <strong>1,700</strong> people live on the island. In 2015, about <strong>400</strong> spoke the language, almost all of them older adults.</li>
+      <li class="in" style="--d:6">UNESCO lists it as <strong>severely endangered</strong>.</li>
+    </ul>
+  </div>
+  <div class="stage">
+    <div class="loc" data-lat="24.45" data-lon="122.99" data-zoom="9" style="--s:15vw; --d:0">
+      <div class="disc"><div class="lmap"></div><div class="tint"></div><div class="sea"></div><span class="pinpt"></span></div>
+      <span class="tag">Yonaguni, Okinawa, Japan</span>
+    </div>
+    <div class="panel in" style="--d:4; max-width:34vw; text-align:center">
+      <strong>Taiwan is only about 110 km away.</strong> On a few clear days a year, you can see its mountains from the island. Change the weather and look at the horizon:
+      <div class="weather" style="margin-top:.6rem">
+        <button class="sbtn on" data-sky="hazy">☁️ Hazy day</button>
+        <button class="sbtn" data-sky="clear">☀️ Clear day</button>
+      </div>
+      <p class="note" id="skynote" style="margin:.5rem 0 0">Most days, the horizon is just sea.</p>
+    </div>
+  </div>
+</section>
+
+<!-- 3. Greetings -->
+<section class="slide" style="--accent: var(--coral)">
+  <div class="text">
+    <p class="kicker in">Speak along</p>
+    <h2 class="in" style="--d:1">Welcome to Dunan!</h2>
+    <div class="bar in" style="--d:2"></div>
+    <p class="in" style="--d:3">Visitors to the island almost always hear these two words. Say them together, then click a card to reveal its meaning.</p>
+    <div class="cards in" style="--d:4; grid-template-columns:1fr 1fr; max-width:42vw">
+      <div class="card" style="--cardc: var(--sun)"><div class="word">waari</div><div class="say"><span class="jp">ワーリー</span> · WAH-ree</div><div class="meaning">"Welcome!"</div><div class="tap">click to reveal</div></div>
+      <div class="card" style="--cardc: var(--sea)"><div class="word">fugarassa</div><div class="say"><span class="jp">フガラッサ</span> · foo-gah-RAHS-sah</div><div class="meaning">"Thank you!"</div><div class="tap">click to reveal</div></div>
+    </div>
+    <p class="note in" style="--d:5; margin-top:.8rem">Compare: Japanese "thank you" is <em>arigatō</em>. Different words, from related languages!</p>
+    <p class="note in" style="--d:6">Pronunciation guides are approximate. Some sources spell "thank you" as <em>fugarasa</em>.</p>
+  </div>
+  <div class="stage">
+    <div class="speak panel in" data-tempo="560" style="--d:3; width:34vw">
+      <div class="line" data-syl="waa·ri"></div><p class="gloss">welcome</p>
+      <div class="line" data-syl="fu·ga·ras·sa"></div><p class="gloss">thank you</p>
+      <button class="btn play">▶ Speak along</button>
+      <p class="note" style="margin-top:.7rem">Try it: greet the person next to you with <strong>waari</strong>, and they answer <strong>fugarassa</strong>.</p>
+    </div>
+  </div>
+</section>
+
+<!-- 4. Sound-change machine -->
+<section class="slide" data-tr="zoom" style="--accent: var(--sun)">
+  <div class="text wide center">
+    <p class="kicker in">Language lab</p>
+    <h2 class="in" style="--d:1">The sound-change machine</h2>
+    <div class="bar in" style="--d:2"></div>
+    <p class="in" style="--d:3; max-width:74vw; margin:0 auto">Japanese and Dunan munui grew from the same ancestor language. Over centuries, Dunan sounds changed in regular ways. Dunan munui has only three main vowels, <strong>a, i, u</strong>, instead of Japanese's five. Pick a Japanese word, then click the rules to turn it into Dunan munui.</p>
+    <div class="machine">
+      <div class="panel wordbox in" style="--d:4">
+        <div class="switch" id="mwords" style="justify-content:center">
+          <button class="sbtn on" data-v="0">yama</button><button class="sbtn" data-v="1">yoru</button><button class="sbtn" data-v="2">wakamono</button><button class="sbtn" data-v="3">yū</button>
+        </div>
+        <div class="letters" id="letters" aria-live="polite"></div>
+        <div class="gloss2" id="mgloss"></div>
+        <div id="mmsg"></div>
+        <button class="linkbtn sbtn" id="mreset" style="font-size:.8rem">↺ start again</button>
+      </div>
+      <div class="rules in" style="--d:5">
+        <button class="rule" data-r="y" style="--rc: var(--sun)">y → d<small>at the start of a word</small></button>
+        <button class="rule" data-r="w" style="--rc: var(--coral)">w → b<small>at the start of a word</small></button>
+        <button class="rule" data-r="k" style="--rc: var(--dusk)">k → g<small>between two vowels</small></button>
+        <button class="rule" data-r="o" style="--rc: var(--sea)">o → u<small>only three vowels!</small></button>
+        <button class="rule" data-r="e" style="--rc: var(--leaf)">e → i<small>only three vowels!</small></button>
+      </div>
+    </div>
+    <p class="note in" style="--d:6; margin-top:.6rem">Even the island's two names, Japanese <strong>Yonaguni</strong> and local <strong>Dunan</strong>, are related. Real languages have exceptions, so these rules don't work for every word.</p>
+  </div>
+</section>
+
+<!-- 5. Counting and classifiers -->
+<section class="slide" data-tr="left" style="--accent: var(--leaf)">
+  <div class="text">
+    <p class="kicker in">Counting</p>
+    <h2 class="in" style="--d:1">One, two, three… what?</h2>
+    <div class="bar in" style="--d:2"></div>
+    <p class="in" style="--d:3">To count things in Dunan munui, you add a <strong>counter word</strong> that depends on <em>what</em> you're counting. The ending <strong>-ci</strong> is for everyday objects:</p>
+    <div class="speak panel compact in" data-tempo="560" style="--d:4; padding:.8rem 1rem">
+      <div class="count3">
+        <div class="c"><b>1</b><span class="line" data-syl="ttū·ci"></span></div>
+        <div class="c"><b>2</b><span class="line" data-syl="ttā·ci"></span></div>
+        <div class="c"><b>3</b><span class="line" data-syl="mī·ci"></span></div>
+      </div>
+      <button class="btn play">▶ Count along</button>
+    </div>
+    <p class="in" style="--d:5; margin-top:.6rem"><strong>English does this too!</strong> We say "a <em>sheet</em> of paper," "a <em>loaf</em> of bread," "a <em>herd</em> of horses."</p>
+    <p class="note in" style="--d:6">The tt is a long, strong t. Counter words are from Omniglot's Yonaguni pages.</p>
+  </div>
+  <div class="stage">
+    <div class="panel in" style="--d:3; width:37vw">
+      <strong>Counter-word match:</strong> click something to count, then pick its counter word.
+      <div class="items" id="items">
+        <button class="item" data-ans="taintu"><span class="ic">🧒</span><small>children</small></button>
+        <button class="item" data-ans="gara"><span class="ic">🐎</span><small>horses</small></button>
+        <button class="item" data-ans="ira"><span class="ic">📄</span><small>paper</small></button>
+        <button class="item" data-ans="mutu"><span class="ic">🌳</span><small>trees</small></button>
+        <button class="item" data-ans="ci"><span class="ic">🪨</span><small>stones</small></button>
+      </div>
+      <div class="switch" id="suffix" style="justify-content:center">
+        <button class="sbtn" data-s="ci">-ci</button><button class="sbtn" data-s="taintu">-taintu</button><button class="sbtn" data-s="gara">-gara</button><button class="sbtn" data-s="ira">-ira</button><button class="sbtn" data-s="mutu">-mutu</button>
+      </div>
+      <p class="out" id="cmsg" aria-live="polite">Hint: one is for people, one for animals, one for flat things, one for trees, and one for everyday objects.</p>
+    </div>
+  </div>
+</section>
+
+<!-- 6. Kaida glyphs -->
+<section class="slide" style="--accent: var(--coral)">
+  <div class="text">
+    <p class="kicker in">Writing without an alphabet</p>
+    <h2 class="in" style="--d:1">Kaidā: pictures that kept count</h2>
+    <div class="bar in" style="--d:2"></div>
+    <ul class="dots">
+      <li class="in" style="--d:3">In the 1600s, rulers placed a heavy <strong>head tax</strong> on the islands. Every adult owed goods like grain and cloth.</li>
+      <li class="in" style="--d:4">Few islanders could read or write Japanese or Chinese characters. So they used <span class="hl">kaidā</span>: about 70–80 <strong>picture signs</strong> for goods, plus marks for numbers and family symbols.</li>
+      <li class="in" style="--d:5">Anyone could "read" a kaidā record, whatever language they spoke. It was used until Japanese schooling arrived in the late 1800s.</li>
+    </ul>
+    <p class="note in" style="--d:6">Nae Ikema, born in 1919, was one of the last people with detailed knowledge of these signs.</p>
+  </div>
+  <div class="stage">
+    <div class="panel in" style="--d:3; width:37vw">
+      <strong>Be the island record-keeper!</strong>
+      <p class="order" id="korder">Record this family's tax: <b>3</b> rice, <b>6</b> millet, <b>2</b> cloth.</p>
+      <div class="ledger" id="ledger">
+        <div class="lrow" data-good="rice">
+          <svg viewBox="0 0 60 60" aria-label="Picture sign for rice"><path d="M30 56 V18" stroke="#2a1608" stroke-width="4"/><path d="M30 18 C22 14 20 6 24 2 M30 26 C20 24 16 16 18 10 M30 26 C40 24 44 16 42 10 M30 18 C38 14 40 6 36 2" stroke="#2a1608" stroke-width="3" fill="none"/></svg>
+          <div class="tally"></div>
+          <div class="lbtns"><button aria-label="Remove one rice">−</button><button aria-label="Add one rice">+</button></div>
+        </div>
+        <div class="lrow" data-good="millet">
+          <svg viewBox="0 0 60 60" aria-label="Picture sign for millet"><path d="M30 56 V30" stroke="#2a1608" stroke-width="4"/><ellipse cx="30" cy="18" rx="9" ry="15" fill="none" stroke="#2a1608" stroke-width="3"/><path d="M24 12 h12 M22 19 h16 M24 26 h12" stroke="#2a1608" stroke-width="2"/></svg>
+          <div class="tally"></div>
+          <div class="lbtns"><button aria-label="Remove one millet">−</button><button aria-label="Add one millet">+</button></div>
+        </div>
+        <div class="lrow" data-good="cloth">
+          <svg viewBox="0 0 60 60" aria-label="Picture sign for cloth"><rect x="10" y="12" width="40" height="36" fill="none" stroke="#2a1608" stroke-width="3"/><path d="M10 24 h40 M10 36 h40 M23 12 v36 M37 12 v36" stroke="#2a1608" stroke-width="2"/></svg>
+          <div class="tally"></div>
+          <div class="lbtns"><button aria-label="Remove one cloth">−</button><button aria-label="Add one cloth">+</button></div>
+        </div>
+      </div>
+      <p class="out" style="margin-bottom:.3rem"><button class="btn" id="kcheck">Check my record</button></p>
+      <p id="kmsg" aria-live="polite"></p>
+      <p class="note" style="margin:0">These pictures and tally marks are simplified for this activity. Real kaidā signs looked different.</p>
+    </div>
+  </div>
+</section>
+
+<!-- 7. History timeline -->
+<section class="slide" data-tr="zoom" style="--accent: var(--dusk)">
+  <div class="text wide">
+    <p class="kicker in">Island history</p>
+    <h2 class="in" style="--d:1">Five hundred years on Dunan</h2>
+    <div class="bar in" style="--d:2"></div>
+    <p class="in" style="--d:3">Click each moment to explore it.</p>
+    <div class="tl in" id="tl" style="--d:4">
+      <button class="ev" style="--ec: var(--sun)"><span class="yr">c. 1500</span><small>The woman chief</small></button>
+      <button class="ev" style="--ec: #ffc98a"><span class="yr">1500s</span><small>Ryukyu Kingdom</small></button>
+      <button class="ev" style="--ec: var(--coral)"><span class="yr">1600s</span><small>The head tax</small></button>
+      <button class="ev" style="--ec: #e9a3c9"><span class="yr">1879</span><small>Part of Japan</small></button>
+      <button class="ev" style="--ec: var(--dusk)"><span class="yr">1945–50s</span><small>The trading boom</small></button>
+      <button class="ev" style="--ec: var(--sea)"><span class="yr">Today</span><small>A small island</small></button>
+    </div>
+    <div class="panel in" id="tltext" style="--d:5" aria-live="polite"></div>
+  </div>
+</section>
+
+<!-- 8. Horse and moth -->
+<section class="slide" style="--accent: var(--leaf)">
+  <div class="text">
+    <p class="kicker in">Island life</p>
+    <h2 class="in" style="--d:1">Small horses and giant moths</h2>
+    <div class="bar in" style="--d:2"></div>
+    <p class="in" style="--d:3">The <strong>Yonaguni horse</strong> is one of only eight horse breeds native to Japan. These small, gentle horses once worked the fields. When tractors arrived, their numbers crashed. In 1976, the town named them a <strong>natural treasure</strong>.</p>
+    <div class="panel in" style="--d:4; margin-top:.5rem">
+      <strong>Yonaguni horses</strong>
+      <div class="colchart">
+        <div class="col"><div class="n">under 60</div><div class="colbar" style="--h:42%; --c: var(--coral)"></div><div class="y">1975</div></div>
+        <div class="col"><div class="n">about 130</div><div class="colbar" style="--h:92%; --c: var(--leaf)"></div><div class="y">recent count</div></div>
+      </div>
+    </div>
+    <p class="note in" style="--d:5">Saving a species and saving a language take the same thing: people who care, starting before it's too late.</p>
+  </div>
+  <div class="stage">
+    <figure class="board" style="--w:19vw; --r:2deg; --d:1">
+      <img data-wiki="Yonaguni horse" alt="A Yonaguni horse">
+      <figcaption>A Yonaguni horse</figcaption>
+    </figure>
+    <div class="panel in" style="--d:3; width:30vw; text-align:center">
+      <button class="moth" id="moth" aria-label="Open the moth's wings">
+        <svg class="wing l" viewBox="0 0 100 120"><path d="M100 30 C70 0 20 0 4 20 C-4 50 20 70 40 74 C20 86 24 116 56 116 C80 110 96 80 100 64 Z" fill="#b5532a"/><path d="M70 30 l10 6 -4 12 -10 -4 Z M58 84 l8 4 -3 9 -8 -3 Z" fill="#f6e7c4"/><path d="M8 24 C20 20 30 30 26 40" stroke="#f6e7c4" stroke-width="4" fill="none"/></svg>
+        <svg class="wing r" viewBox="0 0 100 120"><path d="M0 30 C30 0 80 0 96 20 C104 50 80 70 60 74 C80 86 76 116 44 116 C20 110 4 80 0 64 Z" fill="#b5532a"/><path d="M30 30 l-10 6 4 12 10 -4 Z M42 84 l-8 4 3 9 8 -3 Z" fill="#f6e7c4"/><path d="M92 24 C80 20 70 30 74 40" stroke="#f6e7c4" stroke-width="4" fill="none"/></svg>
+        <span class="body"></span>
+      </button>
+      <div id="mothname" aria-live="polite"><strong>Click the moth to open its wings.</strong></div>
+    </div>
+  </div>
+</section>
+
+<!-- 9. Underwater mystery -->
+<section class="slide" data-tr="zoom" style="--accent: var(--sea)">
+  <div class="text wide center">
+    <p class="kicker in">Think like a scientist</p>
+    <h2 class="in" style="--d:1">The mystery under the sea</h2>
+    <div class="bar in" style="--d:2"></div>
+    <p class="in" style="--d:3; max-width:72vw; margin:0 auto">In 1986, a diver off Yonaguni found giant underwater rocks with flat "terraces," straight edges and steps. People have argued ever since: <strong>natural, or carved by people long ago?</strong> Vote first, then flip the evidence cards.</p>
+    <div class="vote in" style="--d:4" id="vote">
+      <button class="sbtn" data-v="nat">🌊 Natural rock</button>
+      <button class="sbtn" data-v="hum">🛠️ Made by people</button>
+    </div>
+    <div class="in" style="--d:4">
+      <div class="meter"><b class="nat"></b><b class="hum"></b></div>
+      <div class="meterlbl"><span>natural</span><span id="votecount">click to vote (as many as you like!)</span><span>made by people</span></div>
+    </div>
+    <div class="cards compact in" style="--d:5; grid-template-columns: repeat(3, 1fr); margin-top:.9rem; max-width:80vw; margin-left:auto; margin-right:auto">
+      <div class="card" style="--cardc: var(--coral)"><div class="word">Straight lines</div><div class="meaning">One geologist, Masaaki Kimura, thinks people carved the steps when sea levels were lower, perhaps 10,000 years ago.</div><div class="tap">click</div></div>
+      <div class="card" style="--cardc: var(--sea)"><div class="word">Rock that splits</div><div class="meaning">Other geologists, like Robert Schoch, point out that this sandstone naturally breaks along very straight, flat lines.</div><div class="tap">click</div></div>
+      <div class="card" style="--cardc: var(--sun)"><div class="word">Missing clues</div><div class="meaning">No tools, pottery or other human objects have been found at the site. Most scientists think it's natural.</div><div class="tap">click</div></div>
+    </div>
+    <p class="note in" style="--d:6; margin-top:.6rem">Ask yourself: what evidence would change your mind?</p>
+  </div>
+  <figure class="board" style="--w:14vw; --r:-2deg; --d:3; position:absolute; left:3vw; bottom:9vh">
+    <img data-wiki="Yonaguni Monument" alt="Yonaguni Monument underwater">
+    <figcaption>The Yonaguni Monument</figcaption>
+  </figure>
+</section>
+
+<!-- 10. Fading and hope -->
+<section class="slide" data-tr="left" style="--accent: var(--coral)">
+  <div class="text">
+    <p class="kicker in">Why it matters now</p>
+    <h2 class="in" style="--d:1">Will children speak Dunan munui?</h2>
+    <div class="bar in" style="--d:2"></div>
+    <ul class="dots">
+      <li class="in" style="--d:3">School, TV and phones are in <strong>Japanese</strong>. Most children grow up speaking only Japanese.</li>
+      <li class="in" style="--d:4">Yonaguni has <strong>no high school</strong>, so most teens leave the island at age 15, often for good.</li>
+      <li class="in" style="--d:5">Calling it a "dialect" made many people think it wasn't worth protecting.</li>
+    </ul>
+    <div class="cards compact in" style="--d:6; grid-template-columns: repeat(3, 1fr); margin-top:.7rem">
+      <div class="card" style="--cardc: var(--sun)"><div class="word">2003</div><div class="meaning">Nae Ikema publishes a Yonaguni dictionary of over 370 pages.</div><div class="tap">click</div></div>
+      <div class="card" style="--cardc: var(--leaf)"><div class="word">2019</div><div class="meaning">The town's board of education publishes the <em>Dunan Munui Dictionary</em>, with a bigger 2nd edition in 2021.</div><div class="tap">click</div></div>
+      <div class="card" style="--cardc: var(--sea)"><div class="word">Online</div><div class="meaning">Speakers record videos so anyone in the world can hear the language, such as Wikitongues' "Naruko speaking Dunan" (2019).</div><div class="tap">click</div></div>
+    </div>
+  </div>
+  <div class="stage">
+    <div class="panel in" style="--d:3; width:34vw">
+      <strong>Out of every 100 islanders in 2015…</strong>
+      <div class="dotgrid" data-total="100" data-on="25" style="margin-top:.6rem; grid-template-columns: repeat(10, 1fr)"></div>
+      <div class="legend"><span style="--c: var(--rose)">about 25 spoke Dunan munui</span><span style="--c: rgba(255,255,255,.3)">about 75 did not</span></div>
+      <p class="note" style="margin:.4rem 0 0">Estimates differ. One recent source says fewer than 100 fluent speakers remained in 2023.</p>
+    </div>
+    <div class="panel in" style="--d:5; width:34vw">
+      <strong>Your turn:</strong> If you made a dictionary of <em>your</em> family's or friends' special words, what three words would you put in first?
+    </div>
+  </div>
+</section>
+
+<!-- 11. Quiz -->
+<section class="slide" style="--accent: var(--sun)">
+  <div class="text wide center">
+    <p class="kicker in">Sunset review</p>
+    <h2 class="in" style="--d:1">Quick quiz!</h2>
+    <div class="bar in" style="--d:2"></div>
+    <div class="quizgrid">
+      <div class="quiz panel in" style="--d:3" data-right="Yes! Japanese y- often becomes d- in Dunan munui." data-wrong="Hint: use the y → d and o → u rules.">
+        <div class="q">Japanese <em>yoru</em> means "night." What is it in Dunan munui?</div>
+        <div class="options"><button class="opt">yuru</button><button class="opt" data-correct>duru</button><button class="opt">boru</button></div>
+        <div class="feedback"></div>
+      </div>
+      <div class="quiz panel in" style="--d:4" data-right="Right! Pictures anyone could read." data-wrong="Hint: think about taxes and goods.">
+        <div class="q">What were kaidā signs mainly used for?</div>
+        <div class="options"><button class="opt">Writing songs</button><button class="opt" data-correct>Recording taxes</button><button class="opt">Road signs</button></div>
+        <div class="feedback"></div>
+      </div>
+      <div class="quiz panel in" style="--d:5" data-right="Fugarassa! (That means thank you.)" data-wrong="Hint: you practised it with a partner.">
+        <div class="q">How do you say "thank you" in Dunan munui?</div>
+        <div class="options"><button class="opt">waari</button><button class="opt">arigatō</button><button class="opt" data-correct>fugarassa</button></div>
+        <div class="feedback"></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- 12. Closing -->
+<section class="slide end" style="--accent: var(--sun)">
+  <div class="text">
+    <h1 class="in" style="font-size:5.6rem">Fugarassa!</h1>
+    <p class="lead in" style="--d:1; margin-top:.8rem">Thank you! Questions?</p>
+    <p class="quote in" style="--d:2">The sun sets on Dunan every night, and rises again in the morning. A language can come back too, if people keep speaking it.</p>
+  </div>
+  <details class="fine in" style="--d:3">
+    <summary>Sources &amp; image credits</summary>
+    <div class="box">
+      <h4>Sources</h4>
+      <ul>
+        <li><a href="https://en.wikipedia.org/wiki/Yonaguni_language">Yonaguni language (Wikipedia)</a></li>
+        <li><a href="https://ja.wikipedia.org/wiki/%E4%B8%8E%E9%82%A3%E5%9B%BD%E8%AA%9E">与那国語 (Wikipedia, Japanese)</a></li>
+        <li><a href="https://ja.wikibooks.org/wiki/%E4%B8%8E%E9%82%A3%E5%9B%BD%E8%AA%9E">与那国語 (Wikibooks, Japanese): dama, dū</a></li>
+        <li><a href="https://webfrance.hakusuisha.co.jp/posts/6709">Shimabukuro Moriyo: 「わかもの」は「ばかもの」？ (Hakusuisha)</a></li>
+        <li><a href="https://endangeredlanguages.com/lang/3170">Endangered Languages Project: Dunan</a></li>
+        <li><a href="https://omniglot.com/writing/yonaguni.htm">Omniglot: Yonaguni</a></li>
+        <li><a href="https://omniglot.com/language/numbers/yonaguni.htm">Omniglot: Numbers in Yonaguni</a></li>
+        <li><a href="https://en.wikivoyage.org/wiki/Yonaguni">Wikivoyage: Yonaguni (waari, fugarassa)</a></li>
+        <li><a href="https://en.wikipedia.org/wiki/Kaid%C4%81_glyphs">Kaidā glyphs (Wikipedia)</a></li>
+        <li><a href="https://www.l.u-tokyo.ac.jp/postgraduate/database/2015/165.html">University of Tokyo: thesis on kaidā glyphs</a></li>
+        <li><a href="https://ci.nii.ac.jp/ncid/BA71832222">CiNii: Ikema Nae, 与那国語辞典 (2003)</a></li>
+        <li><a href="https://ryukyushimpo.jp/news/entry-1353002.html">Ryukyu Shimpo: どぅなんむぬい辞典 2nd edition</a></li>
+        <li><a href="https://en.wikipedia.org/wiki/Yonaguni,_Okinawa">Yonaguni, Okinawa (Wikipedia)</a></li>
+        <li><a href="https://www.peace-museum.okinawa.jp/testimony/en/?p=132">Okinawa Peace Museum: My life during Yonaguni's prosperous era</a></li>
+        <li><a href="https://www.rfa.org/english/special-reports/yonaguni-island/">Radio Free Asia: Yonaguni island</a></li>
+        <li><a href="https://asianews.network/japans-westernmost-island-yonaguni-and-taiwan-dream-of-renewed-bonds/">Asia News Network: Yonaguni and Taiwan</a></li>
+        <li><a href="https://www.taipeitimes.com/News/taiwan/archives/2019/07/13/2003718597">Taipei Times (2019): seeing across the sea</a></li>
+        <li><a href="https://en.wikipedia.org/wiki/Yonaguni_horse">Yonaguni horse (Wikipedia)</a></li>
+        <li><a href="https://www.inkl.com/news/okinawa-yonaguni-s-indigenous-horses-bred-with-care">Okinawa: Yonaguni's indigenous horses bred with care</a></li>
+        <li><a href="https://japan-guide.com/e/e7275.html">japan-guide.com: Yonaguni</a></li>
+        <li><a href="https://explorersweb.com/exploration-mysteries-yonaguni-monument/">ExplorersWeb: the Yonaguni Monument</a></li>
+        <li><a href="https://www.maff.go.jp/j/syokuiku/jirei/todoufuken/attach/pdf/okinawa-15.pdf">MAFF: Yonaguni food education (no high school)</a></li>
+        <li><a href="https://wikitongues.org/videos/naruko_20190627_yoi-jpn/">Wikitongues: Naruko speaking Dunan</a></li>
+      </ul>
+      <h4>Images (Wikimedia Commons)</h4>
+      <ul id="credits"></ul>
+    </div>
+  </details>
+</section>
+
+</main>
+
+<nav class="controls">
+  <button id="prev" aria-label="Previous slide">‹</button>
+  <span id="counter">1 / 12</span>
+  <button id="next" aria-label="Next slide">›</button>
+  <button id="fs" aria-label="Fullscreen">⤢</button>
+</nav>
+<p class="hint">Use ← → to move. Press F for fullscreen.</p>
+
+<!-- Yonaguni effects: setting sun, clear-day horizon, sound-change machine, counters, kaidā tally, timeline, moth, vote -->
+<script>
+(function () {
+  /* ---------- Sky ---------- */
+  var stars = document.querySelector("#sky .stars");
+  for (var k = 0; k < 70; k++) {
+    var s = document.createElement("i");
+    s.style.left = Math.random() * 100 + "%";
+    s.style.top = Math.random() * 100 + "%";
+    s.style.animationDelay = (-Math.random() * 3) + "s";
+    if (Math.random() < .2) { s.style.width = "3px"; s.style.height = "3px"; }
+    stars.appendChild(s);
+  }
+  var skyChoice = "hazy";
+  document.addEventListener("slidechange", function (e) {
+    document.body.style.setProperty("--t", e.detail.index / (e.detail.total - 1));
+    document.body.classList.toggle("clear", skyChoice === "clear" && e.detail.index === 1);
+  });
+
+  function single(selector, callback) {
+    var group = document.querySelectorAll(selector);
+    group.forEach(function (b) {
+      b.addEventListener("click", function () {
+        group.forEach(function (x) { x.classList.remove("on"); });
+        b.classList.add("on");
+        callback(b);
+      });
+    });
+  }
+
+  single("[data-sky]", function (b) {
+    skyChoice = b.dataset.sky;
+    document.body.classList.toggle("clear", skyChoice === "clear");
+    document.getElementById("skynote").textContent = skyChoice === "clear"
+      ? "Look at the horizon! On the clearest days, Taiwan's mountains appear across the sea."
+      : "Most days, the horizon is just sea.";
+  });
+
+  /* ---------- Sound-change machine ---------- */
+  var WORDS = [
+    { jp: "yama", yo: "dama", en: "mountain" },
+    { jp: "yoru", yo: "duru", en: "night" },
+    { jp: "wakamono", yo: "bagamunu", en: "young person" },
+    { jp: "yū", yo: "dū", en: "evening" }
+  ];
+  var RULES = {
+    y: function (w) { return w.replace(/^y/, "d"); },
+    w: function (w) { return w.replace(/^w/, "b"); },
+    k: function (w) { return w.replace(/([aeiouāīūēō])k(?=[aeiouāīūēō])/g, "$1g"); },
+    o: function (w) { return w.replace(/o/g, "u").replace(/ō/g, "ū"); },
+    e: function (w) { return w.replace(/e/g, "i").replace(/ē/g, "ī"); }
+  };
+  var cur = 0, word = "";
+  var lettersEl = document.getElementById("letters");
+  var mmsg = document.getElementById("mmsg");
+  function draw(changed, done) {
+    lettersEl.innerHTML = "";
+    word.split("").forEach(function (ch, i) {
+      var span = document.createElement("span");
+      span.textContent = ch;
+      if (done) span.className = "done";
+      else if (changed && changed[i]) span.className = "flash";
+      lettersEl.appendChild(span);
+    });
+  }
+  function loadWord(i) {
+    cur = i; word = WORDS[i].jp;
+    document.getElementById("mgloss").textContent = "Japanese: " + WORDS[i].jp + ", \"" + WORDS[i].en + "\"";
+    mmsg.textContent = "Which rules apply? Click them on the right.";
+    draw();
+  }
+  single("#mwords .sbtn", function (b) { loadWord(Number(b.dataset.v)); });
+  document.querySelectorAll(".rule").forEach(function (r) {
+    r.addEventListener("click", function () {
+      var next = RULES[r.dataset.r](word);
+      if (next === word) { mmsg.textContent = "That rule doesn't change this word. Try another!"; return; }
+      var changed = next.split("").map(function (ch, i) { return ch !== word[i]; });
+      word = next;
+      if (word === WORDS[cur].yo) {
+        draw(changed);
+        mmsg.textContent = "";
+        setTimeout(function () {
+          draw(null, true);
+          mmsg.textContent = "✓ " + word + " is real Dunan munui for \"" + WORDS[cur].en + "\"!";
+        }, 700);
+      } else {
+        draw(changed);
+        mmsg.textContent = "Changed! Keep going.";
+      }
+    });
+  });
+  document.getElementById("mreset").addEventListener("click", function () { loadWord(cur); });
+  loadWord(0);
+
+  /* ---------- Counter-word match ---------- */
+  var picked = null;
+  var cmsg = document.getElementById("cmsg");
+  var EXPLAIN = {
+    taintu: "-taintu is for counting people.",
+    gara: "-gara is for counting animals.",
+    ira: "-ira is for flat things, like sheets of paper or leaves.",
+    mutu: "-mutu is for counting trees.",
+    ci: "-ci is for everyday objects, like stones."
+  };
+  document.querySelectorAll(".item").forEach(function (it) {
+    it.addEventListener("click", function () {
+      document.querySelectorAll(".item").forEach(function (x) { x.classList.remove("on"); });
+      it.classList.add("on");
+      picked = it;
+      cmsg.textContent = "Now pick a counter word for " + it.querySelector("small").textContent + ".";
+    });
+  });
+  document.querySelectorAll("#suffix .sbtn").forEach(function (b) {
+    b.addEventListener("click", function () {
+      if (!picked) { cmsg.textContent = "First click something to count."; return; }
+      if (b.dataset.s === picked.dataset.ans) {
+        picked.classList.add("solved");
+        cmsg.textContent = "Correct! " + EXPLAIN[b.dataset.s];
+        if (document.querySelectorAll(".item.solved").length === 5) cmsg.textContent += " You matched them all!";
+      } else {
+        cmsg.textContent = "Not quite. Try another counter word.";
+      }
+    });
+  });
+
+  /* ---------- Kaidā tally ---------- */
+  var TARGET = { rice: 3, millet: 6, cloth: 2 };
+  var counts = { rice: 0, millet: 0, cloth: 0 };
+  function drawTally(row) {
+    var n = counts[row.dataset.good];
+    var box = row.querySelector(".tally");
+    box.innerHTML = "";
+    for (var g = 0; g < n; g += 5) {
+      var grp = document.createElement("span");
+      var size = Math.min(5, n - g);
+      grp.className = "grp" + (size === 5 ? " five" : "");
+      for (var j = 0; j < Math.min(4, size); j++) grp.appendChild(document.createElement("i"));
+      box.appendChild(grp);
+    }
+  }
+  document.querySelectorAll(".lrow").forEach(function (row) {
+    var btns = row.querySelectorAll(".lbtns button");
+    btns[0].addEventListener("click", function () { counts[row.dataset.good] = Math.max(0, counts[row.dataset.good] - 1); drawTally(row); });
+    btns[1].addEventListener("click", function () { counts[row.dataset.good] = Math.min(15, counts[row.dataset.good] + 1); drawTally(row); });
+    drawTally(row);
+  });
+  document.getElementById("kcheck").addEventListener("click", function () {
+    var ok = Object.keys(TARGET).every(function (g) { return counts[g] === TARGET[g]; });
+    var msg = document.getElementById("kmsg");
+    msg.style.color = ok ? "var(--leaf)" : "var(--coral)";
+    msg.textContent = ok
+      ? "Perfect record! Notice you didn't need to read a single word."
+      : "Not yet. Check each row against the family's tax.";
+  });
+
+  /* ---------- Timeline ---------- */
+  var EVENTS = [
+    ["Sanai Isoba", "Legends say a powerful woman named Sanai Isoba ruled the island around the late 1400s and early 1500s. Islanders still tell stories about her."],
+    ["The Ryukyu Kingdom", "In the early 1500s, the Ryukyu Kingdom, based on Okinawa, took control of Yonaguni. Its rulers spoke a different Ryukyuan language."],
+    ["The head tax", "After Japan's Satsuma domain conquered the Ryukyu Kingdom in 1609, a harsh head tax was placed on the outer islands. It lasted until 1903, and islanders kept records with kaidā signs."],
+    ["Part of Japan", "In 1879, Japan made the Ryukyu Kingdom into Okinawa Prefecture. Schools taught standard Japanese. In the 1900s, many schools in Okinawa punished children for speaking island languages."],
+    ["The trading boom", "After World War II, boats traded goods between Yonaguni and nearby Taiwan. The port of Kubura was busy day and night, and unofficial counts say about 12,000 people lived on the island in 1947. Crackdowns ended the boom."],
+    ["A small island", "About 1,700 people live on Yonaguni today. Many young people leave for school and jobs, and fewer people speak Dunan munui each year."]
+  ];
+  var tlText = document.getElementById("tltext");
+  var evs = document.querySelectorAll("#tl .ev");
+  function setEvent(i) {
+    evs.forEach(function (e, k) { e.classList.toggle("on", k === i); });
+    tlText.innerHTML = '<strong style="color:var(--sun); font-size:1.2rem">' + EVENTS[i][0] + "</strong><br>" + EVENTS[i][1];
+  }
+  evs.forEach(function (e, i) { e.addEventListener("click", function () { setEvent(i); }); });
+  setEvent(0);
+
+  /* ---------- Moth ---------- */
+  var moth = document.getElementById("moth");
+  moth.addEventListener("click", function () {
+    moth.classList.toggle("open");
+    var open = moth.classList.contains("open");
+    moth.setAttribute("aria-label", open ? "Close the moth's wings" : "Open the moth's wings");
+    document.getElementById("mothname").innerHTML = open
+      ? "<strong>The atlas moth</strong>, one of the largest moths in the world, with wings about as wide as a dinner plate. In Japanese it's named after the island: <em>Yonaguni-san</em>. The island's museum is named for its Dunan word, <span class=\"hl\">ayamihabiru</span>, often explained as \"patterned butterfly.\""
+      : "<strong>Click the moth to open its wings.</strong>";
+  });
+
+  /* ---------- Vote ---------- */
+  var votes = { nat: 0, hum: 0 };
+  document.querySelectorAll("#vote .sbtn").forEach(function (b) {
+    b.addEventListener("click", function () {
+      votes[b.dataset.v]++;
+      var total = votes.nat + votes.hum;
+      document.querySelector(".meter .nat").style.width = (votes.nat / total * 100) + "%";
+      document.querySelector(".meter .hum").style.width = (votes.hum / total * 100) + "%";
+      document.getElementById("votecount").textContent = votes.nat + " natural · " + votes.hum + " made by people";
+    });
+  });
+})();
+</script>
+<script src="../assets/deck.js"></script>
+</body>
+</html>
