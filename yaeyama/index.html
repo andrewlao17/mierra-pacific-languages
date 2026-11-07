@@ -1,1 +1,883 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Yaeyama: The Language Woven in Five and Four</title>
+<link rel="stylesheet" href="../assets/deck.css">
+<style>
+@import url("https://fonts.googleapis.com/css2?family=Zen+Old+Mincho:wght@600;900&family=Zen+Kaku+Gothic+New:wght@400;500;700;900&display=swap");
 
+/* ---------- Yaeyama theme: indigo cloth, white thread, turquoise reef ---------- */
+:root {
+  --bg: #071a2e;
+  --ink: #f6f2e4;
+  --muted: #cfd9e4;
+  --line: rgba(246, 242, 228, .22);
+  --panel: rgba(10, 32, 56, .82);
+  --indigo: #16305a;
+  --thread: #f6f2e4;
+  --sea: #3fc9bd;
+  --coral: #e2574c;
+  --sand: #f0dfb8;
+  --leaf: #8fcf6b;
+  --sky: #7fb6ef;
+  --rose: #e2574c;
+  --accent: var(--sand);
+  --serif: "Zen Old Mincho", "Hiragino Mincho ProN", Georgia, serif;
+  --sans: "Zen Kaku Gothic New", "Hiragino Kaku Gothic ProN", system-ui, sans-serif;
+  --t: 0;
+  font-size: clamp(12px, 1.3vw, 28px);
+}
+h1 { font-size: 6rem; font-weight: 900; line-height: 1; letter-spacing: -.01em; }
+h2 { font-size: 2.85rem; font-weight: 900; line-height: 1.08; }
+.slide { padding: 7vh 7vw 8vh 6vw; }
+.text { max-width: 44vw; }
+.text.wide { max-width: 84vw; width: 84vw; }
+.stage {
+  right: 9vw; top: 6vh; bottom: 10vh; width: 37vw;
+  display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 1.2rem;
+}
+ul.dots li { font-size: 1.05rem; }
+.speak .line, .card .word { font-family: var(--sans); font-weight: 900; }
+.card.revealed .meaning { max-height: 13rem; }
+.btn { background: var(--sand); color: #1a2740; }
+.syl.on { background: var(--sand); color: #1a2740; }
+.loc .disc { border-color: var(--sand); box-shadow: 0 0 0 .55rem rgba(240,223,184,.16), 0 22px 40px rgba(0,0,0,.55); }
+.loc .tint { background: #d8e6c9; }
+.loc .sea { background: #11456d; }
+.loc .tag { background: #0d2342; border-color: var(--sand); }
+.note { font-size: .82rem; color: var(--muted); }
+.jp { font-family: var(--serif); }
+.quote { font-family: var(--serif); font-size: 1.8rem; font-weight: 900; line-height: 1.25; color: var(--sand); }
+
+/* ---------- The cloth: an indigo loom with a minsa belt that weaves as you go ---------- */
+#cloth { position: fixed; inset: 0; z-index: 0; overflow: hidden; pointer-events: none;
+  background: linear-gradient(180deg, #05121f 0%, #0a2440 48%, #0f3a5e 100%); }
+#cloth .warp { position: absolute; inset: 0; background: repeating-linear-gradient(90deg, rgba(255,255,255,.055) 0 1px, transparent 1px 8px); }
+#cloth .weft { position: absolute; inset: 0; background: repeating-linear-gradient(0deg, rgba(0,0,0,.22) 0 1px, transparent 1px 10px); }
+#cloth .reef {
+  position: absolute; left: 0; right: 0; bottom: 0; height: 30vh;
+  background: linear-gradient(180deg, rgba(63,201,189,0) 0%, rgba(63,201,189,.22) 60%, rgba(63,201,189,.38) 100%);
+}
+#cloth .reef::before {
+  content: ""; position: absolute; inset: 0;
+  background: repeating-linear-gradient(180deg, rgba(255,255,255,.07) 0 2px, transparent 2px 16px);
+  animation: swell 7s ease-in-out infinite alternate;
+}
+@keyframes swell { to { transform: translateY(8px); } }
+#cloth .shade { position: absolute; inset: 0; background: linear-gradient(90deg, rgba(5,16,28,.93) 0%, rgba(5,16,28,.76) 52%, rgba(5,16,28,.28) 100%); }
+
+/* floating star sand */
+#cloth .sand i { position: absolute; width: 5px; height: 5px; background: var(--sand); opacity: .5;
+  clip-path: polygon(50% 0,61% 35%,98% 35%,68% 57%,79% 91%,50% 70%,21% 91%,32% 57%,2% 35%,39% 35%);
+  animation: drift 18s linear infinite; }
+@keyframes drift { from { transform: translateY(14vh) rotate(0deg); opacity: 0; } 15% { opacity: .55; } 85% { opacity: .45; } to { transform: translateY(-16vh) rotate(220deg); opacity: 0; } }
+
+/* the belt on the right edge */
+#cloth .obi { position: absolute; top: 0; bottom: 0; right: 0; width: 4.4vw; background: var(--indigo);
+  box-shadow: inset 2px 0 0 rgba(0,0,0,.45), -14px 0 30px rgba(0,0,0,.35); }
+#cloth .obi .mask { position: absolute; left: 0; right: 0; top: 0; overflow: hidden;
+  height: calc(7% + var(--t) * 93%); transition: height 1.3s cubic-bezier(.3,.9,.3,1); }
+#cloth .obi .inner { position: absolute; top: 0; left: 0; right: 0; height: 108vh; }
+#cloth .obi .sq { position: absolute; left: 22%; width: 56%; background: var(--thread); border-radius: 2px; }
+#cloth .obi .leg { position: absolute; width: 14%; background: rgba(246,242,228,.55); border-radius: 2px; }
+#cloth .obi .edge { position: absolute; top: 0; left: 0; right: 0; height: 3px; background: var(--coral); opacity: .9;
+  transform: translateY(calc(7vh + var(--t) * 93vh)); transition: transform 1.3s cubic-bezier(.3,.9,.3,1); }
+
+/* ---------- Photos as indigo-dyed cloth swatches ---------- */
+.board {
+  position: relative; margin: 0; width: var(--w, 19vw); padding: .95rem .6rem .6rem;
+  background: var(--indigo); border-radius: .4rem;
+  box-shadow: inset 0 0 0 2px rgba(0,0,0,.3), 0 18px 34px rgba(0,0,0,.5);
+  transform: rotate(var(--r, 0deg)); transition: transform .9s cubic-bezier(.2,.8,.2,1), opacity .7s ease;
+}
+.board::before {
+  content: ""; position: absolute; left: .6rem; right: .6rem; top: .3rem; height: .4rem;
+  background: repeating-linear-gradient(90deg, var(--thread) 0 4px, transparent 4px 10px); opacity: .85;
+}
+.slide:not(.active) .board { opacity: 0; transform: translateY(46px) rotate(var(--r, 0deg)); }
+.slide.active .board { transition-delay: calc(.4s + var(--d, 0) * .16s); }
+.slide.active .board:hover { transform: rotate(0deg) scale(1.04); transition-delay: 0s; }
+.board img { display: block; width: 100%; aspect-ratio: var(--ar, 4 / 3); object-fit: cover; border-radius: .2rem; background: #1b3a66; }
+.board figcaption { color: #eef4ff; font-size: .74rem; font-weight: 700; line-height: 1.25; margin: .4rem .15rem 0; }
+
+/* ---------- Shared controls ---------- */
+.switch { display: flex; gap: .4rem; margin: .45rem 0 .6rem; flex-wrap: wrap; }
+.sbtn { font: inherit; font-weight: 700; font-size: .92rem; color: var(--ink); background: var(--panel);
+  border: 2px solid var(--line); border-radius: .4rem; padding: .25em .9em; cursor: pointer; transition: transform .2s; }
+.sbtn:hover { transform: translateY(-2px); }
+.sbtn.on { background: var(--sand); border-color: var(--sand); color: #1a2740; }
+.out { min-height: 3.2em; margin-top: .5rem; }
+
+/* island hopper */
+#islandname { font-family: var(--serif); font-weight: 900; font-size: 1.35rem; color: var(--sand); }
+#islandfact { min-height: 5.2em; margin-top: .25rem; }
+
+/* ---------- Sound machine ---------- */
+.machine { display: grid; grid-template-columns: 1.1fr 1fr; gap: 1.5vw; margin-top: .7rem; text-align: left; }
+.wordbox { text-align: center; padding: 1.1rem 1rem; }
+.oldform { font-family: var(--serif); color: var(--sky); font-size: 1rem; }
+.letters { display: flex; justify-content: center; gap: .18rem; min-height: 5rem; flex-wrap: wrap; }
+.letters span { display: inline-grid; place-items: center; min-width: 3rem; height: 4.4rem; padding: 0 .3rem;
+  font: 900 3.2rem/1 var(--sans); border-radius: .35rem; background: rgba(255,255,255,.08);
+  transition: background .4s, color .4s, transform .4s; }
+.letters span.flash { background: var(--coral); color: #fff; transform: translateY(-8px) scale(1.06); }
+.letters span.done { background: var(--leaf); color: #10280a; }
+.gloss2 { color: var(--sea); font-weight: 700; margin-top: .4rem; }
+.rules { display: grid; gap: .45rem; }
+.rule { font: inherit; text-align: left; font-weight: 700; color: var(--ink); background: var(--panel);
+  border: 2px solid var(--line); border-left: 6px solid var(--rc, var(--sand)); border-radius: .4rem;
+  padding: .42em .85em; cursor: pointer; transition: transform .2s; }
+.rule:hover { transform: translateX(4px); }
+.rule small { display: block; font-weight: 500; color: var(--muted); font-size: .76rem; }
+#mmsg { min-height: 2.6em; font-weight: 700; color: var(--sand); }
+
+/* ---------- du sentence builder ---------- */
+.sent { display: flex; gap: .5rem; justify-content: center; flex-wrap: wrap; margin: .6rem 0 .3rem; }
+.chip { font: inherit; font-weight: 900; font-size: 1.25rem; color: var(--ink); background: var(--panel);
+  border: 2px solid var(--line); border-radius: .5rem; padding: .35em .8em; cursor: pointer; transition: transform .2s, border-color .2s; }
+.chip:hover { transform: translateY(-3px); }
+.chip small { display: block; font-weight: 500; font-size: .7rem; color: var(--muted); }
+.chip.hasdu { border-color: var(--sand); background: rgba(240,223,184,.2); }
+.chip.hasdu::after { content: "+du"; display: block; font-size: .72rem; font-weight: 900; color: var(--sand); }
+.duline { font-family: var(--sans); font-weight: 900; font-size: 1.7rem; text-align: center; margin: .4rem 0 .2rem; }
+.duline.bad { color: var(--coral); }
+.duline.good { color: var(--leaf); }
+#dumsg { min-height: 3.4em; }
+
+/* ---------- Minsa loom ---------- */
+.belt { display: flex; align-items: center; gap: .55rem; min-height: 4.4rem; padding: .5rem .6rem;
+  background: var(--indigo); border-radius: .4rem; box-shadow: inset 0 0 0 2px rgba(0,0,0,.35); overflow-x: auto; }
+.blk { display: flex; gap: .22rem; padding: 0 .25rem; }
+.blk span { width: .95rem; height: 1.8rem; background: var(--thread); border-radius: 2px; animation: pop .35s ease; }
+.blk.b4 span { background: var(--sand); }
+@keyframes pop { from { transform: scaleY(0); } }
+.beltlbl { display: flex; gap: .5rem; justify-content: center; font-size: .78rem; color: var(--muted); margin-top: .3rem; }
+#wmsg { min-height: 3em; font-weight: 700; }
+
+/* ---------- Angama ---------- */
+.masks { display: flex; gap: 1rem; justify-content: center; margin-bottom: .4rem; }
+.masks svg { width: 5.5rem; height: 6.5rem; }
+.masks figcaption { text-align: center; font-size: .74rem; font-weight: 700; color: var(--muted); margin-top: .2rem; }
+.qlist { display: grid; gap: .4rem; }
+.qbtn { font: inherit; text-align: left; font-weight: 700; color: var(--ink); background: var(--panel);
+  border: 2px solid var(--line); border-radius: .4rem; padding: .4em .8em; cursor: pointer; }
+.qbtn:hover { border-color: var(--sand); }
+.qbtn.on { background: rgba(240,223,184,.18); border-color: var(--sand); }
+#amsg { min-height: 5em; margin-top: .5rem; }
+#amsg b { color: var(--sand); }
+
+/* ---------- Timeline ---------- */
+.tl { display: grid; grid-template-columns: repeat(6, 1fr); gap: .55rem; margin-top: 1rem; position: relative; padding-bottom: 1.4rem; }
+.tl::after { content: ""; position: absolute; left: 0; right: 0; bottom: .45rem; height: 3px; border-radius: 3px;
+  background: repeating-linear-gradient(90deg, var(--thread) 0 14px, transparent 14px 22px); }
+.ev { font: inherit; text-align: left; color: #10243d; background: var(--ec); border: 0; border-radius: .4rem;
+  padding: .65rem .75rem; cursor: pointer; transition: transform .25s, box-shadow .25s; }
+.ev:hover { transform: translateY(-4px); }
+.ev.on { box-shadow: 0 0 0 3px #fff, 0 10px 24px rgba(0,0,0,.4); transform: translateY(-6px); }
+.ev .yr { font-family: var(--serif); font-weight: 900; font-size: 1.5rem; line-height: 1; display: block; }
+.ev small { display: block; font-weight: 700; font-size: .78rem; margin-top: .3rem; }
+#tltext { min-height: 5.4rem; margin-top: .4rem; }
+
+/* ---------- Island treasures tabs ---------- */
+.tabwrap { position: relative; min-height: 15rem; }
+.tab { display: none; }
+.tab.on { display: block; animation: fadein .5s ease; }
+@keyframes fadein { from { opacity: 0; transform: translateY(8px); } }
+.grainbox { display: grid; place-items: center; }
+.grain { fill: var(--sand); transition: opacity .5s; }
+.grain.star { opacity: 0; }
+svg.zoomed .grain.dot { opacity: 0; }
+svg.zoomed .grain.star { opacity: 1; }
+.crossbox svg { background: #04101d; border-radius: .5rem; }
+.crossline { stroke: var(--sea); stroke-width: 2; opacity: 0; transition: opacity .9s ease; }
+svg.linked .crossline { opacity: .9; }
+.catrow { display: flex; align-items: center; gap: 1rem; }
+.bigno { font-family: var(--serif); font-size: 3.2rem; font-weight: 900; color: var(--sea); line-height: 1; }
+
+/* ---------- Quiz tint ---------- */
+.opt.right { background: var(--leaf); }
+.opt.wrong { background: var(--coral); }
+
+@media (max-width: 820px) {
+  .slide { padding: 6vh 10vw 12vh 6vw; }
+  h1 { font-size: 3.6rem; }
+  .text, .text.wide { max-width: none; width: auto; }
+  .stage { position: relative; inset: auto; width: 100%; margin-top: 1.5rem; }
+  .board { width: 74vw; }
+  .stage .panel, .stage .speak { width: 100% !important; max-width: none !important; }
+  .machine { grid-template-columns: 1fr; }
+  .tl { grid-template-columns: repeat(2, 1fr); }
+  #cloth .obi { width: 9vw; }
+}
+</style>
+</head>
+<body data-map="BlankMap-Equirectangular.svg">
+
+<div id="cloth" aria-hidden="true">
+  <div class="warp"></div>
+  <div class="weft"></div>
+  <div class="reef"></div>
+  <div class="sand"></div>
+  <div class="obi"><div class="mask"><div class="inner"></div></div><div class="edge"></div></div>
+  <div class="shade"></div>
+</div>
+<div class="progress"></div>
+
+<main>
+
+<!-- 1. Title -->
+<section class="slide" style="--accent: var(--sand)">
+  <div class="text">
+    <p class="kicker in">Rare Languages of the Asia-Pacific · Module 18</p>
+    <h1 class="in" style="--d:1">Yaeyama</h1>
+    <p class="in jp" style="--d:2; font-size:1.55rem; font-weight:900; color:var(--sand)">Yaimamuni · ヤイマムニ</p>
+    <div class="bar in" style="--d:3"></div>
+    <p class="lead in" style="--d:4">Nineteen islands, one language family, and a pattern of five and four that means <em>forever</em></p>
+    <p class="muted in" style="--d:5">Watch the right edge: a minsā belt weaves itself a little further with every slide.</p>
+  </div>
+  <div class="stage">
+    <figure class="board" style="--w:26vw; --r:1.5deg; --d:0">
+      <img data-wiki="Taketomi Island" data-width="1200" alt="A village lane on Taketomi Island in the Yaeyama Islands">
+      <figcaption>Taketomi Island, one of the Yaeyama Islands of southern Japan</figcaption>
+    </figure>
+  </div>
+</section>
+
+<!-- 2. Where and who -->
+<section class="slide" data-tr="left" style="--accent: var(--sea)">
+  <div class="text">
+    <p class="kicker in">Where and who</p>
+    <h2 class="in" style="--d:1">Japan's southernmost islands</h2>
+    <div class="bar in" style="--d:2"></div>
+    <ul class="dots">
+      <li class="in" style="--d:3">The Yaeyama Islands sit southwest of Okinawa and east of Taiwan. Together they hold about <strong>53,000</strong> people. Speakers call the language <span class="hl">Yaimamuni</span>, "Yaeyama speech."</li>
+      <li class="in" style="--d:4">It is a <strong>Southern Ryukyuan</strong> language, in the same family as Japanese but <strong>not understandable</strong> to Japanese speakers. Japan's government still files it as a "dialect."</li>
+      <li class="in" style="--d:5">Roughly <strong>7,000–10,000</strong> people can speak it, and most are over 50. UNESCO lists it as <strong>definitely endangered</strong>.</li>
+      <li class="in" style="--d:6">Here is the twist: <strong>each island has its own variety</strong>, and some of them cannot understand each other either.</li>
+    </ul>
+    <p class="note in" style="--d:7">Nearby Yonaguni speech is counted as a separate language, not part of Yaeyama.</p>
+  </div>
+  <div class="stage">
+    <div class="loc" data-lat="24.34" data-lon="124.16" data-zoom="9" style="--s:14vw; --d:0">
+      <div class="disc"><div class="lmap"></div><div class="tint"></div><div class="sea"></div><span class="pinpt"></span></div>
+      <span class="tag">Yaeyama Islands, Okinawa, Japan</span>
+    </div>
+    <div class="panel in" style="--d:4; width:34vw">
+      <strong>Island hopper:</strong> click an island to visit it.
+      <div class="switch" id="islands" style="margin-top:.5rem">
+        <button class="sbtn on" data-i="0">Ishigaki</button><button class="sbtn" data-i="1">Taketomi</button><button class="sbtn" data-i="2">Iriomote</button><button class="sbtn" data-i="3">Hateruma</button><button class="sbtn" data-i="4">Kuroshima</button><button class="sbtn" data-i="5">Aragusuku</button>
+      </div>
+      <p id="islandname"></p>
+      <p id="islandfact" aria-live="polite"></p>
+    </div>
+  </div>
+</section>
+
+<!-- 3. Greetings -->
+<section class="slide" style="--accent: var(--coral)">
+  <div class="text">
+    <p class="kicker in">Speak along</p>
+    <h2 class="in" style="--d:1">Ōritōri — come on in!</h2>
+    <div class="bar in" style="--d:2"></div>
+    <p class="in" style="--d:3">These two words are painted on signs all over Ishigaki. Say them together, then click a card to reveal the meaning.</p>
+    <div class="cards in" style="--d:4; grid-template-columns:1fr 1fr; max-width:41vw">
+      <div class="card" style="--cardc: var(--sand)"><div class="word">ōritōri</div><div class="say"><span class="jp">おーりとーり</span> · oh-ree-TOH-ree</div><div class="meaning">"Welcome — please come in!"</div><div class="tap">click to reveal</div></div>
+      <div class="card" style="--cardc: var(--sea)"><div class="word">miifaiyuu</div><div class="say"><span class="jp">みーふぁいゆー</span> · mee-fah-ee-YOO</div><div class="meaning">"Thank you!"</div><div class="tap">click to reveal</div></div>
+    </div>
+    <p class="note in" style="--d:5; margin-top:.8rem">Another Yaeyama way to say thank you is <em>fukoorasaan</em>. Some islands say <em>niifaiyuu</em> instead of <em>miifaiyuu</em> — small island, different word.</p>
+    <p class="note in" style="--d:6">Compare Japanese <em>yōkoso</em> and <em>arigatō</em>: same family, completely different words.</p>
+  </div>
+  <div class="stage">
+    <div class="speak panel in" data-tempo="540" style="--d:3; width:33vw">
+      <div class="line" data-syl="ōo·ri·too·ri"></div><p class="gloss">welcome, come in</p>
+      <div class="line" data-syl="mii·fai·yuu"></div><p class="gloss">thank you</p>
+      <button class="btn play">▶ Speak along</button>
+      <p class="note" style="margin-top:.7rem">Try it: one person says <strong>ōritōri</strong> at the door, the other answers <strong>miifaiyuu</strong>.</p>
+    </div>
+    <div class="panel in" style="--d:5; width:33vw; text-align:center">
+      <strong>Pronunciation tip</strong>
+      <p class="note" style="margin:.3rem 0 0">Long vowels matter. <em>Ōritōri</em> holds the <em>ō</em> twice as long as a short <em>o</em> — shorten them and the word stops sounding like Yaeyama.</p>
+    </div>
+  </div>
+</section>
+
+<!-- 4. Sound-change machine -->
+<section class="slide" data-tr="zoom" style="--accent: var(--sand)">
+  <div class="text wide center">
+    <p class="kicker in">Language lab</p>
+    <h2 class="in" style="--d:1">The p-keeper machine</h2>
+    <div class="bar in" style="--d:2"></div>
+    <p class="in" style="--d:3; max-width:72vw; margin:0 auto">Long ago, the ancestor of Japanese had a <strong>p</strong> sound at the start of many words. In Japan it softened into <strong>h</strong>. Out in Yaeyama, the old <strong>p</strong> stayed put. Pick a Japanese word and click the rules to travel back to the Yaeyama form.</p>
+    <div class="machine">
+      <div class="panel wordbox in" style="--d:4">
+        <div class="switch" id="mwords" style="justify-content:center">
+          <button class="sbtn on" data-v="0">hato</button><button class="sbtn" data-v="1">hone</button><button class="sbtn" data-v="2">fune</button><button class="sbtn" data-v="3">wata</button>
+        </div>
+        <div class="oldform" id="mold"></div>
+        <div class="letters" id="letters" aria-live="polite"></div>
+        <div class="gloss2" id="mgloss"></div>
+        <div id="mmsg"></div>
+        <button class="linkbtn sbtn" id="mreset" style="font-size:.8rem">↺ start again</button>
+      </div>
+      <div class="rules in" style="--d:5">
+        <button class="rule" data-r="h" style="--rc: var(--sand)">h → p<small>Japanese softened it; Yaeyama kept the old sound</small></button>
+        <button class="rule" data-r="w" style="--rc: var(--coral)">w → b<small>at the start of a word</small></button>
+        <button class="rule" data-r="t" style="--rc: var(--sky)">t → d<small>between two vowels, in some words</small></button>
+        <button class="rule" data-r="o" style="--rc: var(--sea)">o → u<small>Yaeyama leans toward u</small></button>
+        <button class="rule" data-r="e" style="--rc: var(--leaf)">e → i<small>Yaeyama leans toward i</small></button>
+      </div>
+    </div>
+    <p class="note in" style="--d:6; margin-top:.6rem">Real languages are messy: <em>hara</em> "belly" comes out as <em>paru</em>, with a vowel change these five rules don't cover. Linguists spend careers on the leftovers.</p>
+  </div>
+</section>
+
+<!-- 5. The du spotlight -->
+<section class="slide" data-tr="left" style="--accent: var(--sky)">
+  <div class="text">
+    <p class="kicker in">Grammar you can feel</p>
+    <h2 class="in" style="--d:1">The word that points</h2>
+    <div class="bar in" style="--d:2"></div>
+    <p class="in" style="--d:3">Yaeyama puts its words in the same order as Japanese: the verb comes last. But it does one thing English and Japanese don't.</p>
+    <ul class="dots">
+      <li class="in" style="--d:4">When you ask <strong>who, what, where</strong>, the question word has to carry a little spotlight: <span class="hl">du</span>.</li>
+      <li class="in" style="--d:5">Leave the <em>du</em> off and the sentence isn't just odd — speakers say it's simply <strong>not Yaeyama</strong>.</li>
+      <li class="in" style="--d:6">English has nothing like it. The closest feeling is the stress in "<em>WHO</em> ate it?" — except in Yaeyama it's a real word you must say.</li>
+    </ul>
+    <p class="note in" style="--d:7">Linguists call <em>du</em> a focus marker. Yaeyama is one of the languages that keeps a focus system Japanese mostly lost.</p>
+  </div>
+  <div class="stage">
+    <div class="panel in" style="--d:3; width:35vw">
+      <strong>Build the question:</strong> "Who ate the soba?"
+      <p class="note" style="margin:.3rem 0 0">Click a word to clip the spotlight <em>du</em> onto it.</p>
+      <div class="sent" id="sent">
+        <button class="chip" data-w="taa">taa<small>who</small></button>
+        <button class="chip" data-w="suba-ba">suba-ba<small>soba (object)</small></button>
+        <button class="chip" data-w="fai">fai<small>ate</small></button>
+      </div>
+      <p class="duline" id="duline">taa suba-ba fai</p>
+      <p id="dumsg" aria-live="polite">Nothing marked yet. Try clipping <em>du</em> somewhere.</p>
+      <button class="sbtn" id="duclear">↺ take the spotlight off</button>
+    </div>
+  </div>
+</section>
+
+<!-- 6. Minsa loom -->
+<section class="slide" style="--accent: var(--thread)">
+  <div class="text">
+    <p class="kicker in">Cloth that talks</p>
+    <h2 class="in" style="--d:1">Five and four: minsā</h2>
+    <div class="bar in" style="--d:2"></div>
+    <ul class="dots">
+      <li class="in" style="--d:3"><span class="hl">Minsā</span> is a cotton belt woven on Taketomi and Ishigaki, indigo blue with white squares. Its pattern repeats <strong>five squares, then four</strong>.</li>
+      <li class="in" style="--d:4">That's a pun. In Japanese, five is <em>itsu</em> — which also means "when" — and four is <em>yo</em>, which also means "age" or "world." Five and four reads as <strong><em>itsu no yo made mo</em>: "forever."</strong></li>
+      <li class="in" style="--d:5">A young woman wove one and gave it to the man she loved. The narrow zigzag edging looks like centipede legs, and carried a second message: <strong>come and visit often</strong>.</li>
+      <li class="in" style="--d:6">Yaeyama minsā became a nationally recognised traditional craft in 1989, and is still woven on upright looms today.</li>
+    </ul>
+    <p class="note in" style="--d:7">A whole sentence, said with no letters at all — and readable by anyone, in any language.</p>
+  </div>
+  <div class="stage">
+    <div class="panel in" style="--d:3; width:35vw">
+      <strong>At the loom:</strong> weave the message. Four blocks, alternating.
+      <div class="belt" id="belt" aria-live="polite"></div>
+      <div class="beltlbl"><span>white = 5 · sand = 4</span></div>
+      <div class="switch" style="justify-content:center; margin-top:.5rem">
+        <button class="sbtn" id="w5">weave 5</button>
+        <button class="sbtn" id="w4">weave 4</button>
+        <button class="sbtn" id="wundo">undo</button>
+        <button class="btn" id="wcheck">read my belt</button>
+      </div>
+      <p id="wmsg" aria-live="polite">An empty loom. Start with the block that means "when."</p>
+    </div>
+  </div>
+</section>
+
+<!-- 7. Songs and spirits -->
+<section class="slide" data-tr="zoom" style="--accent: var(--coral)">
+  <div class="text">
+    <p class="kicker in">Songs and spirits</p>
+    <h2 class="in" style="--d:1">Yunta, and the visitors from gusō</h2>
+    <div class="bar in" style="--d:2"></div>
+    <ul class="dots">
+      <li class="in" style="--d:3"><span class="hl">Yunta</span> are work songs: one person calls a line, everyone else answers a chorus, and the rhythm keeps the whole field planting together. No instrument needed — just voices.</li>
+      <li class="in" style="--d:4">The most famous is <strong>Asadoya Yunta</strong> from Taketomi, about Asato Kuyama (1722–1799) and a government official who proposed to her. On Okinawa people sing the version where she refuses him; on Taketomi they sing the one where she doesn't.</li>
+      <li class="in" style="--d:5">In 1934 a record company put <strong>new Japanese lyrics</strong> on the tune and it became a nationwide hit — so most of Japan knows the melody without knowing a word of the Yaeyama original.</li>
+      <li class="in" style="--d:6">At Obon, masked ancestors come back. <strong>Ushumai</strong> (grandfather) and <strong>Nmi</strong> (grandmother) visit houses with dancers and answer the crowd's questions about the afterlife, <strong>gusō</strong> — in Yaeyama, in high squeaky voices, and always as a joke.</li>
+    </ul>
+  </div>
+  <div class="stage">
+    <div class="speak panel compact in" data-tempo="520" style="--d:3; width:33vw; text-align:center">
+      <strong style="font-size:.9rem">The chorus everyone answers</strong>
+      <div class="line" data-syl="sā·yui·yui"></div><p class="gloss">a chorus of pure sound — it carries the beat, not a meaning</p>
+      <button class="btn play">▶ Sing the response</button>
+    </div>
+    <div class="panel in" style="--d:4; width:33vw">
+      <div class="masks">
+        <figure>
+          <svg viewBox="0 0 60 72" aria-label="Mask of Ushumai, the grandfather spirit"><ellipse cx="30" cy="34" rx="22" ry="30" fill="#f0dfb8" stroke="#1a2740" stroke-width="2"/><path d="M14 26 q8 -6 16 0 M30 26 q8 -6 16 0" stroke="#1a2740" stroke-width="2" fill="none"/><circle cx="21" cy="33" r="2.6" fill="#1a2740"/><circle cx="39" cy="33" r="2.6" fill="#1a2740"/><path d="M30 36 v8" stroke="#1a2740" stroke-width="2"/><path d="M20 50 q10 9 20 0" stroke="#1a2740" stroke-width="2.5" fill="none"/><path d="M22 56 q8 12 16 0" stroke="#9a8a63" stroke-width="2" fill="none"/></svg>
+          <figcaption>Ushumai</figcaption>
+        </figure>
+        <figure>
+          <svg viewBox="0 0 60 72" aria-label="Mask of Nmi, the grandmother spirit"><ellipse cx="30" cy="34" rx="21" ry="29" fill="#fff6e6" stroke="#1a2740" stroke-width="2"/><path d="M15 27 q7 -4 14 1 M31 28 q7 -5 14 -1" stroke="#1a2740" stroke-width="2" fill="none"/><path d="M17 34 q4 -3 8 0 M35 34 q4 -3 8 0" stroke="#1a2740" stroke-width="2.5" fill="none"/><path d="M30 37 v7" stroke="#1a2740" stroke-width="2"/><ellipse cx="30" cy="52" rx="7" ry="5" fill="#e2574c"/></svg>
+          <figcaption>Nmi</figcaption>
+        </figure>
+      </div>
+      <strong>Ask the ancestors a question:</strong>
+      <div class="qlist" id="angama" style="margin-top:.4rem">
+        <button class="qbtn" data-a="0">Why does Obon last three days?</button>
+        <button class="qbtn" data-a="1">What's the food like in gusō?</button>
+        <button class="qbtn" data-a="2">How old are you, Ushumai?</button>
+      </div>
+      <p id="amsg" aria-live="polite"></p>
+    </div>
+  </div>
+</section>
+
+<!-- 8. Timeline -->
+<section class="slide" data-tr="zoom" style="--accent: var(--sky)">
+  <div class="text wide">
+    <p class="kicker in">Island history</p>
+    <h2 class="in" style="--d:1">Five hundred hard years</h2>
+    <div class="bar in" style="--d:2"></div>
+    <p class="in" style="--d:3">Click each moment to explore it.</p>
+    <div class="tl in" id="tl" style="--d:4">
+      <button class="ev" style="--ec: var(--sand)"><span class="yr">1500</span><small>Akahachi's revolt</small></button>
+      <button class="ev" style="--ec: #e8c98f"><span class="yr">1637</span><small>The head tax</small></button>
+      <button class="ev" style="--ec: var(--coral)"><span class="yr">1771</span><small>The great tsunami</small></button>
+      <button class="ev" style="--ec: #e9a3c9"><span class="yr">1879</span><small>Okinawa Prefecture</small></button>
+      <button class="ev" style="--ec: var(--sky)"><span class="yr">1945</span><small>War malaria</small></button>
+      <button class="ev" style="--ec: var(--sea)"><span class="yr">1972→</span><small>Back to Japan</small></button>
+    </div>
+    <div class="panel in" id="tltext" style="--d:5" aria-live="polite"></div>
+  </div>
+</section>
+
+<!-- 9. Island treasures -->
+<section class="slide" data-tr="left" style="--accent: var(--sea)">
+  <div class="text">
+    <p class="kicker in">Found nowhere else</p>
+    <h2 class="in" style="--d:1">Three island treasures</h2>
+    <div class="bar in" style="--d:2"></div>
+    <p class="in" style="--d:3">Yaeyama is the only place on earth for a lot of things — a cat, a kind of sand, and a view of the sky that the rest of Japan never gets. Explore all three in the panel.</p>
+    <p class="in" style="--d:4">Iriomote Island is more than ninety percent jungle and mangrove. In 2021 it was added, with other southern islands, to the <strong>UNESCO World Heritage</strong> list for its wildlife.</p>
+    <p class="note in" style="--d:5">Words carry habitats too: when a language goes quiet, the local names for plants, fish, reefs and weather usually go with it.</p>
+  </div>
+  <div class="stage">
+    <figure class="board" style="--w:17vw; --r:-2deg; --d:1">
+      <img data-wiki="Iriomote cat" alt="An Iriomote cat">
+      <figcaption>The Iriomote cat, found only on one island</figcaption>
+    </figure>
+    <div class="panel in" style="--d:3; width:34vw">
+      <div class="switch" id="tabs" style="justify-content:center">
+        <button class="sbtn on" data-tab="0">Star sand</button><button class="sbtn" data-tab="1">Iriomote cat</button><button class="sbtn" data-tab="2">Southern Cross</button>
+      </div>
+      <div class="tabwrap">
+        <div class="tab on" data-p="0">
+          <div class="grainbox">
+            <svg id="sandsvg" viewBox="0 0 220 110" style="width:100%; max-width:18rem" aria-label="Grains of star sand">
+              <g id="grains"></g>
+            </svg>
+          </div>
+          <p style="margin:.3rem 0 0"><strong>Hoshizuna</strong>, "star sand," washes up on Taketomi's beaches. Each grain is the tiny shell of a single-celled sea creature.</p>
+          <button class="sbtn" id="zoomsand" style="margin-top:.4rem">🔍 look closer</button>
+        </div>
+        <div class="tab" data-p="1">
+          <div class="catrow">
+            <svg viewBox="0 0 80 70" style="width:5.5rem" aria-label="Drawing of a wildcat's face"><path d="M14 22 L10 6 L26 15 Z M66 22 L70 6 L54 15 Z" fill="#b08a5a"/><ellipse cx="40" cy="38" rx="28" ry="25" fill="#c89a63"/><ellipse cx="29" cy="34" rx="4" ry="5" fill="#1a2740"/><ellipse cx="51" cy="34" rx="4" ry="5" fill="#1a2740"/><path d="M36 46 h8 l-4 4 z" fill="#1a2740"/><path d="M40 50 v4 M40 54 q-6 5 -11 1 M40 54 q6 5 11 1" stroke="#1a2740" stroke-width="2" fill="none"/><path d="M24 26 q4 -4 9 -2 M47 24 q5 -2 9 2" stroke="#8a6a3f" stroke-width="2" fill="none"/></svg>
+            <div><span class="bigno">~100</span><p class="note" style="margin:0">individuals left, on one island</p></div>
+          </div>
+          <p style="margin:.4rem 0 0">The <strong>Iriomote cat</strong> was first identified in 1965 and lives in the smallest range of any wild cat on earth. It's listed as critically endangered; islanders run road-kill patrols and keep stray cats off the island.</p>
+        </div>
+        <div class="tab" data-p="2">
+          <div class="crossbox" style="display:grid; place-items:center">
+            <svg id="crosssvg" viewBox="0 0 220 120" style="width:100%; max-width:18rem" aria-label="The Southern Cross constellation low on the horizon">
+              <line class="crossline" x1="110" y1="28" x2="110" y2="92"/>
+              <line class="crossline" x1="78" y1="62" x2="142" y2="56"/>
+              <circle cx="110" cy="28" r="3.4" fill="#f6f2e4"/><circle cx="110" cy="92" r="4.2" fill="#f6f2e4"/>
+              <circle cx="78" cy="62" r="3" fill="#f6f2e4"/><circle cx="142" cy="56" r="3.6" fill="#f6f2e4"/>
+              <circle cx="124" cy="76" r="2" fill="#bcd4ea"/>
+              <rect x="0" y="104" width="220" height="16" fill="#0b2a44"/>
+            </svg>
+          </div>
+          <p style="margin:.3rem 0 0"><strong>Hateruma</strong> is the southernmost inhabited island in Japan, and the only place in the country where the <strong>Southern Cross</strong> clears the horizon well enough to see.</p>
+          <button class="sbtn" id="linkstars" style="margin-top:.4rem">✦ connect the stars</button>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- 10. Fading and hope -->
+<section class="slide" style="--accent: var(--coral)">
+  <div class="text">
+    <p class="kicker in">Why it matters now</p>
+    <h2 class="in" style="--d:1">Spoken in songs, barely in kitchens</h2>
+    <div class="bar in" style="--d:2"></div>
+    <ul class="dots">
+      <li class="in" style="--d:3">Researchers report that people under 60 mostly use Yaeyama only in <strong>songs and rituals</strong>. Children grow up speaking Japanese.</li>
+      <li class="in" style="--d:4">For a century, school and government called it a <strong>dialect</strong>. A thing called a dialect is easy to treat as something to grow out of.</li>
+      <li class="in" style="--d:5">Yaeyama is written down only rarely, so when a speaker dies, a whole way of saying things can go with them.</li>
+    </ul>
+    <div class="cards compact in" style="--d:6; grid-template-columns: repeat(3, 1fr); margin-top:.7rem">
+      <div class="card" style="--cardc: var(--sand)"><div class="word">Dictionaries</div><div class="meaning">Scholars born in the islands began recording Yaeyama vocabulary in the early 1900s, and word collections keep being published today.</div><div class="tap">click</div></div>
+      <div class="card" style="--cardc: var(--leaf)"><div class="word">Sept 18</div><div class="meaning">Okinawa marks "Shimakutuba Day" — island-language day. The date is a pun: 9-1-8 reads as ku-tu-ba, "words."</div><div class="tap">click</div></div>
+      <div class="card" style="--cardc: var(--sea)"><div class="word">Contests</div><div class="meaning">Islanders hold speech and drama contests performed entirely in island speech, and schools bring elders in to teach it.</div><div class="tap">click</div></div>
+    </div>
+  </div>
+  <div class="stage">
+    <div class="panel in" style="--d:3; width:33vw">
+      <strong>Out of every 100 people in the islands…</strong>
+      <div class="dotgrid" data-total="100" data-on="17" style="margin-top:.6rem; grid-template-columns: repeat(10, 1fr)"></div>
+      <div class="legend"><span style="--c: var(--rose)">roughly 17 can speak Yaeyama</span><span style="--c: rgba(255,255,255,.3)">roughly 83 cannot</span></div>
+      <p class="note" style="margin:.4rem 0 0">Estimates vary widely: 7,000–10,000 speakers among about 53,000 islanders, and almost all of them are over 50.</p>
+    </div>
+    <div class="panel in" style="--d:5; width:33vw">
+      <strong>Your turn:</strong> minsā says "forever" with five squares and four. Design a pattern of your own — shapes, colours, a rhythm of beats — that says something your family would understand without a single letter.
+    </div>
+  </div>
+</section>
+
+<!-- 11. Quiz -->
+<section class="slide" style="--accent: var(--sand)">
+  <div class="text wide center">
+    <p class="kicker in">Review at the loom</p>
+    <h2 class="in" style="--d:1">Quick quiz!</h2>
+    <div class="bar in" style="--d:2"></div>
+    <div class="quizgrid">
+      <div class="quiz panel in" style="--d:3" data-right="Yes! Yaeyama kept the old p, and o leans to u." data-wrong="Hint: use the h → p and o → u rules.">
+        <div class="q">Japanese <em>hato</em> means "dove." What is it in Yaeyama?</div>
+        <div class="options"><button class="opt">hatu</button><button class="opt" data-correct>patu</button><button class="opt">badu</button></div>
+        <div class="feedback"></div>
+      </div>
+      <div class="quiz panel in" style="--d:4" data-right="Right — five and four read as 'itsu no yo made mo.'" data-wrong="Hint: it's a pun on the numbers themselves.">
+        <div class="q">What does the five-and-four minsā pattern mean?</div>
+        <div class="options"><button class="opt">Nine children</button><button class="opt" data-correct>Forever</button><button class="opt">Good harvest</button></div>
+        <div class="feedback"></div>
+      </div>
+      <div class="quiz panel in" style="--d:5" data-right="Correct! The question word carries the spotlight." data-wrong="Hint: think about which word the spotlight shines on.">
+        <div class="q">In a Yaeyama question, which word must carry <em>du</em>?</div>
+        <div class="options"><button class="opt">The verb</button><button class="opt">The object</button><button class="opt" data-correct>The question word</button></div>
+        <div class="feedback"></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- 12. Closing -->
+<section class="slide end" style="--accent: var(--sand)">
+  <div class="text">
+    <h1 class="in" style="font-size:5.4rem">Miifaiyuu!</h1>
+    <p class="lead in" style="--d:1; margin-top:.8rem">Thank you! Questions?</p>
+    <p class="quote in" style="--d:2">Five squares, then four: <em>forever</em>. A belt can hold a promise for three hundred years. A language only holds one if somebody keeps weaving.</p>
+  </div>
+  <details class="fine in" style="--d:3">
+    <summary>Sources &amp; image credits</summary>
+    <div class="box">
+      <h4>Sources</h4>
+      <ul>
+        <li><a href="https://en.wikipedia.org/wiki/Yaeyama_language">Yaeyama language (Wikipedia)</a> — Yaimamuni, p/h and w/b correspondences, o→u and e→i, the <em>du</em> marker</li>
+        <li><a href="https://en.wikipedia.org/wiki/Ryukyuan_languages">Ryukyuan languages (Wikipedia)</a> — miifaiyuu, fukoorasaan, ōritōri</li>
+        <li><a href="https://omniglot.com/writing/yaeyama.htm">Omniglot: Yaeyama</a> — islands, 7,000–10,000 speakers</li>
+        <li><a href="https://endangeredlanguages.com/lang/5353">Endangered Languages Project: Yaeyama</a></li>
+        <li><a href="https://kogeijapan.com/locale/en_US/yaeyamaminsa/">Kogei Japan: Yaeyama Minsa</a> — five and four, centipede-leg edging</li>
+        <li><a href="https://nihonmono.jp/en/article/17114/">Nihonmono: Yaeyama Minsa weaving</a></li>
+        <li><a href="https://artisan.zozo.com/en/articles/azamiya">Azamiya: Yaeyama Minsah-ori</a> — national traditional craft, 1989</li>
+        <li><a href="https://en.wikipedia.org/wiki/Angama_(dance)">Angama (Wikipedia)</a> — Ushumai, Nmi, question and answer</li>
+        <li><a href="https://english.ryukyushimpo.jp/2015/09/05/20086/">Ryukyu Shimpo (2015): Angama on Ishigaki's Unke</a> — the recorded gusō exchange</li>
+        <li><a href="https://en.wikipedia.org/wiki/Asadoya_Yunta">Asadoya Yunta (Wikipedia)</a> — Asato Kuyama, the two endings</li>
+        <li><a href="https://library.osu.edu/site/japanese/?p=1161">Ohio State University Libraries: Asadoya Yunta</a> — the 1934 recording</li>
+        <li><a href="https://en.wikipedia.org/wiki/Oyake_Akahachi">Oyake Akahachi (Wikipedia)</a></li>
+        <li><a href="https://en.wikipedia.org/wiki/Sakishima_Islands">Sakishima Islands (Wikipedia)</a> — 1500 revolt, heavier taxation of Yaeyama</li>
+        <li><a href="https://en.wikipedia.org/wiki/1771_Great_Yaeyama_Tsunami">1771 Great Yaeyama Tsunami (Wikipedia)</a></li>
+        <li><a href="https://www.jstage.jst.go.jp/article/grj1925/45/7/45_7_461/_article">Malaria and the inhabitants of the Yaeyama Islands (Geographical Review of Japan)</a></li>
+        <li><a href="https://www.morethantokyo.com/okinawa-the-ryukyu-kingdom/">More Than Tokyo: war malaria survivors</a></li>
+        <li><a href="https://lab.bluehub.jp/en/iriomote-cat/">Earth Lab: why the Iriomote cat is critically endangered</a></li>
+        <li><a href="https://www.jtef.jp/en/iriomote-cat/">Japan Tiger &amp; Elephant Fund: Iriomote cat</a></li>
+        <li><a href="https://www.visit-okinawa.com/en/destinations/yaeyama-islands/iriomote-island/">Visit Okinawa: Iriomote Island</a></li>
+        <li><a href="https://nippon100.com/en/taketomi-tanadui">Nippon100: Taketomi's Tanadui festival</a></li>
+        <li><a href="https://yaeyamaislands.jp/eventcalendar/">Yaeyama Islands event calendar</a></li>
+        <li><a href="https://en.wikipedia.org/wiki/Ishigaki_Island">Ishigaki Island (Wikipedia)</a></li>
+      </ul>
+      <h4>Images (Wikimedia Commons)</h4>
+      <ul id="credits"></ul>
+    </div>
+  </details>
+</section>
+
+</main>
+
+<nav class="controls">
+  <button id="prev" aria-label="Previous slide">‹</button>
+  <span id="counter">1 / 12</span>
+  <button id="next" aria-label="Next slide">›</button>
+  <button id="fs" aria-label="Fullscreen">⤢</button>
+</nav>
+<p class="hint">Use ← → to move. Press F for fullscreen.</p>
+
+<!-- Yaeyama effects: weaving belt, island hopper, p-keeper machine, du builder, loom, angama, timeline, treasures -->
+<script>
+(function () {
+  /* ---------- Background: star sand + the minsa belt ---------- */
+  var sandbox = document.querySelector("#cloth .sand");
+  for (var k = 0; k < 42; k++) {
+    var g = document.createElement("i");
+    g.style.left = Math.random() * 100 + "%";
+    g.style.top = Math.random() * 100 + "%";
+    g.style.animationDelay = (-Math.random() * 18) + "s";
+    g.style.animationDuration = (14 + Math.random() * 12) + "s";
+    var sz = 4 + Math.round(Math.random() * 4);
+    g.style.width = sz + "px"; g.style.height = sz + "px";
+    sandbox.appendChild(g);
+  }
+
+  var inner = document.querySelector("#cloth .obi .inner");
+  var y = 1.4, group = 5;
+  while (y < 108) {
+    for (var s = 0; s < group; s++) {
+      var sq = document.createElement("div");
+      sq.className = "sq";
+      sq.style.top = y + "vh"; sq.style.height = "1.5vh";
+      inner.appendChild(sq);
+      y += 2.1;
+    }
+    var leg = document.createElement("div");
+    leg.className = "leg";
+    leg.style.top = (y + .3) + "vh"; leg.style.height = ".5vh"; leg.style.left = "6%";
+    inner.appendChild(leg);
+    var leg2 = leg.cloneNode();
+    leg2.style.left = "80%";
+    inner.appendChild(leg2);
+    y += 2.4;
+    group = group === 5 ? 4 : 5;
+  }
+
+  document.addEventListener("slidechange", function (e) {
+    document.body.style.setProperty("--t", e.detail.index / (e.detail.total - 1));
+  });
+
+  function single(selector, callback) {
+    var grp = document.querySelectorAll(selector);
+    grp.forEach(function (b) {
+      b.addEventListener("click", function () {
+        grp.forEach(function (x) { x.classList.remove("on"); });
+        b.classList.add("on");
+        callback(b);
+      });
+    });
+  }
+
+  /* ---------- Island hopper ---------- */
+  var ISLANDS = [
+    ["Ishigaki", "The big one: about 47,000 people, the airport, the ferry port and the high school. Its speech is the variety usually used to represent Yaeyama as a whole."],
+    ["Taketomi", "Tiny, flat and sandy, with a few hundred residents and lanes of white coral gravel. Home of minsā weaving, star-sand beaches, and the ten-day Tanadui harvest festival. Oddly, its speech may be closer to Okinawan than to the rest of Yaeyama."],
+    ["Iriomote", "Over ninety percent jungle and mangrove, with the island's only wildcat and almost no roads. Part of a UNESCO World Heritage area since 2021."],
+    ["Hateruma", "Japan's southernmost inhabited island, and the only place in the country with a view of the Southern Cross. Oyake Akahachi, who led the 1500 revolt, is said to have been born here."],
+    ["Kuroshima", "Heart-shaped, flat, and home to far more cattle than people. Most islanders raise calves that are sold to farms all over Japan."],
+    ["Aragusuku", "Two small islands known locally as Panari, with almost no permanent residents left — but still visited for festivals, and famous for an old style of pottery."]
+  ];
+  function showIsland(i) {
+    document.getElementById("islandname").textContent = ISLANDS[i][0];
+    document.getElementById("islandfact").textContent = ISLANDS[i][1];
+  }
+  single("#islands .sbtn", function (b) { showIsland(Number(b.dataset.i)); });
+  showIsland(0);
+
+  /* ---------- The p-keeper machine ---------- */
+  var WORDS = [
+    { jp: "hato", ya: "patu", en: "dove", old: "ancient form: *pato", ok: ["h", "o"] },
+    { jp: "hone", ya: "puni", en: "bone", old: "ancient form: *ponay", ok: ["h", "o", "e"] },
+    { jp: "fune", ya: "funi", en: "boat", old: "ancient form: *punay", ok: ["e"] },
+    { jp: "wata", ya: "bada", en: "insides, guts", old: "ancient form: *wata", ok: ["w", "t"] }
+  ];
+  var RULES = {
+    h: function (w) { return w.replace(/^h/, "p"); },
+    w: function (w) { return w.replace(/^w/, "b"); },
+    t: function (w) { return w.replace(/([aeiou])t(?=[aeiou])/g, "$1d"); },
+    o: function (w) { return w.replace(/o/g, "u"); },
+    e: function (w) { return w.replace(/e/g, "i"); }
+  };
+  var cur = 0, word = "";
+  var lettersEl = document.getElementById("letters");
+  var mmsg = document.getElementById("mmsg");
+  function draw(changed, done) {
+    lettersEl.innerHTML = "";
+    word.split("").forEach(function (ch, i) {
+      var span = document.createElement("span");
+      span.textContent = ch;
+      if (done) span.className = "done";
+      else if (changed && changed[i]) span.className = "flash";
+      lettersEl.appendChild(span);
+    });
+  }
+  function loadWord(i) {
+    cur = i; word = WORDS[i].jp;
+    document.getElementById("mold").textContent = WORDS[i].old;
+    document.getElementById("mgloss").textContent = "Japanese: " + WORDS[i].jp + ", \"" + WORDS[i].en + "\"";
+    mmsg.textContent = "Which rules apply? Click them on the right.";
+    draw();
+  }
+  single("#mwords .sbtn", function (b) { loadWord(Number(b.dataset.v)); });
+  document.querySelectorAll(".rule").forEach(function (r) {
+    r.addEventListener("click", function () {
+      var id = r.dataset.r;
+      var next = RULES[id](word);
+      if (next === word) { mmsg.textContent = "That rule doesn't change this word. Try another!"; return; }
+      if (WORDS[cur].ok.indexOf(id) === -1) {
+        mmsg.textContent = "Careful — that change doesn't happen in this word. Nothing moved.";
+        return;
+      }
+      var changed = next.split("").map(function (ch, i) { return ch !== word[i]; });
+      word = next;
+      if (word === WORDS[cur].ya) {
+        draw(changed);
+        mmsg.textContent = "";
+        setTimeout(function () {
+          draw(null, true);
+          mmsg.textContent = "✓ " + word + " is Yaeyama for \"" + WORDS[cur].en + "\"!";
+        }, 700);
+      } else {
+        draw(changed);
+        mmsg.textContent = "Changed! Keep going.";
+      }
+    });
+  });
+  document.getElementById("mreset").addEventListener("click", function () { loadWord(cur); });
+  loadWord(0);
+
+  /* ---------- du sentence builder ---------- */
+  var chips = document.querySelectorAll("#sent .chip");
+  var duline = document.getElementById("duline");
+  var dumsg = document.getElementById("dumsg");
+  function renderDu(marked) {
+    var parts = [];
+    chips.forEach(function (c) {
+      parts.push(c.dataset.w + (c.classList.contains("hasdu") ? "-du" : ""));
+    });
+    duline.className = "duline" + (marked === "taa" ? " good" : marked ? "" : " bad");
+    duline.textContent = (marked ? "" : "✻ ") + parts.join(" ");
+    if (marked === "taa") {
+      dumsg.innerHTML = "<strong style='color:var(--leaf)'>That's it.</strong> <em>taa-du suba-ba fai</em> — \"Who ate the soba?\" The spotlight sits on the question word, and the sentence works.";
+    } else if (marked) {
+      dumsg.innerHTML = "<strong style='color:var(--coral)'>Not there.</strong> In Yaeyama the <em>du</em> has to ride on the question word — here that's <em>taa</em>, \"who.\"";
+    } else {
+      dumsg.innerHTML = "<strong style='color:var(--coral)'>✻ Ungrammatical.</strong> All the words are right and the order is right, but with no <em>du</em> anywhere, speakers reject the sentence.";
+    }
+  }
+  chips.forEach(function (c) {
+    c.addEventListener("click", function () {
+      chips.forEach(function (x) { x.classList.remove("hasdu"); });
+      c.classList.add("hasdu");
+      renderDu(c.dataset.w);
+    });
+  });
+  document.getElementById("duclear").addEventListener("click", function () {
+    chips.forEach(function (x) { x.classList.remove("hasdu"); });
+    renderDu(null);
+  });
+
+  /* ---------- Minsa loom ---------- */
+  var blocks = [], beltEl = document.getElementById("belt"), wmsg = document.getElementById("wmsg");
+  function drawBelt() {
+    beltEl.innerHTML = "";
+    blocks.forEach(function (n) {
+      var b = document.createElement("div");
+      b.className = "blk" + (n === 4 ? " b4" : "");
+      for (var i = 0; i < n; i++) b.appendChild(document.createElement("span"));
+      beltEl.appendChild(b);
+    });
+  }
+  function addBlock(n) {
+    if (blocks.length >= 6) { wmsg.textContent = "That belt is long enough! Press 'read my belt' or undo."; return; }
+    blocks.push(n); drawBelt();
+    wmsg.textContent = "Woven: " + blocks.join("–") + ".";
+  }
+  document.getElementById("w5").addEventListener("click", function () { addBlock(5); });
+  document.getElementById("w4").addEventListener("click", function () { addBlock(4); });
+  document.getElementById("wundo").addEventListener("click", function () {
+    blocks.pop(); drawBelt();
+    wmsg.textContent = blocks.length ? "Woven: " + blocks.join("–") + "." : "Back to an empty loom.";
+  });
+  document.getElementById("wcheck").addEventListener("click", function () {
+    var ok = blocks.length === 4 && blocks.every(function (n, i) { return n === (i % 2 === 0 ? 5 : 4); });
+    wmsg.style.color = ok ? "var(--leaf)" : "var(--coral)";
+    wmsg.innerHTML = ok
+      ? "Perfect: 5–4–5–4. <em>Itsu no yo made mo</em> — forever. Now you can read a belt."
+      : "Not yet. The message needs four blocks alternating five, four, five, four — starting with five.";
+  });
+  drawBelt();
+
+  /* ---------- Angama question and answer ---------- */
+  var ANGAMA = [
+    ["Why does Obon last three days?", "Because in <b>gusō</b>, the afterlife, Obon is the three-day New Year holiday — and nobody works through their holiday. If you want to know more about it, come along with us and see!", "A real exchange, recorded on Ishigaki in 2015."],
+    ["What's the food like in gusō?", "Exactly what you set on the family altar — so if the rice is cold, grandchild, that is entirely your doing.", "In the spirit of Angama: the answer is always a tease aimed at the living."],
+    ["How old are you, Ushumai?", "Old enough that I have stopped counting, and young enough to dance all the way to your neighbour's house after this.", "In the spirit of Angama: Ushumai never answers a question straight."]
+  ];
+  var amsg = document.getElementById("amsg");
+  document.querySelectorAll("#angama .qbtn").forEach(function (b) {
+    b.addEventListener("click", function () {
+      document.querySelectorAll("#angama .qbtn").forEach(function (x) { x.classList.remove("on"); });
+      b.classList.add("on");
+      var a = ANGAMA[Number(b.dataset.a)];
+      amsg.innerHTML = "<em>(in a high, squeaky voice)</em> " + a[1] + "<br><span class='note'>" + a[2] + "</span>";
+    });
+  });
+  amsg.innerHTML = "<span class='note'>Pick a question. The spirits answer in Yaeyama, in falsetto, and the whole street laughs.</span>";
+
+  /* ---------- Timeline ---------- */
+  var EVENTS = [
+    ["Akahachi's revolt", "Oyake Akahachi, a chief based at Ōhama on Ishigaki, united much of Yaeyama and refused to send tribute to the Ryukyu Kingdom. In 1500 the kingdom sent an army of around 3,000 men and he was killed. Official histories call him a rebel; on the islands he is remembered as a hero."],
+    ["The head tax", "Once Ryukyu came under the control of Japan's Satsuma domain, a per-person tax was imposed on Miyako and Yaeyama — and Yaeyama was taxed especially hard, partly as punishment for Akahachi. Families owed grain and cloth whether the harvest came or not. The tax ran until 1903."],
+    ["The great tsunami", "On the morning of 24 April 1771, an earthquake sent a huge tsunami over the islands. Around 12,000 people died across Yaeyama and Miyako — roughly a third of Yaeyama's population. Boulders the size of houses still sit where the wave dropped them on Ishigaki's east coast."],
+    ["Okinawa Prefecture", "In 1879 Japan abolished the Ryukyu Kingdom and made it Okinawa Prefecture. Schools taught standard Japanese only, and across Okinawa children were punished for speaking island languages at school."],
+    ["War malaria", "In 1945 the Japanese army ordered Yaeyama's villagers into the malarial mountains of Iriomote. About half of the roughly 31,000 islanders caught malaria and thousands died. Malaria was finally wiped out in the islands in 1962."],
+    ["Back to Japan", "Okinawa was under United States administration until 1972. Today about 53,000 people live in Yaeyama, tourism is the big industry, and Yaimamuni is heard mostly in songs, festivals and the voices of elders."]
+  ];
+  var tlText = document.getElementById("tltext");
+  var evs = document.querySelectorAll("#tl .ev");
+  function setEvent(i) {
+    evs.forEach(function (e, k) { e.classList.toggle("on", k === i); });
+    tlText.innerHTML = '<strong style="color:var(--sand); font-size:1.2rem">' + EVENTS[i][0] + "</strong><br>" + EVENTS[i][1];
+  }
+  evs.forEach(function (e, i) { e.addEventListener("click", function () { setEvent(i); }); });
+  setEvent(0);
+
+  /* ---------- Island treasures ---------- */
+  var grains = document.getElementById("grains");
+  for (var n = 0; n < 26; n++) {
+    var gx = 12 + Math.random() * 196, gy = 14 + Math.random() * 84, r = 3 + Math.random() * 4;
+    var dot = document.createElementNS("http://www.w3.org/2000/svg", "circle");
+    dot.setAttribute("cx", gx.toFixed(1)); dot.setAttribute("cy", gy.toFixed(1)); dot.setAttribute("r", (r * .55).toFixed(1));
+    dot.setAttribute("class", "grain dot");
+    grains.appendChild(dot);
+    var star = document.createElementNS("http://www.w3.org/2000/svg", "path");
+    var p = "", arms = 5 + Math.round(Math.random());
+    for (var a = 0; a < arms; a++) {
+      var ang = (a / arms) * Math.PI * 2;
+      p += (a ? "L" : "M") + (gx + Math.cos(ang) * r).toFixed(1) + " " + (gy + Math.sin(ang) * r).toFixed(1) +
+           "Q" + gx.toFixed(1) + " " + gy.toFixed(1) + " " +
+           (gx + Math.cos(ang + Math.PI * 2 / arms) * r).toFixed(1) + " " + (gy + Math.sin(ang + Math.PI * 2 / arms) * r).toFixed(1);
+    }
+    var sp = document.createElementNS("http://www.w3.org/2000/svg", "path");
+    sp.setAttribute("d", p + "Z"); sp.setAttribute("class", "grain star");
+    grains.appendChild(sp);
+  }
+  var tabs = document.querySelectorAll(".tab");
+  single("#tabs .sbtn", function (b) {
+    tabs.forEach(function (t) { t.classList.toggle("on", t.dataset.p === b.dataset.tab); });
+  });
+  document.getElementById("zoomsand").addEventListener("click", function () {
+    var svg = document.getElementById("sandsvg");
+    svg.classList.toggle("zoomed");
+    this.textContent = svg.classList.contains("zoomed") ? "🔍 zoom back out" : "🔍 look closer";
+  });
+  document.getElementById("linkstars").addEventListener("click", function () {
+    var svg = document.getElementById("crosssvg");
+    svg.classList.toggle("linked");
+    this.textContent = svg.classList.contains("linked") ? "✦ hide the lines" : "✦ connect the stars";
+  });
+})();
+</script>
+<script src="../assets/deck.js"></script>
+</body>
+</html>
