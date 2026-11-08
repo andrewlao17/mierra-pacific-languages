@@ -1,0 +1,681 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Kaurna: The Language That Woke Up</title>
+<link rel="stylesheet" href="../assets/deck.css">
+<style>
+@import url("https://fonts.googleapis.com/css2?family=Crimson+Pro:wght@600;700&family=DM+Sans:wght@400;500;700;900&display=swap");
+
+/* ---------- Kaurna theme: parchment turning into country ---------- */
+:root {
+  --bg: #1a1410;
+  --ink: #f5efe0;
+  --muted: #d2c9b4;
+  --line: rgba(245, 239, 224, .22);
+  --panel: rgba(30, 22, 16, .86);
+  --ochre: #c45a2a;
+  --gum: #8aa882;
+  --parch: #e8dcc0;
+  --inkbrown: #5a4328;
+  --sky: #7ab8d4;
+  --wattle: #e8c02f;
+  --rose: #c45a2a;
+  --accent: var(--wattle);
+  --serif: "Crimson Pro", Georgia, serif;
+  --sans: "DM Sans", system-ui, sans-serif;
+  --t: 0;
+  font-size: clamp(12px, 1.3vw, 28px);
+}
+h1 { font-family: var(--serif); font-size: 5.6rem; font-weight: 700; line-height: 1.02; }
+h2 { font-family: var(--serif); font-size: 2.7rem; font-weight: 700; line-height: 1.12; }
+.slide { padding: 7vh 4vw 8vh 6vw; }
+.text { max-width: 44vw; }
+.text.wide { max-width: 86vw; width: 86vw; }
+.stage {
+  right: 5vw; top: 6vh; bottom: 10vh; width: 38vw;
+  display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 1.1rem;
+}
+ul.dots li { font-size: 1.04rem; }
+.speak .line, .card .word { font-family: var(--sans); font-weight: 900; }
+.card.revealed .meaning { max-height: 15rem; }
+.btn { background: var(--wattle); color: #2e2405; }
+.syl.on { background: var(--wattle); color: #2e2405; }
+.loc .disc { border-color: var(--wattle); box-shadow: 0 0 0 .55rem rgba(232,192,47,.16), 0 22px 40px rgba(0,0,0,.55); }
+.loc .tint { background: #d8c89f; }
+.loc .sea { background: #1d5f74; }
+.loc .tag { background: #241a12; border-color: var(--wattle); }
+.note { font-size: .82rem; color: var(--muted); }
+.quote { font-family: var(--serif); font-size: 1.75rem; font-weight: 700; line-height: 1.3; color: var(--wattle); }
+
+/* ---------- Background: page becoming country ---------- */
+#country { position: fixed; inset: 0; z-index: 0; overflow: hidden; pointer-events: none;
+  background: linear-gradient(180deg, #16100c 0%, #241a12 48%, #30221a 100%); }
+#country .page { position: absolute; inset: 0; background: var(--parch);
+  opacity: calc(1 - var(--t) * .86); transition: opacity 1.7s ease; }
+#country .page .rules { position: absolute; inset: 0;
+  background: repeating-linear-gradient(0deg, transparent 0 46px, rgba(90,67,40,.22) 46px 47px); }
+#country .page svg { position: absolute; inset: 0; width: 100%; height: 100%; }
+#country .land { position: absolute; inset: 0; opacity: var(--t); transition: opacity 1.7s ease; }
+#country .land .sky { position: absolute; inset: 0 0 34vh 0; background: linear-gradient(180deg, #2d6d8c 0%, #7ab8d4 70%, #e8c9a0 100%); }
+#country .land .plain { position: absolute; left: 0; right: 0; bottom: 0; height: 36vh;
+  background: linear-gradient(180deg, #b8632f 0%, #8c4620 60%, #5e2f16 100%); }
+#country .land .plain::before { content: ""; position: absolute; inset: 0;
+  background: repeating-linear-gradient(90deg, rgba(0,0,0,.07) 0 3px, transparent 3px 22px); }
+#country .land .gums { position: absolute; left: 0; right: 0; bottom: 28vh; height: 30vh; }
+#country .land .gums svg { width: 100%; height: 100%; display: block; }
+#country .land .river { position: absolute; left: 0; right: 0; bottom: 6vh; height: 7vh;
+  background: linear-gradient(180deg, #4e8fa6, #27576b); opacity: .9; }
+#country .shade { position: absolute; inset: 0;
+  background: linear-gradient(90deg, rgba(10,7,5,.93) 0%, rgba(10,7,5,.74) 50%, rgba(10,7,5,.24) 100%);
+  opacity: calc(.25 + var(--t) * .75); transition: opacity 1.7s ease; }
+#country .shadeP { position: absolute; inset: 0;
+  background: linear-gradient(90deg, rgba(232,220,192,.96) 0%, rgba(232,220,192,.8) 50%, rgba(232,220,192,.3) 100%);
+  opacity: calc(1 - var(--t) * 1.2); transition: opacity 1.7s ease; }
+
+/* ---------- Photos ---------- */
+.board { position: relative; margin: 0; width: var(--w, 19vw); padding: .6rem .6rem .5rem;
+  background: var(--parch); border-radius: .2rem; box-shadow: 0 18px 34px rgba(0,0,0,.6);
+  transform: rotate(var(--r, 0deg)); transition: transform .9s cubic-bezier(.2,.8,.2,1), opacity .7s ease; }
+.slide:not(.active) .board { opacity: 0; transform: translateY(46px) rotate(var(--r, 0deg)); }
+.slide.active .board { transition-delay: calc(.4s + var(--d, 0) * .16s); }
+.board img { display: block; width: 100%; aspect-ratio: var(--ar, 4 / 3); object-fit: cover; background: #c9bfa4; }
+.board figcaption { color: #241a12; font-size: .73rem; font-weight: 700; line-height: 1.25; margin: .4rem .1rem 0; font-family: var(--serif); }
+
+/* ---------- Shared controls ---------- */
+.switch { display: flex; gap: .4rem; margin: .4rem 0 .6rem; flex-wrap: wrap; }
+.sbtn { font: inherit; font-weight: 700; font-size: .92rem; color: var(--ink); background: var(--panel);
+  border: 2px solid var(--line); border-radius: .3rem; padding: .25em .9em; cursor: pointer; transition: transform .2s; }
+.sbtn:hover { transform: translateY(-2px); }
+.sbtn.on { background: var(--wattle); border-color: var(--wattle); color: #2e2405; }
+.out { min-height: 3.2em; margin-top: .5rem; }
+
+/* ---------- Sleeping vs dead ---------- */
+.terms { display: grid; gap: .4rem; }
+.term { font: inherit; text-align: left; font-weight: 700; font-size: .9rem; color: var(--ink); background: var(--panel);
+  border: 2px solid var(--line); border-radius: .3rem; padding: .45em .75em; cursor: pointer; }
+.term:hover { border-color: var(--wattle); }
+.term.on { border-color: var(--wattle); background: rgba(232,192,47,.14); }
+#tmsg { min-height: 5.6em; margin-top: .4rem; }
+
+/* ---------- Archive counter ---------- */
+.archive { display: grid; gap: .35rem; }
+.arow { display: grid; grid-template-columns: 9rem 1fr 3.4rem; gap: .4rem; align-items: center; }
+.arow span { font-size: .8rem; font-weight: 700; }
+.arow .ab { height: 1rem; border-radius: .2rem; background: var(--inkbrown); width: 0; transition: width 1.3s cubic-bezier(.2,.8,.2,1); }
+.arow .ab.good { background: var(--gum); }
+.arow .pc { font-size: .78rem; text-align: right; color: var(--muted); }
+#armsg { min-height: 4.6em; margin-top: .4rem; }
+
+/* ---------- Spelling puzzle ---------- */
+.spellbox { text-align: center; }
+.oldword { font-family: var(--serif); font-size: 2.4rem; color: var(--parch); background: rgba(232,220,192,.1);
+  border: 2px dashed var(--line); border-radius: .3rem; padding: .3rem 0; }
+.pair { display: flex; gap: .5rem; justify-content: center; margin: .5rem 0; }
+.pair button { font: 800 1.4rem var(--sans); color: var(--ink); background: var(--panel);
+  border: 2px solid var(--line); border-radius: .3rem; padding: .3em 1em; cursor: pointer; }
+.pair button.on { border-color: var(--wattle); background: rgba(232,192,47,.18); }
+#spmsg { min-height: 6em; }
+
+/* ---------- Conversation ---------- */
+.convo { display: grid; gap: .4rem; }
+.bub { padding: .5rem .7rem; border-radius: .6rem; max-width: 85%; font-size: .95rem; }
+.bub.them { background: rgba(138,168,130,.2); border: 2px solid rgba(138,168,130,.5); justify-self: start; }
+.bub.you { background: rgba(232,192,47,.18); border: 2px solid rgba(232,192,47,.5); justify-self: end; text-align: right; }
+.bub b { font-family: var(--sans); font-size: 1.15rem; display: block; }
+.bub small { color: var(--muted); }
+.choices { display: grid; gap: .3rem; margin-top: .4rem; }
+.ch { font: inherit; font-weight: 700; font-size: .9rem; color: var(--ink); background: var(--panel);
+  border: 2px solid var(--line); border-radius: .3rem; padding: .4em .7em; cursor: pointer; text-align: left; }
+.ch:hover { border-color: var(--wattle); }
+
+/* ---------- Word making ---------- */
+.strats { display: grid; gap: .4rem; }
+.st { font: inherit; text-align: left; font-weight: 700; font-size: .88rem; color: var(--ink); background: var(--panel);
+  border: 2px solid var(--line); border-left: 6px solid var(--sc, var(--ochre)); border-radius: .3rem; padding: .4em .75em; cursor: pointer; }
+.st:hover { transform: translateX(3px); }
+#stmsg { min-height: 5.6em; margin-top: .4rem; }
+
+/* ---------- Place name map ---------- */
+.pmap { position: relative; width: 100%; aspect-ratio: 5 / 4; max-width: 17rem; margin: .3rem auto;
+  background: rgba(196,90,42,.14); border: 2px solid var(--line); border-radius: .4rem; overflow: hidden; }
+.pmap svg { position: absolute; inset: 0; width: 100%; height: 100%; }
+.pin { position: absolute; transform: translate(-50%, -50%); border: 0; cursor: pointer;
+  background: var(--panel); border: 2px solid var(--wattle); border-radius: 999px; color: var(--ink);
+  font: 700 .66rem var(--sans); padding: .15em .5em; white-space: nowrap; }
+.pin:hover { transform: translate(-50%, -50%) scale(1.1); }
+.pin.on { background: var(--wattle); color: #2e2405; }
+#pmsg { min-height: 5.4em; margin-top: .4rem; }
+
+/* ---------- Timeline ---------- */
+.tl { display: grid; grid-template-columns: repeat(6, 1fr); gap: .55rem; margin-top: 1rem; position: relative; padding-bottom: 1.4rem; }
+.tl::after { content: ""; position: absolute; left: 0; right: 0; bottom: .45rem; height: 3px; border-radius: 3px;
+  background: linear-gradient(90deg, var(--inkbrown), var(--ochre), var(--gum)); }
+.ev { font: inherit; text-align: left; color: #221a10; background: var(--ec); border: 0; border-radius: .3rem;
+  padding: .65rem .75rem; cursor: pointer; transition: transform .25s, box-shadow .25s; }
+.ev:hover { transform: translateY(-4px); }
+.ev.on { box-shadow: 0 0 0 3px #fff, 0 10px 24px rgba(0,0,0,.4); transform: translateY(-6px); }
+.ev .yr { font-family: var(--serif); font-weight: 700; font-size: 1.3rem; line-height: 1; display: block; }
+.ev small { display: block; font-weight: 700; font-size: .76rem; margin-top: .3rem; }
+#tltext { min-height: 5.4rem; margin-top: .4rem; }
+
+/* ---------- Quiz tint ---------- */
+.opt.right { background: var(--gum); }
+.opt.wrong { background: var(--ochre); }
+
+@media (max-width: 820px) {
+  .slide { padding: 6vh 6vw 12vh; }
+  h1 { font-size: 3.2rem; }
+  .text, .text.wide { max-width: none; width: auto; }
+  .stage { position: relative; inset: auto; width: 100%; margin-top: 1.5rem; }
+  .board { width: 74vw; }
+  .stage .panel, .stage .speak { width: 100% !important; max-width: none !important; }
+  .tl { grid-template-columns: repeat(2, 1fr); }
+}
+</style>
+</head>
+<body data-map="BlankMap-Equirectangular.svg">
+
+<div id="country" aria-hidden="true">
+  <div class="page">
+    <div class="rules"></div>
+    <svg viewBox="0 0 1200 800" preserveAspectRatio="none">
+      <g stroke="#5a4328" stroke-width="2.5" fill="none" opacity=".55" stroke-linecap="round">
+        <path d="M80 70 q18 -22 34 0 q14 18 30 -4 q16 -20 34 2 M200 70 q22 -18 40 2"/>
+        <path d="M80 164 q26 -24 48 2 q20 22 44 -6 q18 -20 40 4 M240 164 q30 -20 54 4"/>
+        <path d="M80 258 q20 -26 42 0 q18 22 38 -4 M190 258 q28 -22 50 2 q22 20 44 -4"/>
+        <path d="M80 352 q24 -20 44 2 q20 20 42 -6 M190 352 q26 -18 46 4"/>
+        <path d="M80 446 q18 -24 38 0 q20 24 44 -4 q20 -22 42 2 M230 446 q24 -18 44 2"/>
+        <path d="M80 540 q22 -22 44 2 q18 18 38 -4 M186 540 q30 -22 54 4 q20 18 40 -2"/>
+        <path d="M80 634 q20 -20 40 2 q22 22 46 -6 M190 634 q26 -20 48 2"/>
+        <path d="M80 728 q24 -24 46 0 q18 20 40 -4"/>
+      </g>
+    </svg>
+  </div>
+  <div class="land">
+    <div class="sky"></div>
+    <div class="gums">
+      <svg viewBox="0 0 1600 300" preserveAspectRatio="none">
+        <g stroke="#9aa89a" stroke-width="12" fill="none" stroke-linecap="round">
+          <path d="M140 300 V120 M140 170 l-50 -46 M140 150 l54 -50"/>
+          <path d="M520 300 V90 M520 150 l-62 -54 M520 130 l58 -46"/>
+          <path d="M1000 300 V140 M1000 190 l-48 -44 M1000 170 l52 -48"/>
+          <path d="M1400 300 V100 M1400 160 l-56 -50 M1400 140 l50 -42"/>
+        </g>
+        <g fill="#7f9a7a" opacity=".85">
+          <ellipse cx="110" cy="110" rx="70" ry="40"/><ellipse cx="190" cy="96" rx="62" ry="36"/>
+          <ellipse cx="482" cy="82" rx="78" ry="44"/><ellipse cx="572" cy="94" rx="66" ry="38"/>
+          <ellipse cx="968" cy="132" rx="70" ry="40"/><ellipse cx="1046" cy="146" rx="60" ry="34"/>
+          <ellipse cx="1364" cy="96" rx="74" ry="42"/><ellipse cx="1448" cy="110" rx="62" ry="36"/>
+        </g>
+      </svg>
+    </div>
+    <div class="plain"></div>
+    <div class="river"></div>
+  </div>
+  <div class="shadeP"></div>
+  <div class="shade"></div>
+</div>
+<div class="progress"></div>
+
+<main>
+
+<!-- 1. Title -->
+<section class="slide" style="--accent: var(--wattle)">
+  <div class="text">
+    <p class="kicker in">Rare Languages of the Asia-Pacific · Module 30</p>
+    <h1 class="in" style="--d:1">Kaurna</h1>
+    <p class="in" style="--d:2; font-size:1.35rem; font-weight:900; color:var(--wattle)">Kaurna warra · the Adelaide Plains, South Australia</p>
+    <div class="bar in" style="--d:3"></div>
+    <p class="lead in" style="--d:4">Every module in this course has ended with the same worry: documentation preserves, but only speakers continue. Here is the language that tested whether a community can put that in reverse</p>
+    <p class="muted in" style="--d:5">Watch the background: a page of handwriting is about to turn back into country.</p>
+  </div>
+  <div class="stage">
+    <figure class="board" style="--w:24vw; --r:-1.5deg; --d:0">
+      <img data-wiki="Adelaide Park Lands" data-width="1200" alt="The Adelaide Park Lands, South Australia">
+      <figcaption>The Adelaide Park Lands — every one of them now carries a Kaurna name</figcaption>
+    </figure>
+  </div>
+</section>
+
+<!-- 2. Where and who -->
+<section class="slide" data-tr="left" style="--accent: var(--gum)">
+  <div class="text">
+    <p class="kicker in">Where and who</p>
+    <h2 class="in" style="--d:1">A city built on top of it</h2>
+    <div class="bar in" style="--d:2"></div>
+    <ul class="dots">
+      <li class="in" style="--d:3"><span class="hl">Kaurna warra</span> is the language of the Adelaide Plains — the flat, fertile country between the Mount Lofty Ranges and the sea in South Australia. <span class="hl">Kaurna meyunna</span> means "Kaurna people."</li>
+      <li class="in" style="--d:4">In 1836 the British founded the city of Adelaide directly on that country. Within a human lifetime the language had stopped being spoken as an everyday tongue.</li>
+      <li class="in" style="--d:5">The person usually named as the last first-language speaker, <strong>Ivaritji</strong>, died in <strong>1929</strong>. For roughly sixty years after that, nobody spoke Kaurna.</li>
+      <li class="in" style="--d:6">Today you will hear it at the opening of events across Adelaide, in schools, in the names of the Park Lands and on university courses. That is not a survival story. It is a <strong>reawakening</strong> story, and it is different.</li>
+    </ul>
+    <p class="note in" style="--d:7">Australia had hundreds of languages before 1788. Roughly a dozen are still being learned by children. Dozens more are in the position Kaurna was in — recorded on paper, waiting.</p>
+  </div>
+  <div class="stage">
+    <div class="loc" data-lat="-34.93" data-lon="138.6" data-zoom="5" style="--s:13vw; --d:0">
+      <div class="disc"><div class="lmap"></div><div class="tint"></div><div class="sea"></div><span class="pinpt"></span></div>
+      <span class="tag">Adelaide Plains, South Australia</span>
+    </div>
+    <div class="panel in" style="--d:4; width:34vw">
+      <strong>Why this module is last of its kind</strong>
+      <p class="note" style="margin:.3rem 0 0">Yonaguni, Nivkh, Ket, Rapa Nui — each one still has speakers, and each module ended with the same unanswered question: if the last speaker goes, is that it?</p>
+      <p class="note" style="margin:.4rem 0 0">Kaurna went past that point. It has been there and come back. Whatever you think about language revival, this is the case to argue from.</p>
+    </div>
+  </div>
+</section>
+
+<!-- 3. Sleeping, not dead -->
+<section class="slide" data-tr="zoom" style="--accent: var(--wattle)">
+  <div class="text">
+    <p class="kicker in">Words matter</p>
+    <h2 class="in" style="--d:1">"Sleeping," not "extinct"</h2>
+    <div class="bar in" style="--d:2"></div>
+    <p class="in" style="--d:3">Linguists used to write that Kaurna was <em>extinct</em>. Many Aboriginal communities reject that word, and the terminology you will see in Australia now is <strong>sleeping</strong>, <strong>dormant</strong> or <strong>awakening</strong>.</p>
+    <p class="in" style="--d:4">This is not politeness. It is a claim about what a language <em>is</em> — and it has practical consequences. Work through the panel.</p>
+    <p class="note in" style="--d:5">Notice how the terminology changes what you expect to be possible. If a language is extinct, the only sensible response is to study it. If it is sleeping, the sensible response is to wake it up.</p>
+  </div>
+  <div class="stage">
+    <div class="panel in" style="--d:3; width:35vw">
+      <strong>Four words for the same situation:</strong>
+      <div class="terms" id="terms" style="margin-top:.5rem">
+        <button class="term" data-t="0">"extinct"</button>
+        <button class="term" data-t="1">"dead"</button>
+        <button class="term" data-t="2">"sleeping"</button>
+        <button class="term" data-t="3">"awakening"</button>
+      </div>
+      <p id="tmsg" aria-live="polite">Click each one.</p>
+    </div>
+  </div>
+</section>
+
+<!-- 4. The archive -->
+<section class="slide" style="--accent: var(--inkbrown)">
+  <div class="text">
+    <p class="kicker in">The accidental archive</p>
+    <h2 class="in" style="--d:1">Two German missionaries, 1838</h2>
+    <div class="bar in" style="--d:2"></div>
+    <ul class="dots">
+      <li class="in" style="--d:3">In October 1838, two years after the colony was founded, <strong>Christian Teichelmann</strong> and <strong>Clamor Schürmann</strong> arrived in Adelaide — Lutheran missionaries trained in Germany. They set about learning Kaurna properly, working with Kaurna men including <strong>Mullawirraburka</strong>, <strong>Kadlitpinna</strong> and <strong>Ityamaiitpinna</strong>.</li>
+      <li class="in" style="--d:4">In December 1839 they opened a school at <span class="hl">Piltawodli</span>, on the north bank of the River Torrens, where Kaurna children were taught to read and write <strong>in their own language</strong>.</li>
+      <li class="in" style="--d:5">In <strong>1840</strong> they published a grammar sketch and vocabulary. Across all the historical sources, somewhere between <strong>3,000 and 3,500</strong> Kaurna words were written down — at the time the largest Aboriginal wordlist recorded anywhere in Australia.</li>
+      <li class="in" style="--d:6">Their motive was conversion. They translated the Ten Commandments and German hymns, and never finished the Bible. Their legacy turned out to be something else entirely.</li>
+    </ul>
+    <p class="note in" style="--d:7">Both men also believed colonisation was a menace to the people they lived among, and said so. Within a few years the authorities closed the Kaurna-language school and moved the children into English-only education.</p>
+  </div>
+  <div class="stage">
+    <div class="panel in" style="--d:3; width:34vw">
+      <strong>What survived on paper</strong>
+      <div class="archive" style="margin-top:.5rem">
+        <div class="arow"><span>words recorded</span><div class="ab good" data-w="88"></div><div class="pc">~3,500</div></div>
+        <div class="arow"><span>sentences</span><div class="ab good" data-w="42"></div><div class="pc">hundreds</div></div>
+        <div class="arow"><span>grammar sketch</span><div class="ab" data-w="24"></div><div class="pc">24 pp</div></div>
+        <div class="arow"><span>audio recordings</span><div class="ab" data-w="0"></div><div class="pc">none</div></div>
+      </div>
+      <p id="armsg" style="margin-top:.4rem">Enough to rebuild a vocabulary and a grammar. Not enough to know, for certain, what it sounded like — there is not one second of recorded Kaurna speech from a first-language speaker.</p>
+    </div>
+  </div>
+</section>
+
+<!-- 5. Reading German handwriting -->
+<section class="slide" data-tr="left" style="--accent: var(--ochre)">
+  <div class="text">
+    <p class="kicker in">Be the reviver</p>
+    <h2 class="in" style="--d:1">Is it <em>pudni</em> or <em>budni</em>?</h2>
+    <div class="bar in" style="--d:2"></div>
+    <p class="in" style="--d:3">Here is the first problem anyone reviving Kaurna hits. The missionaries wrote the language down using <strong>German spelling conventions</strong>, by ear, with no recording equipment and no training in phonetics as we know it.</p>
+    <p class="in" style="--d:4">So when their notebooks give two spellings for the same word, you have to work out whether that is two different words, a mistake — or something about Kaurna itself that German ears could not hear.</p>
+    <p class="in" style="--d:5">Try it in the panel with a word you will use on the next slide.</p>
+    <p class="note in" style="--d:6">This is what "reviving from documents" actually involves. Not finding a lost book — reading an existing one extremely carefully, and reasoning about the gaps.</p>
+  </div>
+  <div class="stage">
+    <div class="panel in" style="--d:3; width:35vw">
+      <div class="spellbox">
+        <strong>The record shows both spellings:</strong>
+        <div class="oldword" id="oldword">…naa <em>pudni</em> / …naa <em>budni</em></div>
+        <p class="note" style="margin:.3rem 0">Which one is right?</p>
+        <div class="pair" id="pair">
+          <button data-p="0">pudni</button><button data-p="1">budni</button><button data-p="2">both</button>
+        </div>
+      </div>
+      <p id="spmsg" aria-live="polite">Make a call, then see what the linguists concluded.</p>
+    </div>
+  </div>
+</section>
+
+<!-- 6. Speak along -->
+<section class="slide" style="--accent: var(--gum)">
+  <div class="text">
+    <p class="kicker in">Speak along</p>
+    <h2 class="in" style="--d:1">Have a conversation in Kaurna</h2>
+    <div class="bar in" style="--d:2"></div>
+    <p class="in" style="--d:3">This is the part that makes Kaurna different from every other module in this course. You are not learning a few words of something dying. You are learning the same greetings that get used in Adelaide schools and at public events every week.</p>
+    <div class="speak panel compact in" data-tempo="540" style="--d:4; padding:.8rem 1rem; margin-top:.5rem">
+      <div class="line" data-syl="nii·na mar·ni"></div><p class="gloss">are you good? — hello, to one person</p>
+      <div class="line" data-syl="mar·ni·ai"></div><p class="gloss">I'm good</p>
+      <button class="btn play">▶ Say them</button>
+    </div>
+    <p class="note in" style="--d:5; margin-top:.5rem">The greeting song <em>Niina Marni</em> was composed by Aunty Cherie Warrarra Watkins at Kaurna Plains School, and children across South Australia now learn it.</p>
+    <p class="note in" style="--d:6">Kaurna marks how many people you are talking to: <strong>niina</strong> for one, <strong>niwa</strong> for two, <strong>naa</strong> for a group. English lost that distinction centuries ago.</p>
+  </div>
+  <div class="stage">
+    <div class="panel in" style="--d:3; width:35vw">
+      <strong>Walk through it:</strong>
+      <div class="convo" id="convo" style="margin-top:.5rem"></div>
+      <div class="choices" id="choices"></div>
+    </div>
+  </div>
+</section>
+
+<!-- 7. Waking it up -->
+<section class="slide" data-tr="zoom" style="--accent: var(--wattle)">
+  <div class="text">
+    <p class="kicker in">How it was done</p>
+    <h2 class="in" style="--d:1">It started with a songbook</h2>
+    <div class="bar in" style="--d:2"></div>
+    <ul class="dots">
+      <li class="in" style="--d:3">In <strong>1989</strong>, Kaurna people and the linguist <strong>Rob Amery</strong> began working together — not on a dictionary, but on <strong>songs</strong>. Children at Kaurna Plains School needed something to sing.</li>
+      <li class="in" style="--d:4">That is the right order, and it is not obvious. Songs are short, memorable, performable and public. They give people something to <em>do</em> with a language before anyone can hold a conversation in it.</li>
+      <li class="in" style="--d:5">From there: school programmes, a university course from 1997, Amery's doctoral thesis on reclaiming Kaurna from written sources, and in <strong>2002</strong> the founding of <span class="hl">Kaurna Warra Pintyanthi</span> — "creating Kaurna language" — by elders <strong>Alitya Rigney</strong> and <strong>Lewis Yerloburka O'Brien</strong> with Amery.</li>
+      <li class="in" style="--d:6">KWP does the slow work: answering requests for names and translations, building teaching materials, and deciding on new words.</li>
+    </ul>
+    <p class="note in" style="--d:7">Note who leads. The linguist is a collaborator; the authority over the language sits with Kaurna elders and the community body. Revivals that get this backwards tend not to last.</p>
+  </div>
+  <div class="stage">
+    <div class="cards in" style="--d:3; grid-template-columns:1fr; width:34vw">
+      <div class="card" style="--cardc: var(--wattle)"><div class="word">Why songs first?</div><div class="meaning">Because a song can be sung correctly by someone who does not yet speak the language — and singing it in public, to an audience, makes the language real in a way that a wordlist never does. Several Australian revivals have started the same way.</div><div class="tap">click to reveal</div></div>
+      <div class="card" style="--cardc: var(--gum)"><div class="word">Who owns the language?</div><div class="meaning">The Kaurna community. KWP exists partly so that requests — for a name, a translation, a Welcome to Country — go to a Kaurna-led body rather than to whoever happens to answer the phone. Control over how the language is used is part of the revival, not a side issue.</div><div class="tap">click to reveal</div></div>
+      <div class="card" style="--cardc: var(--ochre)"><div class="word">Is it the same language?</div><div class="meaning">Honestly: it is a reconstruction. Modern Kaurna is based on 19th-century records, filled out with new words, and spoken by people whose first language is English. Linguists distinguish the historical sources from the emerging modern language. Both are Kaurna. Neither is a fake.</div><div class="tap">click to reveal</div></div>
+    </div>
+  </div>
+</section>
+
+<!-- 8. Making new words -->
+<section class="slide" style="--accent: var(--ochre)">
+  <div class="text">
+    <p class="kicker in">Be the committee</p>
+    <h2 class="in" style="--d:1">The 1840 dictionary has no word for "email"</h2>
+    <div class="bar in" style="--d:2"></div>
+    <p class="in" style="--d:3">A vocabulary recorded in 1840 describes the world of 1840. Reviving a language means deciding, deliberately and in public, what to call a phone, a hospital, a bus, a computer and a football club.</p>
+    <p class="in" style="--d:4">Every living language does this constantly — English did it with <em>computer</em>, <em>download</em> and <em>podcast</em>. The difference is that in a revival the decisions are made by a named committee, on the record, instead of by millions of people without noticing.</p>
+    <p class="in" style="--d:5">By the early 1990s more than a hundred new Kaurna terms had already been developed. Click the strategies in the panel, then try the challenge.</p>
+    <p class="note in" style="--d:6">There is no "correct" answer at the bottom of the panel — because in real life there isn't one either. The committee argues, decides, and the community either uses the word or quietly doesn't.</p>
+  </div>
+  <div class="stage">
+    <div class="panel in" style="--d:3; width:35vw">
+      <strong>How new words get made:</strong>
+      <div class="strats" id="strats" style="margin-top:.5rem">
+        <button class="st" data-s="0" style="--sc: var(--ochre)">Compound two old words</button>
+        <button class="st" data-s="1" style="--sc: var(--gum)">Extend an existing meaning</button>
+        <button class="st" data-s="2" style="--sc: var(--wattle)">Describe what it does</button>
+        <button class="st" data-s="3" style="--sc: var(--sky)">Borrow and reshape</button>
+      </div>
+      <p id="stmsg" aria-live="polite">Click a strategy.</p>
+      <p style="margin:.5rem 0 0"><strong>Your challenge:</strong> using only words that could plausibly have existed in 1840 — fire, talk, far, hand, lightning, shell, message, string — design a word for <em>telephone</em>. Then defend it against the other three strategies.</p>
+    </div>
+  </div>
+</section>
+
+<!-- 9. Place names -->
+<section class="slide" data-tr="left" style="--accent: var(--sky)">
+  <div class="text">
+    <p class="kicker in">The map changes</p>
+    <h2 class="in" style="--d:1">Putting the names back</h2>
+    <div class="bar in" style="--d:2"></div>
+    <p class="in" style="--d:3">The most visible part of the Kaurna revival is not in classrooms. It is on signs. Adelaide City Council and the South Australian government have restored Kaurna names across the city, in most cases as <strong>dual names</strong> alongside the English ones.</p>
+    <p class="in" style="--d:4">Every one of the Adelaide Park Lands — the ring of green that surrounds the city centre — now carries a Kaurna name. Click the map.</p>
+    <p class="in" style="--d:5">In <strong>2018</strong> the Federal Court recognised Kaurna <strong>native title</strong> over the Adelaide Plains, reported at the time as the first such determination covering an Australian capital city's metropolitan area.</p>
+    <p class="note in" style="--d:6">A name on a sign is a small thing and a large thing at once. It costs a council almost nothing. It also means a child riding past reads a Kaurna word every day without being taught it.</p>
+  </div>
+  <div class="stage">
+    <div class="panel in" style="--d:3; width:35vw">
+      <strong>Kaurna names in Adelaide:</strong>
+      <div class="pmap" id="pmap">
+        <svg viewBox="0 0 100 80" preserveAspectRatio="none">
+          <rect x="18" y="22" width="64" height="44" fill="rgba(245,239,224,.06)" stroke="rgba(245,239,224,.25)" stroke-width="1"/>
+          <path d="M0 30 Q30 22 54 30 Q78 38 100 30" stroke="#4e8fa6" stroke-width="3" fill="none"/>
+          <path d="M0 76 H100" stroke="rgba(245,239,224,.15)" stroke-width="1"/>
+        </svg>
+        <button class="pin" data-p="0" style="left:50%; top:62%">Tarntanya</button>
+        <button class="pin" data-p="1" style="left:50%; top:33%">Karrawirra Pari</button>
+        <button class="pin" data-p="2" style="left:22%; top:46%">Piltawodli</button>
+        <button class="pin" data-p="3" style="left:76%; top:80%">Park Lands</button>
+      </div>
+      <p id="pmsg" aria-live="polite">Click a place.</p>
+    </div>
+  </div>
+</section>
+
+<!-- 10. What revival can and can't do -->
+<section class="slide" style="--accent: var(--gum)">
+  <div class="text">
+    <p class="kicker in">The honest assessment</p>
+    <h2 class="in" style="--d:1">So — did it work?</h2>
+    <div class="bar in" style="--d:2"></div>
+    <p class="in" style="--d:3">It depends entirely on what you were asking for.</p>
+    <ul class="dots">
+      <li class="in" style="--d:4"><strong>If you wanted a community of fluent first-language speakers:</strong> not yet, and possibly not ever. There is no neighbourhood in Adelaide where Kaurna is the household language, and the modern language is spoken by people who think in English.</li>
+      <li class="in" style="--d:5"><strong>If you wanted the language used in public life:</strong> yes, comprehensively. Welcome to Country, school songs, place names, university courses, a language academy, new words made every year by a Kaurna-led body.</li>
+      <li class="in" style="--d:6"><strong>If you wanted a model others can follow:</strong> absolutely. Kaurna is now one of the most-cited reclamation projects in the world, and dozens of Australian communities have used its methods on their own sources.</li>
+    </ul>
+    <p class="in" style="--d:7">Hebrew is the usual comparison: revived from written sources into a national language with millions of speakers. It took a state, an education system, mass migration and a hundred years. Kaurna has a city council, a university department, some schools and about thirty-five years.</p>
+  </div>
+  <div class="stage">
+    <div class="panel in" style="--d:3; width:34vw">
+      <strong>The course's question, answered</strong>
+      <p style="margin:.3rem 0 0">Every module so far has ended with the same line: <em>documentation preserves, only speakers continue.</em> Kaurna shows that line is not quite right.</p>
+      <p style="margin:.5rem 0 0">Documentation is not a substitute for speakers. But if it is <strong>good enough</strong>, and the community wants it badly enough, it is a <strong>seed</strong>. Teichelmann and Schürmann were not trying to save a language for the 21st century. They did it anyway, by writing carefully.</p>
+    </div>
+    <div class="panel in" style="--d:5; width:34vw">
+      <strong>Your turn:</strong> you have one year and a small budget to document a language with ten elderly speakers. Knowing what Kaurna needed 180 years later, what exactly do you record — and in what order?
+    </div>
+  </div>
+</section>
+
+<!-- 11. Quiz -->
+<section class="slide" style="--accent: var(--wattle)">
+  <div class="text wide center">
+    <p class="kicker in">Review on the plains</p>
+    <h2 class="in" style="--d:1">Quick quiz!</h2>
+    <div class="bar in" style="--d:2"></div>
+    <div class="quizgrid">
+      <div class="quiz panel in" style="--d:3" data-right="Yes — Teichelmann and Schürmann, from 1838, with Kaurna teachers." data-wrong="Hint: they arrived two years after the colony was founded.">
+        <div class="q">What made the Kaurna revival possible?</div>
+        <div class="options"><button class="opt">Audio recordings</button><button class="opt" data-correct>19th-century missionary records</button><button class="opt">A surviving speaker</button></div>
+        <div class="feedback"></div>
+      </div>
+      <div class="quiz panel in" style="--d:4" data-right="Right — it implies the language can be woken, and that changes what people attempt." data-wrong="Hint: think about what each word implies is possible.">
+        <div class="q">Why say a language is "sleeping" rather than "extinct"?</div>
+        <div class="options"><button class="opt">It's more polite</button><button class="opt" data-correct>It implies it can come back</button><button class="opt">It's the legal term</button></div>
+        <div class="feedback"></div>
+      </div>
+      <div class="quiz panel in" style="--d:5" data-right="Correct — Kaurna Warra Pintyanthi, founded in 2002 by Kaurna elders with a linguist." data-wrong="Hint: a named, Kaurna-led body does it on the record.">
+        <div class="q">Who decides the Kaurna word for a modern invention?</div>
+        <div class="options"><button class="opt">The government</button><button class="opt" data-correct>A Kaurna-led language body</button><button class="opt">Nobody — they use English</button></div>
+        <div class="feedback"></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- 12. Closing -->
+<section class="slide end" style="--accent: var(--wattle)">
+  <div class="text">
+    <h1 class="in" style="font-size:4.6rem">Niina marni?</h1>
+    <p class="lead in" style="--d:1; margin-top:.8rem">Are you good? Thank you! Questions?</p>
+    <p class="quote in" style="--d:2">Two missionaries wrote down three thousand words in a language they were trying to replace. Ninety years after the last speaker died, the great-great-grandchildren of the people who taught them opened the book and started again.</p>
+    <p class="note in" style="--d:3">Marni naa pudni — and see you next module.</p>
+  </div>
+  <details class="fine in" style="--d:4">
+    <summary>Sources &amp; image credits</summary>
+    <div class="box">
+      <h4>Sources</h4>
+      <ul>
+        <li>Amery, <em>Warrabarna Kaurna! Reclaiming an Australian Language</em> (2000) — the standard account of the revival</li>
+        <li><a href="https://ses.library.usyd.edu.au/bitstream/handle/2123/6913/RAL-chapter-4.pdf">Amery, "Monitoring the use of Kaurna"</a> — Ivaritji, the missionary record, the naming of Kaurna Warra Pintyanthi</li>
+        <li><a href="https://core.ac.uk/download/pdf/32298853.pdf">Amery, "Reclaiming the Kaurna language: a long and lasting collaboration in an urban setting," <em>Language Documentation &amp; Conservation</em> 8 (2014)</a> — the 1989 songbook, KWP, the Kaurna men who taught the missionaries</li>
+        <li><a href="https://mobilelanguageteam.com.au/languages/kaurna/">Mobile Language Team: Kaurna</a> — the 3,000–3,500 word total and the source list</li>
+        <li><a href="https://en.wikipedia.org/wiki/Kaurna">Kaurna (Wikipedia)</a> — Piltawodli, the 1840 publication, Kaurna meyunna</li>
+        <li><a href="https://en.wikipedia.org/wiki/Christian_Gottlieb_Teichelmann">Christian Gottlieb Teichelmann (Wikipedia)</a> and <a href="https://en.wikipedia.org/wiki/Clamor_Wilhelm_Sch%C3%BCrmann">Clamor Wilhelm Schürmann (Wikipedia)</a></li>
+        <li>Teichelmann &amp; Schürmann, <em>Outlines of a grammar, vocabulary, and phraseology of the aboriginal language of South Australia</em> (Adelaide, 1840)</li>
+        <li><a href="https://en.wikipedia.org/wiki/Alitya_Rigney">Alitya Rigney (Wikipedia)</a> — co-founder of Kaurna Warra Pintyanthi</li>
+        <li><a href="https://adelaidia.history.sa.gov.au/subjects/kaurna-language-kaurna-warra">Amery, "Kaurna language (Kaurna warra)," Adelaidia (History SA)</a></li>
+        <li><a href="https://www.abc.net.au/education/niina-marni/104026218">ABC Education: the <em>Niina Marni</em> greeting song</a> — composed by Aunty Cherie Watkins</li>
+        <li><a href="https://polyglotclub.com/wiki/Language/Kaurna/Vocabulary/How-to-Say-Hello-and-Greetings">Kaurna greetings, including the singular / dual / plural forms</a></li>
+        <li>Amery &amp; Williams, "Reinstatement of Kaurna toponyms in Adelaide and the Adelaide Plains"</li>
+        <li>Amery &amp; Rigney, "Collaborative language revival — the work of Kaurna Warra Pintyandi" (2007)</li>
+      </ul>
+      <h4>Images (Wikimedia Commons)</h4>
+      <ul id="credits"></ul>
+    </div>
+  </details>
+</section>
+
+</main>
+
+<nav class="controls">
+  <button id="prev" aria-label="Previous slide">‹</button>
+  <span id="counter">1 / 12</span>
+  <button id="next" aria-label="Next slide">›</button>
+  <button id="fs" aria-label="Fullscreen">⤢</button>
+</nav>
+<p class="hint">Use ← → to move. Press F for fullscreen.</p>
+
+<!-- Kaurna effects: page becoming country, terminology, spelling puzzle, conversation, word-making, place names -->
+<script>
+(function () {
+  document.addEventListener("slidechange", function (e) {
+    document.body.style.setProperty("--t", e.detail.index / (e.detail.total - 1));
+  });
+
+  function single(selector, callback) {
+    var grp = document.querySelectorAll(selector);
+    grp.forEach(function (b) {
+      b.addEventListener("click", function () {
+        grp.forEach(function (x) { x.classList.remove("on"); });
+        b.classList.add("on");
+        callback(b);
+      });
+    });
+  }
+
+  /* ---------- Archive bars ---------- */
+  setTimeout(function () {
+    document.querySelectorAll(".arow .ab").forEach(function (b) { b.style.width = b.dataset.w + "%"; });
+  }, 500);
+
+  /* ---------- Terminology ---------- */
+  var TERMS = [
+    ["\u201cextinct\u201d", "The traditional term in linguistics, borrowed from biology. It treats a language like a species: once the last individual dies, it is gone and the case is closed. Many Aboriginal people object that this writes off both the language and the community still connected to it — and in Kaurna's case it turned out to be factually wrong."],
+    ["\u201cdead\u201d", "Blunter, and used the same way. The objection is the same, plus one more: a Kaurna person hearing that their language is dead is being told something about their own family. Terms that describe a situation also describe people."],
+    ["\u201csleeping\u201d", "The term widely preferred in Australia. A sleeping language is one with no current speakers but a surviving record and a community who claim it. The word carries an assumption — that it can be woken — and that assumption has now been tested and found reasonable."],
+    ["\u201cawakening\u201d", "What Kaurna is doing. The language is being used again, by people learning it as a second language, with new vocabulary being made for new things. Nobody claims it is in the state it was in 1836. The claim is that it is in use, which is a different and achievable thing."]
+  ];
+  var tmsg = document.getElementById("tmsg");
+  single("#terms .term", function (b) {
+    var T = TERMS[Number(b.dataset.t)];
+    tmsg.innerHTML = "<strong style='color:var(--wattle)'>" + T[0] + "</strong><br>" + T[1];
+  });
+
+  /* ---------- Spelling puzzle ---------- */
+  var SPELL = [
+    "<strong>A reasonable guess</strong> — and the spelling you will most often see in schools today. But it is not the whole answer.",
+    "<strong>Also reasonable</strong> — and you will see this spelling in print too, including in published Kaurna materials.",
+    "<strong>This is the linguists' answer.</strong>"
+  ];
+  var spmsg = document.getElementById("spmsg");
+  single("#pair button", function (b) {
+    var i = Number(b.dataset.p);
+    spmsg.innerHTML = SPELL[i] + "<br><br>Kaurna, like many Australian languages, does <strong>not distinguish p from b</strong>. They are the same sound, and whether it comes out closer to one or the other does not change the word. German-speaking missionaries, whose own language treats p and b as different, heard it sometimes one way and sometimes the other — so their notebooks fluctuate.<br><br>Modern Kaurna had to <em>choose</em> a spelling, and you will see both in use. The wobble in the historical record is not an error. It is evidence about the sound system.";
+  });
+
+  /* ---------- Conversation ---------- */
+  var convo = document.getElementById("convo"), choices = document.getElementById("choices");
+  var STEP = 0;
+  var SCRIPT = [
+    { them: ["Niina marni?", "are you good? — hello"],
+      opts: [["Marni'ai", "I'm good", true], ["Nakutha", "see you later", false]],
+      ok: "Exactly right. <strong>Marni'ai</strong> — I'm good. You have just completed the most common exchange in Kaurna.",
+      no: "That's \u201csee you later\u201d — a bit early! Try the other one." },
+    { them: ["Wanti niina?", "where are you going? — also used as a greeting"],
+      opts: [["Wardli-ana", "I'm going home", true], ["Niwa marni?", "are you two good?", false]],
+      ok: "<strong>Wardli-ana</strong> — I'm going home. <em>Wardli</em> is house or home. Notice you did not need a separate word for \u201cto\u201d: the ending does that job.",
+      no: "That's the greeting for two people. The question was about where you are going." },
+    { them: ["Marni naa pudni.", "welcome — literally, good you came, to a group"],
+      opts: [["Ngaityalya", "thank you", true], ["Yaku", "no", false]],
+      ok: "<strong>Ngaityalya</strong> — thank you. And that is a full exchange: greeting, question, answer, welcome, thanks. You can do this at the start of a class.",
+      no: "\u201cNo\u201d is a bold response to being welcomed. Try again." }
+  ];
+  function render() {
+    choices.innerHTML = "";
+    if (STEP >= SCRIPT.length) {
+      var done = document.createElement("div");
+      done.className = "bub them";
+      done.innerHTML = "<b>Nakutha</b><small>see you later</small>";
+      convo.appendChild(done);
+      return;
+    }
+    var S = SCRIPT[STEP];
+    var b = document.createElement("div");
+    b.className = "bub them";
+    b.innerHTML = "<b>" + S.them[0] + "</b><small>" + S.them[1] + "</small>";
+    convo.appendChild(b);
+    S.opts.forEach(function (o) {
+      var c = document.createElement("button");
+      c.className = "ch";
+      c.innerHTML = "<strong>" + o[0] + "</strong> — <span style='color:var(--muted)'>" + o[1] + "</span>";
+      c.addEventListener("click", function () {
+        if (!o[2]) {
+          choices.innerHTML = "<p class='note'>" + S.no + "</p>";
+          setTimeout(render, 1400);
+          return;
+        }
+        var y = document.createElement("div");
+        y.className = "bub you";
+        y.innerHTML = "<b>" + o[0] + "</b><small>" + o[1] + "</small>";
+        convo.appendChild(y);
+        var n = document.createElement("p");
+        n.className = "note";
+        n.innerHTML = S.ok;
+        convo.appendChild(n);
+        STEP++;
+        render();
+      });
+      choices.appendChild(c);
+    });
+  }
+  render();
+
+  /* ---------- Word-making strategies ---------- */
+  var STRATS = [
+    ["Compound two old words", "Take two words that already exist and stick them together so the meaning is transparent. English does this constantly — <em>railway</em>, <em>football</em>, <em>keyboard</em> — and it is the most common strategy in language revival because every part of the new word is already documented."],
+    ["Extend an existing meaning", "Give an old word a new job. English <em>mouse</em> picked up a computer meaning without anybody inventing a syllable. The advantage is that nothing new has to be learned; the risk is ambiguity, and arguments about whether the extension feels right."],
+    ["Describe what it does", "Build a short descriptive phrase and let it harden into a word — \u201cthe thing that carries voices,\u201d \u201cthe sitting-down place.\u201d Many Australian languages build words this way naturally, so new terms made this way tend to sound like the language rather than like a translation."],
+    ["Borrow and reshape", "Take the English word and bend it to fit the sound system of the language. Every language on earth does this, and it is often the one speakers actually adopt. Some revivals resist it, on the grounds that the point is to avoid English — which is a genuine disagreement, not a settled question."]
+  ];
+  var stmsg = document.getElementById("stmsg");
+  document.querySelectorAll("#strats .st").forEach(function (b) {
+    b.addEventListener("click", function () {
+      var S = STRATS[Number(b.dataset.s)];
+      stmsg.innerHTML = "<strong style='color:var(--wattle)'>" + S[0] + "</strong><br>" + S[1];
+    });
+  });
+
+  /* ---------- Place names ---------- */
+  var PLACES = [
+    ["Tarntanya", "The Kaurna name for the area where central Adelaide now stands, usually explained as relating to the male red kangaroo. The city is officially dual-named, so the Kaurna name appears alongside \u201cAdelaide\u201d on signs and in government documents."],
+    ["Karrawirra Pari", "The Kaurna name for the River Torrens, which runs through the middle of the city — \u201cred gum forest river.\u201d It is now the official dual name. The river was the centre of Kaurna life on the plains long before it was a feature of a colonial town plan."],
+    ["Piltawodli", "On the north bank of the river, in what is now the west Park Lands. This was the Native Location, and in December 1839 Teichelmann and Schürmann opened a school here where Kaurna children were taught literacy in Kaurna. Almost everything used to rebuild the language today traces back to work done on this spot."],
+    ["The Park Lands", "The ring of parkland around the city centre. Every single one of the Park Lands has been given a Kaurna name, through a naming process run with the Kaurna community. It is the largest single act of putting the language back onto the map — and it means tens of thousands of people walk through Kaurna words every day."]
+  ];
+  var pmsg = document.getElementById("pmsg");
+  single("#pmap .pin", function (b) {
+    var P = PLACES[Number(b.dataset.p)];
+    pmsg.innerHTML = "<strong style='color:var(--wattle)'>" + P[0] + "</strong><br>" + P[1];
+  });
+})();
+</script>
+<script src="../assets/deck.js"></script>
+</body>
+</html>
