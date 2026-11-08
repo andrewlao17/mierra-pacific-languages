@@ -1,0 +1,692 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Rapa Nui: The Island That Wrote Its Own Script</title>
+<link rel="stylesheet" href="../assets/deck.css">
+<style>
+@import url("https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@600;700&family=Manrope:wght@400;600;700;800&display=swap");
+
+/* ---------- Rapa Nui theme: basalt, scoria red, ocean, dawn over the moai ---------- */
+:root {
+  --bg: #0b1218;
+  --ink: #f2f0ea;
+  --muted: #c3cdd2;
+  --line: rgba(242, 240, 234, .22);
+  --panel: rgba(12, 24, 32, .85);
+  --basalt: #3b4248;
+  --scoria: #b8482f;
+  --ocean: #1c7b8c;
+  --grass: #7fa05a;
+  --dawn: #f0a860;
+  --bone: #e6ded0;
+  --rose: #b8482f;
+  --accent: var(--dawn);
+  --serif: "Cormorant Garamond", Georgia, serif;
+  --sans: "Manrope", system-ui, sans-serif;
+  --t: 0;
+  font-size: clamp(12px, 1.3vw, 28px);
+}
+h1 { font-family: var(--serif); font-size: 6rem; font-weight: 700; line-height: 1; }
+h2 { font-family: var(--serif); font-size: 2.9rem; font-weight: 700; line-height: 1.1; }
+.slide { padding: 7vh 4vw 8vh 6vw; }
+.text { max-width: 44vw; }
+.text.wide { max-width: 86vw; width: 86vw; }
+.stage {
+  right: 5vw; top: 6vh; bottom: 10vh; width: 38vw;
+  display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 1.1rem;
+}
+ul.dots li { font-size: 1.04rem; }
+.speak .line, .card .word { font-family: var(--sans); font-weight: 800; }
+.card.revealed .meaning { max-height: 15rem; }
+.btn { background: var(--dawn); color: #2b1a08; }
+.syl.on { background: var(--dawn); color: #2b1a08; }
+.loc .disc { border-color: var(--dawn); box-shadow: 0 0 0 .55rem rgba(240,168,96,.16), 0 22px 40px rgba(0,0,0,.55); }
+.loc .tint { background: #cfe0bb; }
+.loc .sea { background: #0f4a57; }
+.loc .tag { background: #0a1b22; border-color: var(--dawn); }
+.note { font-size: .82rem; color: var(--muted); }
+.quote { font-family: var(--serif); font-size: 1.8rem; font-weight: 700; line-height: 1.3; color: var(--dawn); }
+
+/* ---------- Background: ocean, moai, dawn, a band of glyphs ---------- */
+#isla { position: fixed; inset: 0; z-index: 0; overflow: hidden; pointer-events: none;
+  background: linear-gradient(180deg, #070f16 0%, #0d2431 44%, #113c4a 70%, #0a2128 100%); }
+#isla .sun { position: absolute; right: 22vw; width: 9vw; height: 9vw; border-radius: 50%;
+  top: calc(44vh - var(--t) * 26vh);
+  background: radial-gradient(circle at 48% 48%, #fff0cf, #f0a860 55%, rgba(240,168,96,0) 72%);
+  opacity: calc(.25 + var(--t) * .75); transition: top 1.7s ease, opacity 1.7s ease; }
+#isla .sea2 { position: absolute; left: 0; right: 0; bottom: 0; height: 26vh;
+  background: linear-gradient(180deg, #11606e 0%, #06222a 100%); }
+#isla .sea2::before { content: ""; position: absolute; inset: 0;
+  background: repeating-linear-gradient(180deg, rgba(255,255,255,.08) 0 2px, transparent 2px 16px);
+  animation: swell 8s ease-in-out infinite alternate; }
+@keyframes swell { to { transform: translateY(7px); } }
+#isla .moai { position: absolute; left: 0; right: 0; bottom: 22vh; height: 34vh; }
+#isla .moai svg { width: 100%; height: 100%; display: block; }
+#isla .glyphband { position: absolute; left: 0; right: 0; bottom: 0; height: 7vh; overflow: hidden;
+  background: rgba(10,20,26,.6); border-top: 2px solid rgba(242,240,234,.14); }
+#isla .glyphband .strip { display: flex; gap: 1.6vw; align-items: center; height: 100%; padding-left: 2vw;
+  animation: scroll 60s linear infinite; }
+@keyframes scroll { to { transform: translateX(-50%); } }
+#isla .glyphband svg { height: 55%; width: auto; opacity: .55; }
+#isla .shade { position: absolute; inset: 0;
+  background: linear-gradient(90deg, rgba(3,8,12,.95) 0%, rgba(3,8,12,.78) 50%, rgba(3,8,12,.28) 100%); }
+
+/* ---------- Photos ---------- */
+.board { position: relative; margin: 0; width: var(--w, 19vw); padding: .6rem .6rem .5rem;
+  background: var(--bone); border-radius: .2rem; box-shadow: 0 18px 34px rgba(0,0,0,.6);
+  transform: rotate(var(--r, 0deg)); transition: transform .9s cubic-bezier(.2,.8,.2,1), opacity .7s ease; }
+.slide:not(.active) .board { opacity: 0; transform: translateY(46px) rotate(var(--r, 0deg)); }
+.slide.active .board { transition-delay: calc(.4s + var(--d, 0) * .16s); }
+.board img { display: block; width: 100%; aspect-ratio: var(--ar, 4 / 3); object-fit: cover; background: #c6bfae; }
+.board figcaption { color: #22251d; font-size: .73rem; font-weight: 700; line-height: 1.25; margin: .4rem .1rem 0; font-family: var(--serif); }
+
+/* ---------- Shared controls ---------- */
+.switch { display: flex; gap: .4rem; margin: .4rem 0 .6rem; flex-wrap: wrap; }
+.sbtn { font: inherit; font-weight: 700; font-size: .92rem; color: var(--ink); background: var(--panel);
+  border: 2px solid var(--line); border-radius: .3rem; padding: .25em .9em; cursor: pointer; transition: transform .2s; }
+.sbtn:hover { transform: translateY(-2px); }
+.sbtn.on { background: var(--dawn); border-color: var(--dawn); color: #2b1a08; }
+.out { min-height: 3.2em; margin-top: .5rem; }
+
+/* ---------- Cognate table ---------- */
+.cog { display: grid; grid-template-columns: 5rem repeat(3, 1fr); gap: .3rem; font-family: var(--sans); }
+.cog div { padding: .3rem .2rem; text-align: center; font-weight: 700; font-size: .95rem; border-radius: .2rem; }
+.cog .hd { font-size: .72rem; letter-spacing: .06em; text-transform: uppercase; color: var(--muted); font-weight: 800; }
+.cog .gl { text-align: left; font-size: .82rem; color: var(--muted); }
+.cog .rn { background: rgba(240,168,96,.16); color: var(--dawn); }
+.cog .row:hover { cursor: pointer; }
+#cogmsg { min-height: 4.4em; margin-top: .5rem; }
+
+/* ---------- Tablet reader ---------- */
+.tablet { background: #6b5536; border-radius: .6rem; padding: .7rem .5rem; box-shadow: inset 0 0 0 3px rgba(0,0,0,.3), 0 14px 26px rgba(0,0,0,.5);
+  transition: transform 1s cubic-bezier(.3,.9,.3,1); }
+.tablet.flipped { transform: rotate(180deg); }
+.tabline { display: flex; gap: .3rem; justify-content: center; align-items: center; padding: .3rem 0;
+  border-bottom: 2px solid rgba(0,0,0,.25); }
+.tabline:last-child { border-bottom: 0; }
+.tabline.rev { transform: rotate(180deg); }
+.tabline.cur { background: rgba(240,168,96,.22); border-radius: .2rem; }
+.tabline svg { height: 2rem; width: auto; }
+.readout { font-family: var(--sans); text-align: center; font-weight: 800; color: var(--dawn); min-height: 1.6em; margin-top: .4rem; }
+#tbmsg { min-height: 5em; margin-top: .4rem; }
+
+/* ---------- Decipherment checklist ---------- */
+.checks { display: grid; gap: .4rem; }
+.chk { font: inherit; text-align: left; font-weight: 700; font-size: .88rem; color: var(--ink); background: var(--panel);
+  border: 2px solid var(--line); border-radius: .3rem; padding: .45em .7em; cursor: pointer; }
+.chk:hover { border-color: var(--dawn); }
+.chk.yes { border-color: var(--grass); }
+.chk.no { border-color: var(--scoria); }
+.chk .mk { float: right; font-weight: 900; }
+#ckmsg { min-height: 5.4em; margin-top: .4rem; }
+
+/* ---------- Fluency bars ---------- */
+.ages { display: grid; gap: .4rem; }
+.age { display: grid; grid-template-columns: 6rem 1fr 3rem; gap: .4rem; align-items: center; }
+.age span { font-size: .82rem; font-weight: 700; }
+.age .ab { height: 1.1rem; border-radius: .2rem; background: var(--ocean); width: 0; transition: width 1.3s cubic-bezier(.2,.8,.2,1); }
+.age .pc { font-size: .8rem; text-align: right; color: var(--muted); font-weight: 700; }
+.age.kids .ab { background: var(--scoria); }
+#agemsg { min-height: 4.6em; margin-top: .5rem; }
+
+/* ---------- Myth check ---------- */
+.myth { display: grid; gap: .4rem; }
+.mb { font: inherit; text-align: left; font-weight: 600; font-size: .88rem; color: var(--ink); background: var(--panel);
+  border: 2px solid var(--line); border-radius: .3rem; padding: .45em .7em; cursor: pointer; }
+.mb:hover { border-color: var(--scoria); }
+.mb.on { border-color: var(--scoria); background: rgba(184,72,47,.14); }
+#mymsg { min-height: 6em; margin-top: .4rem; }
+
+/* ---------- Timeline ---------- */
+.tl { display: grid; grid-template-columns: repeat(6, 1fr); gap: .55rem; margin-top: 1rem; position: relative; padding-bottom: 1.4rem; }
+.tl::after { content: ""; position: absolute; left: 0; right: 0; bottom: .45rem; height: 3px; border-radius: 3px;
+  background: linear-gradient(90deg, var(--grass), var(--scoria), var(--dawn)); }
+.ev { font: inherit; text-align: left; color: #141a14; background: var(--ec); border: 0; border-radius: .3rem;
+  padding: .65rem .75rem; cursor: pointer; transition: transform .25s, box-shadow .25s; }
+.ev:hover { transform: translateY(-4px); }
+.ev.on { box-shadow: 0 0 0 3px #fff, 0 10px 24px rgba(0,0,0,.4); transform: translateY(-6px); }
+.ev .yr { font-family: var(--serif); font-weight: 700; font-size: 1.4rem; line-height: 1; display: block; }
+.ev small { display: block; font-weight: 700; font-size: .76rem; margin-top: .3rem; }
+#tltext { min-height: 5.4rem; margin-top: .4rem; }
+
+/* ---------- Quiz tint ---------- */
+.opt.right { background: var(--grass); }
+.opt.wrong { background: var(--scoria); }
+
+@media (max-width: 820px) {
+  .slide { padding: 6vh 6vw 12vh; }
+  h1 { font-size: 3.4rem; }
+  .text, .text.wide { max-width: none; width: auto; }
+  .stage { position: relative; inset: auto; width: 100%; margin-top: 1.5rem; }
+  .board { width: 74vw; }
+  .stage .panel, .stage .speak { width: 100% !important; max-width: none !important; }
+  .tl { grid-template-columns: repeat(2, 1fr); }
+  .cog { grid-template-columns: 4rem repeat(3, 1fr); font-size: .85rem; }
+}
+</style>
+</head>
+<body data-map="BlankMap-Equirectangular.svg">
+
+<div id="isla" aria-hidden="true">
+  <div class="sun"></div>
+  <div class="moai">
+    <svg viewBox="0 0 1600 340" preserveAspectRatio="none">
+      <g fill="#171e22">
+        <path d="M120 340 V150 q0 -46 44 -46 q44 0 44 46 V340 Z"/><path d="M128 150 q36 -22 72 0" fill="#171e22"/>
+        <path d="M300 340 V130 q0 -52 50 -52 q50 0 50 52 V340 Z"/>
+        <path d="M500 340 V162 q0 -42 40 -42 q40 0 40 42 V340 Z"/>
+        <path d="M690 340 V120 q0 -56 54 -56 q54 0 54 56 V340 Z"/>
+        <path d="M900 340 V158 q0 -44 42 -44 q42 0 42 44 V340 Z"/>
+        <path d="M1080 340 V136 q0 -50 48 -50 q48 0 48 50 V340 Z"/>
+        <path d="M1300 340 V166 q0 -40 38 -40 q38 0 38 40 V340 Z"/>
+        <path d="M1460 340 V128 q0 -52 50 -52 q50 0 50 52 V340 Z"/>
+      </g>
+      <g fill="#5a2a1c" opacity=".9">
+        <rect x="316" y="58" width="68" height="24" rx="10"/><rect x="706" y="44" width="76" height="24" rx="10"/><rect x="1094" y="66" width="68" height="22" rx="10"/>
+      </g>
+    </svg>
+  </div>
+  <div class="sea2"></div>
+  <div class="glyphband"><div class="strip" id="strip"></div></div>
+  <div class="shade"></div>
+</div>
+<div class="progress"></div>
+
+<main>
+
+<!-- 1. Title -->
+<section class="slide" style="--accent: var(--dawn)">
+  <div class="text">
+    <p class="kicker in">Rare Languages of the Asia-Pacific · Module 29</p>
+    <h1 class="in" style="--d:1">Rapa Nui</h1>
+    <p class="in" style="--d:2; font-size:1.4rem; font-weight:800; color:var(--dawn)">Easter Island · Isla de Pascua · Chile</p>
+    <div class="bar in" style="--d:3"></div>
+    <p class="lead in" style="--d:4">The most isolated inhabited island on earth, a Polynesian language under pressure from Spanish — and a script that nobody alive can read</p>
+    <p class="muted in" style="--d:5">Watch the horizon: the sun is rising behind the moai, and a line of rongorongo is scrolling past your feet.</p>
+  </div>
+  <div class="stage">
+    <figure class="board" style="--w:24vw; --r:1.5deg; --d:0">
+      <img data-wiki="Easter Island" data-width="1200" alt="Moai on Easter Island">
+      <figcaption>Rapa Nui — 3,800 km from the coast of Chile, and 2,000 km from the nearest inhabited island</figcaption>
+    </figure>
+  </div>
+</section>
+
+<!-- 2. Where and who -->
+<section class="slide" data-tr="left" style="--accent: var(--ocean)">
+  <div class="text">
+    <p class="kicker in">Where and who</p>
+    <h2 class="in" style="--d:1">The last place anyone reached</h2>
+    <div class="bar in" style="--d:2"></div>
+    <ul class="dots">
+      <li class="in" style="--d:3">Rapa Nui sits alone in the southeastern Pacific. Polynesian voyagers settled it between about <strong>1150 and 1280 CE</strong> — one of the last habitable places on earth that humans found.</li>
+      <li class="in" style="--d:4">The language is <strong>Eastern Polynesian</strong>, a cousin of Māori, Hawaiian, Tahitian and Marquesan. Those cousins are thousands of kilometres away, and none of them is mutually intelligible with Rapa Nui.</li>
+      <li class="in" style="--d:5">Around <strong>6,600</strong> people identify as Rapa Nui; the island's population is over 7,700. Estimates of speakers run from about <strong>1,000 to 2,500</strong>, depending on who counts and how.</li>
+      <li class="in" style="--d:6">UNESCO lists Rapa Nui as <strong>severely endangered</strong>. The competing language is not English — it is <strong>Spanish</strong>, the official language of Chile since the island's annexation in 1888.</li>
+    </ul>
+    <p class="note in" style="--d:7">Greeting on the island: <em>ʻIorana</em>. You will hear it constantly — one Rapa Nui word that everybody, including visitors, still uses.</p>
+  </div>
+  <div class="stage">
+    <div class="loc" data-lat="-27.12" data-lon="-109.36" data-zoom="4" style="--s:13vw; --d:0">
+      <div class="disc"><div class="lmap"></div><div class="tint"></div><div class="sea"></div><span class="pinpt"></span></div>
+      <span class="tag">Rapa Nui, Valparaíso Region, Chile</span>
+    </div>
+    <div class="panel in" style="--d:4; width:34vw">
+      <strong>Why isolation matters twice</strong>
+      <p class="note" style="margin:.3rem 0 0">Isolation let Rapa Nui develop its own character over centuries — and, almost certainly, its own writing system, which no other Polynesian society produced.</p>
+      <p class="note" style="margin:.4rem 0 0">The same isolation made the island catastrophically vulnerable the moment outsiders arrived with ships, diseases and shackles. Both halves of this module come from the same geography.</p>
+    </div>
+  </div>
+</section>
+
+<!-- 3. Cousins -->
+<section class="slide" data-tr="zoom" style="--accent: var(--grass)">
+  <div class="text">
+    <p class="kicker in">The family</p>
+    <h2 class="in" style="--d:1">Cousins across an ocean</h2>
+    <div class="bar in" style="--d:2"></div>
+    <p class="in" style="--d:3">Polynesian languages are unusually close relatives — the whole family spread across the Pacific in a few thousand years, so the resemblances are still obvious even between islands that are nine thousand kilometres apart.</p>
+    <p class="in" style="--d:4">Click any row in the panel. Once you know the sound correspondences, you can almost convert between these languages in your head.</p>
+    <ul class="dots">
+      <li class="in" style="--d:5">Where Rapa Nui and Māori have <strong>r</strong>, Hawaiian usually has <strong>l</strong>.</li>
+      <li class="in" style="--d:6">Where Rapa Nui has <strong>h</strong>, Māori often has <strong>wh</strong> and Hawaiian has <strong>h</strong>.</li>
+      <li class="in" style="--d:7">Hawaiian dropped <strong>t</strong> in favour of <strong>k</strong> — which is why "one" is <em>tahi</em> in Rapa Nui and <em>kahi</em> in Hawaiian.</li>
+    </ul>
+  </div>
+  <div class="stage">
+    <div class="panel in" style="--d:3; width:35vw">
+      <div class="cog" id="cog">
+        <div class="hd gl">meaning</div><div class="hd">Rapa Nui</div><div class="hd">Māori</div><div class="hd">Hawaiian</div>
+      </div>
+      <p id="cogmsg" aria-live="polite">Click a row.</p>
+    </div>
+  </div>
+</section>
+
+<!-- 4. Rongorongo -->
+<section class="slide" style="--accent: var(--bone)">
+  <div class="text">
+    <p class="kicker in">The script</p>
+    <h2 class="in" style="--d:1">Rongorongo</h2>
+    <div class="bar in" style="--d:2"></div>
+    <ul class="dots">
+      <li class="in" style="--d:3">Outsiders first noticed it in <strong>1864</strong>: rows of tiny carved figures — birds, fish, people, plants — incised into wooden tablets and objects.</li>
+      <li class="in" style="--d:4">Exactly <strong>27 objects</strong> survive. They carry roughly <strong>15,000 characters</strong> made from over <strong>400 distinct glyphs</strong>. <strong>None of them is on Rapa Nui.</strong> They are in museums in Europe, the Americas and elsewhere.</li>
+      <li class="in" style="--d:5">Rongorongo had a place in island life: there were <em>tuhunga tā</em>, specialists who carved and recited, and a chief named <strong>Ngaʻara</strong> — the last great master of the script, who died around 1859 — ran a rongorongo school and held an annual festival at Anakena where tablets were recited from dawn to dusk.</li>
+      <li class="in" style="--d:6">If rongorongo was invented on the island without outside influence, it is one of a tiny handful of times in human history that writing was invented from scratch — and the most recent.</li>
+    </ul>
+    <p class="note in" style="--d:7">A 2024 radiocarbon study dated four tablets. Three gave 19th-century ranges; one came from wood felled between <strong>1493 and 1509</strong>, long before any European arrived. Important caveat: that dates the <em>wood</em>, not the carving.</p>
+  </div>
+  <div class="stage">
+    <div class="panel in" style="--d:3; width:34vw; text-align:center">
+      <strong>A row of rongorongo</strong>
+      <div id="sample" style="margin:.6rem 0; display:flex; gap:.5rem; justify-content:center; flex-wrap:wrap"></div>
+      <p class="note" style="margin:0">Stylised shapes, drawn for this module — the real glyphs are far more intricate, and each one is a distinct, repeatable sign.</p>
+      <p class="note" style="margin:.4rem 0 0">Think about what 400 distinct signs implies. Alphabets have 20–40. Syllable systems have 50–100. Four hundred suggests something that mixes sounds and whole words — which is also what makes it hard to crack.</p>
+    </div>
+  </div>
+</section>
+
+<!-- 5. Reading a tablet -->
+<section class="slide" data-tr="left" style="--accent: var(--dawn)">
+  <div class="text">
+    <p class="kicker in">Try it</p>
+    <h2 class="in" style="--d:1">You have to turn the tablet over</h2>
+    <div class="bar in" style="--d:2"></div>
+    <p class="in" style="--d:3">Rongorongo is written in <strong>reverse boustrophedon</strong>. You start at the bottom left and read along the line. When you reach the end, the next line is <strong>upside down</strong> — so you physically rotate the whole tablet 180 degrees and keep going.</p>
+    <p class="in" style="--d:4">The word <em>boustrophedon</em> means "as the ox turns" — the way a plough goes up one furrow and back down the next. Several ancient writing systems did something like this. Rongorongo is the version that makes you turn the page in your hands.</p>
+    <p class="in" style="--d:5">Use the panel. Read a line, rotate, read the next.</p>
+    <p class="note in" style="--d:6">This is one of the few things about rongorongo that is firmly established. The direction of reading is known. What the signs <em>mean</em> is not.</p>
+  </div>
+  <div class="stage">
+    <div class="panel in" style="--d:3; width:35vw">
+      <strong>A four-line tablet:</strong>
+      <div class="tablet" id="tablet" style="margin-top:.5rem"></div>
+      <div class="readout" id="readout">line 1 of 4</div>
+      <div class="switch" style="justify-content:center">
+        <button class="btn" id="rotbtn">↻ rotate the tablet</button>
+        <button class="sbtn" id="resetbtn">↺ start again</button>
+      </div>
+      <p id="tbmsg" aria-live="polite">You are reading the bottom line, left to right. Press rotate when you reach the end.</p>
+    </div>
+  </div>
+</section>
+
+<!-- 6. Why undeciphered -->
+<section class="slide" data-tr="zoom" style="--accent: var(--scoria)">
+  <div class="text">
+    <p class="kicker in">Think like a decipherer</p>
+    <h2 class="in" style="--d:1">What it takes to crack a script</h2>
+    <div class="bar in" style="--d:2"></div>
+    <p class="in" style="--d:3">Egyptian hieroglyphs, Linear B and Maya glyphs were all deciphered within the last two centuries. Rongorongo has defeated everyone. That is not because it is cleverer — it is because the usual tools are missing.</p>
+    <p class="in" style="--d:4">Work through the checklist. Each item is something decipherers normally need; click to see whether Rapa Nui has it.</p>
+    <p class="note in" style="--d:5">There were attempts to record readings from islanders in the late 1800s, within decades of the catastrophe. One man in Tahiti, Metoro Tauʻa Ure, chanted the tablets for a French bishop — but the resulting readings have been heavily criticised, including for glossing signs with words for materials that did not exist on the island.</p>
+  </div>
+  <div class="stage">
+    <div class="panel in" style="--d:3; width:35vw">
+      <strong>The decipherer's checklist:</strong>
+      <div class="checks" id="checks" style="margin-top:.5rem">
+        <button class="chk" data-k="0">A bilingual text <span class="mk">?</span></button>
+        <button class="chk" data-k="1">Enough surviving text <span class="mk">?</span></button>
+        <button class="chk" data-k="2">A known language behind it <span class="mk">?</span></button>
+        <button class="chk" data-k="3">Living readers to ask <span class="mk">?</span></button>
+        <button class="chk" data-k="4">Known context for each object <span class="mk">?</span></button>
+      </div>
+      <p id="ckmsg" aria-live="polite">Click each requirement.</p>
+    </div>
+  </div>
+</section>
+
+<!-- 7. 1862 -->
+<section class="slide" style="--accent: var(--scoria)">
+  <div class="text">
+    <p class="kicker in">The year everything broke</p>
+    <h2 class="in" style="--d:1">1862</h2>
+    <div class="bar in" style="--d:2"></div>
+    <ul class="dots">
+      <li class="in" style="--d:3">Beginning in <strong>1862</strong>, Peruvian slave raiders abducted around <strong>1,500 people</strong> from Rapa Nui — a large share of the island's population — to work in Peru. Most died there.</li>
+      <li class="in" style="--d:4">International pressure forced a repatriation. Only a handful survived the return journey, and they brought <strong>smallpox and tuberculosis</strong> back with them.</li>
+      <li class="in" style="--d:5">The people taken were not a random sample. Raiders took the able-bodied, and that included <strong>chiefs, priests and the literate specialists</strong> who carved and recited rongorongo. The script stopped being produced in the late 1860s.</li>
+      <li class="in" style="--d:6">By the 1870s the island's population had fallen to roughly <strong>a hundred people</strong>. Everything that survives of pre-contact Rapa Nui knowledge passed through that bottleneck.</li>
+    </ul>
+    <p class="in" style="--d:7">This is the real answer to "why can't we read rongorongo?" Not that it is uncrackable. That the people who could read it were taken away and died, within about a decade of outsiders noticing the script existed.</p>
+  </div>
+  <div class="stage">
+    <div class="panel in" style="--d:3; width:35vw">
+      <strong>You have probably heard a different story.</strong>
+      <p class="note" style="margin:.3rem 0 0">Click each popular claim.</p>
+      <div class="myth" id="myth" style="margin-top:.4rem">
+        <button class="mb" data-m="0">"They cut down all their trees and collapsed."</button>
+        <button class="mb" data-m="1">"The population crashed before Europeans arrived."</button>
+        <button class="mb" data-m="2">"The moai were built by a vanished civilisation."</button>
+      </div>
+      <p id="mymsg" aria-live="polite"></p>
+    </div>
+  </div>
+</section>
+
+<!-- 8. Timeline -->
+<section class="slide" data-tr="zoom" style="--accent: var(--ocean)">
+  <div class="text wide">
+    <p class="kicker in">History</p>
+    <h2 class="in" style="--d:1">Eight hundred years</h2>
+    <div class="bar in" style="--d:2"></div>
+    <p class="in" style="--d:3">Click each moment to explore it.</p>
+    <div class="tl in" id="tl" style="--d:4">
+      <button class="ev" style="--ec: var(--grass)"><span class="yr">c. 1200</span><small>Settlement</small></button>
+      <button class="ev" style="--ec: #b9cfa0"><span class="yr">1722</span><small>First European ship</small></button>
+      <button class="ev" style="--ec: var(--scoria)"><span class="yr">1862–77</span><small>Raids and collapse</small></button>
+      <button class="ev" style="--ec: #e39f8c"><span class="yr">1888</span><small>Annexation</small></button>
+      <button class="ev" style="--ec: var(--dawn)"><span class="yr">1966–76</span><small>Citizens, and a school subject</small></button>
+      <button class="ev" style="--ec: var(--ocean)"><span class="yr">today</span><small>Immersion and tourism</small></button>
+    </div>
+    <div class="panel in" id="tltext" style="--d:5" aria-live="polite"></div>
+  </div>
+</section>
+
+<!-- 9. The fluency gap -->
+<section class="slide" data-tr="left" style="--accent: var(--ocean)">
+  <div class="text">
+    <p class="kicker in">The numbers</p>
+    <h2 class="in" style="--d:1">A language sorted by age</h2>
+    <div class="bar in" style="--d:2"></div>
+    <p class="in" style="--d:3">In 2016 Chile's education ministry and UNESCO ran a sociolinguistic survey on the island. The results are the clearest picture of language shift in this entire course, because they break it down by age.</p>
+    <ul class="dots">
+      <li class="in" style="--d:4">About <strong>70%</strong> of elders speak Rapa Nui fluently. About <strong>35%</strong> of people aged 20–39. About <strong>6.7%</strong> of children under 12.</li>
+      <li class="in" style="--d:5">Half of all speakers are over 40. When the 20–39 group become parents, most do not pass the language on — and in families where one parent is not Rapa Nui, the household language is almost always Spanish.</li>
+      <li class="in" style="--d:6">Forty years ago, about <strong>76%</strong> of schoolchildren spoke Rapa Nui. Today roughly <strong>10%</strong> of young people have real command of it.</li>
+    </ul>
+    <p class="note in" style="--d:7">Notice that this collapse happened <em>after</em> the language was introduced as a school subject in 1976. Teaching a language for a few hours a week does not, on its own, stop a shift.</p>
+  </div>
+  <div class="stage">
+    <div class="panel in" style="--d:3; width:35vw">
+      <strong>Fluency in Rapa Nui, by age (2016 survey)</strong>
+      <div class="ages" id="ages" style="margin-top:.5rem">
+        <div class="age"><span>over 40</span><div class="ab" data-w="70"></div><div class="pc">70%</div></div>
+        <div class="age"><span>20–39</span><div class="ab" data-w="35"></div><div class="pc">35%</div></div>
+        <div class="age"><span>young people</span><div class="ab" data-w="10"></div><div class="pc">~10%</div></div>
+        <div class="age kids"><span>under 12</span><div class="ab" data-w="6.7"></div><div class="pc">6.7%</div></div>
+      </div>
+      <div class="switch" style="justify-content:center; margin-top:.5rem">
+        <button class="sbtn on" id="nowb">2016</button><button class="sbtn" id="thenb">around 1976</button>
+      </div>
+      <p id="agemsg" aria-live="polite">Switch between the two surveys.</p>
+    </div>
+  </div>
+</section>
+
+<!-- 10. What's being done -->
+<section class="slide" style="--accent: var(--grass)">
+  <div class="text">
+    <p class="kicker in">Why it matters now</p>
+    <h2 class="in" style="--d:1">Back from the brink, maybe</h2>
+    <div class="bar in" style="--d:2"></div>
+    <ul class="dots">
+      <li class="in" style="--d:3">One school on the island, <strong>Lorenzo Baeza Vega</strong>, runs a Rapa Nui immersion programme from pre-primary to fourth grade. It has existed for roughly two decades, and the hours allotted to it rise and fall — partly because the school is under pressure to score well on Chile's national standardised tests, which are in Spanish.</li>
+      <li class="in" style="--d:4">Preschool immersion has expanded through the <strong>Honga'a Reo</strong> programme, modelled on the Māori <em>kōhanga reo</em> "language nests" — the approach that pulled Māori back from a similar position.</li>
+      <li class="in" style="--d:5">The island has its own language academy, <strong>ʻŪmaŋa Hatu Reʻo</strong>, and the language is loudly, publicly used at <strong>Tapati Rapa Nui</strong>, the annual February festival of song, dance, sport and storytelling.</li>
+      <li class="in" style="--d:6">Attitudes have changed completely. Forty years ago Rapa Nui was something to leave behind; today it is a point of pride, and that shift is the precondition for everything else.</li>
+    </ul>
+    <p class="note in" style="--d:7">The remaining obstacle is arithmetic, not attitude: a tourism economy that runs in Spanish and English, a school system measured in Spanish, and a generation of parents who were not given the language themselves.</p>
+  </div>
+  <div class="stage">
+    <div class="cards in" style="--d:3; grid-template-columns:1fr; width:34vw">
+      <div class="card" style="--cardc: var(--grass)"><div class="word">Does immersion work?</div><div class="meaning">It is the only approach with a track record. Māori and Hawaiian were both in Rapa Nui's position and both recovered child speakers through language nests and immersion schooling. Neither is "saved" — but both have thousands of young speakers who would not otherwise exist.</div><div class="tap">click to reveal</div></div>
+      <div class="card" style="--cardc: var(--dawn)"><div class="word">What does tourism do?</div><div class="meaning">Both things at once. It funds the island and gives Rapa Nui culture an audience and a value — and it fills the island with people who speak Spanish and English, making those the languages of work. Several modules in this course show the same double edge.</div><div class="tap">click to reveal</div></div>
+      <div class="card" style="--cardc: var(--ocean)"><div class="word">And rongorongo?</div><div class="meaning">Still undeciphered, and all 27 objects are still off the island. Researchers continue to analyse the glyph sequences statistically, and the 2024 dating strengthened the case for independent invention. Some Rapa Nui argue the tablets should come home — a question about ownership as much as about linguistics.</div><div class="tap">click to reveal</div></div>
+    </div>
+  </div>
+</section>
+
+<!-- 11. Quiz -->
+<section class="slide" style="--accent: var(--dawn)">
+  <div class="text wide center">
+    <p class="kicker in">Review at sunrise</p>
+    <h2 class="in" style="--d:1">Quick quiz!</h2>
+    <div class="bar in" style="--d:2"></div>
+    <div class="quizgrid">
+      <div class="quiz panel in" style="--d:3" data-right="Yes — read a line, then physically turn the tablet 180°." data-wrong="Hint: 'as the ox turns'.">
+        <div class="q">How do you read a rongorongo tablet?</div>
+        <div class="options"><button class="opt">Top to bottom</button><button class="opt" data-correct>Rotating it after every line</button><button class="opt">In a spiral</button></div>
+        <div class="feedback"></div>
+      </div>
+      <div class="quiz panel in" style="--d:4" data-right="Right — the slave raids and the epidemics that followed." data-wrong="Hint: it happened in the 1860s, and it came from outside.">
+        <div class="q">What ended rongorongo?</div>
+        <div class="options"><button class="opt">A volcanic eruption</button><button class="opt" data-correct>Slave raids and disease</button><button class="opt">A royal ban</button></div>
+        <div class="feedback"></div>
+      </div>
+      <div class="quiz panel in" style="--d:5" data-right="Correct — about 70% of elders, about 6.7% of children under 12." data-wrong="Hint: the gap is enormous.">
+        <div class="q">In the 2016 survey, how many children under 12 spoke Rapa Nui fluently?</div>
+        <div class="options"><button class="opt">About half</button><button class="opt">About a quarter</button><button class="opt" data-correct>About 7%</button></div>
+        <div class="feedback"></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- 12. Closing -->
+<section class="slide end" style="--accent: var(--dawn)">
+  <div class="text">
+    <h1 class="in" style="font-size:5rem">ʻIorana</h1>
+    <p class="lead in" style="--d:1; margin-top:.8rem">Hello, and goodbye. Thank you! Questions?</p>
+    <p class="quote in" style="--d:2">A people on the loneliest island on earth invented writing, and then had the readers taken from them by ship. We have the tablets. We do not have the voices that could have read them aloud.</p>
+    <p class="note in" style="--d:3">Which is exactly the argument for every other module in this course: record the speakers while the speakers are here.</p>
+  </div>
+  <details class="fine in" style="--d:4">
+    <summary>Sources &amp; image credits</summary>
+    <div class="box">
+      <h4>Sources</h4>
+      <ul>
+        <li><a href="https://en.wikipedia.org/wiki/Rapa_Nui_language">Rapa Nui language (Wikipedia)</a> — classification, speakers, the language academy</li>
+        <li><a href="https://en.wikipedia.org/wiki/Rapa_Nui_people">Rapa Nui people (Wikipedia)</a> — population, Spanish dominance, syntactic shift</li>
+        <li><a href="https://courier.unesco.org/en/articles/rapa-nui-back-brink">UNESCO Courier: "Rapa Nui: back from the brink"</a> — the 2016 MINEDUC/UNESCO survey, the immersion programme and the SIMCE pressure</li>
+        <li><a href="https://www.easterislandfoundation.org/post/pre-school-rapanui-language-program">Easter Island Foundation: pre-school Rapanui language programme</a> — the 70% / 6.7% figures, Honga'a Reo</li>
+        <li><a href="http://elcat.colo.hawaii.edu/lang/2520">Endangered Languages Project: Rapa Nui</a> — Makihara's research on bilingualism and purism</li>
+        <li><a href="https://www.ncbi.nlm.nih.gov/pmc/articles/PMC10837134/">Ferrara et al., "The invention of writing on Rapa Nui. New radiocarbon dates on the Rongorongo script," <em>Scientific Reports</em> (2024)</a></li>
+        <li><a href="https://archaeologymag.com/2024/02/undeciphered-rongorongo-script-found-on-easter-island/">Archaeology Magazine (Feb 2024): the dated tablet and what it means</a></li>
+        <li><a href="https://www.iflscience.com/rongorongo-the-mysterious-writing-of-easter-island-is-still-undeciphered-75342">IFLScience: Rongorongo remains undeciphered</a> — 27 objects, the 1860s raids</li>
+        <li><a href="https://en.wikipedia.org/wiki/Decipherment_of_rongorongo">Decipherment of rongorongo (Wikipedia)</a> — Jaussen, Metoro Tauʻa Ure, and the criticisms</li>
+        <li><a href="https://en.wikipedia.org/wiki/Nga%EA%9E%8Cara">Ngaʻara (Wikipedia)</a> — the last master of rongorongo, the school and the Anakena festival</li>
+        <li><a href="https://en.wikipedia.org/wiki/Rongorongo">Rongorongo (Wikipedia)</a> — reverse boustrophedon, glyph inventory</li>
+        <li><a href="https://santium.com/language-series/rongorongo-language-rapa-nui/">"Rongorongo: the lost script of Rapa Nui"</a> — the caveat that radiocarbon dates the wood, not the carving</li>
+        <li><a href="https://en.wikipedia.org/wiki/History_of_Easter_Island">History of Easter Island (Wikipedia)</a> — the Peruvian raids, the population low point, annexation</li>
+      </ul>
+      <h4>Images (Wikimedia Commons)</h4>
+      <ul id="credits"></ul>
+    </div>
+  </details>
+</section>
+
+</main>
+
+<nav class="controls">
+  <button id="prev" aria-label="Previous slide">‹</button>
+  <span id="counter">1 / 12</span>
+  <button id="next" aria-label="Next slide">›</button>
+  <button id="fs" aria-label="Fullscreen">⤢</button>
+</nav>
+<p class="hint">Use ← → to move. Press F for fullscreen.</p>
+
+<!-- Rapa Nui effects: dawn, glyph band, cognates, the rotating tablet, decipherment checklist, fluency bars -->
+<script>
+(function () {
+  /* ---------- Stylised glyph shapes (our own drawings, not real rongorongo) ---------- */
+  var GLYPHS = [
+    'M10 46 q6 -34 20 -34 q14 0 10 18 q-3 12 -14 12 M30 42 l10 6 M20 42 v10',
+    'M8 30 q14 -22 32 -8 q12 10 2 20 q-14 14 -28 2 M38 24 l10 -8 M24 44 v8',
+    'M12 48 V16 q0 -8 10 -8 q10 0 10 8 v32 M14 26 h16 M8 48 h30',
+    'M10 40 q18 -30 34 -4 M16 20 v-10 M34 18 v-10 M14 44 h28',
+    'M12 14 q18 8 30 -2 M14 28 q16 10 28 0 M16 42 q14 8 26 0',
+    'M22 8 v44 M10 20 q12 -14 24 0 M10 40 q12 14 24 0',
+    'M10 46 q10 -22 24 -22 q12 0 10 12 q-2 10 -12 10 M34 24 l8 -14 M14 46 h26',
+    'M14 10 l16 18 l-16 18 M34 10 v36'
+  ];
+  function glyphSVG(i, h) {
+    return '<svg viewBox="0 0 56 56" style="height:' + h + '"><g fill="none" stroke="currentColor" stroke-width="4" stroke-linecap="round" stroke-linejoin="round">' +
+      '<path d="' + GLYPHS[i % GLYPHS.length] + '"/></g></svg>';
+  }
+  var strip = document.getElementById("strip");
+  var html = "";
+  for (var k = 0; k < 60; k++) html += '<span style="color:var(--bone)">' + glyphSVG(k * 3 % 8, "100%") + "</span>";
+  strip.innerHTML = html + html;
+
+  var sample = document.getElementById("sample");
+  for (var s = 0; s < 7; s++) {
+    var sp = document.createElement("span");
+    sp.style.color = "var(--bone)";
+    sp.innerHTML = glyphSVG(s, "2.6rem");
+    sample.appendChild(sp);
+  }
+
+  document.addEventListener("slidechange", function (e) {
+    document.body.style.setProperty("--t", e.detail.index / (e.detail.total - 1));
+  });
+
+  function single(selector, callback) {
+    var grp = document.querySelectorAll(selector);
+    grp.forEach(function (b) {
+      b.addEventListener("click", function () {
+        grp.forEach(function (x) { x.classList.remove("on"); });
+        b.classList.add("on");
+        callback(b);
+      });
+    });
+  }
+
+  /* ---------- Cognates ---------- */
+  var COG = [
+    ["one", "tahi", "tahi", "kahi", "Rapa Nui and Māori agree exactly. Hawaiian turned every old t into a k, so tahi became kahi — one sound change, applied to the entire language."],
+    ["two", "rua", "rua", "lua", "Identical in Rapa Nui and Māori. Hawaiian turned r into l. Learn those two rules and most of this table becomes predictable."],
+    ["three", "toru", "toru", "kolu", "Both rules at once: t → k and r → l. Same word underneath."],
+    ["five", "rima", "rima", "lima", "And this is the word you met in the Enggano and Yami modules — lima, five, carried from Taiwan to the Pacific over thousands of years."],
+    ["fish", "ika", "ika", "iʻa", "Hawaiian replaced the k with a glottal stop, written with an ʻokina. The word is still recognisably the same."],
+    ["house", "hare", "whare", "hale", "Rapa Nui hare, Māori whare, Hawaiian hale. Three islands, nine thousand kilometres apart, one word."]
+  ];
+  var cogEl = document.getElementById("cog"), cogmsg = document.getElementById("cogmsg");
+  COG.forEach(function (c, i) {
+    ["gl", "rn", "", ""].forEach(function (cls, j) {
+      var d = document.createElement("div");
+      d.className = "row " + cls;
+      d.textContent = c[j];
+      d.addEventListener("click", function () { cogmsg.textContent = c[4]; });
+      cogEl.appendChild(d);
+    });
+  });
+  cogmsg.textContent = COG[0][4];
+
+  /* ---------- The rotating tablet ---------- */
+  var tablet = document.getElementById("tablet"), readout = document.getElementById("readout"), tbmsg = document.getElementById("tbmsg");
+  var lineN = 0, flipped = false;
+  function buildTablet() {
+    tablet.innerHTML = "";
+    for (var L = 0; L < 4; L++) {
+      var row = document.createElement("div");
+      row.className = "tabline" + (L % 2 ? " rev" : "");
+      row.dataset.l = L;
+      var inner = "";
+      for (var g = 0; g < 6; g++) inner += '<span style="color:#efe6d2">' + glyphSVG((L * 5 + g) % 8, "2rem") + "</span>";
+      row.innerHTML = inner;
+      tablet.insertBefore(row, tablet.firstChild);
+    }
+    mark();
+  }
+  function mark() {
+    tablet.querySelectorAll(".tabline").forEach(function (r) {
+      r.classList.toggle("cur", Number(r.dataset.l) === lineN);
+    });
+    readout.textContent = "line " + (lineN + 1) + " of 4";
+  }
+  document.getElementById("rotbtn").addEventListener("click", function () {
+    if (lineN >= 3) { tbmsg.innerHTML = "<strong>That's the whole tablet.</strong> Four lines, two rotations, and you are back where you started. Press ↺ to try again."; return; }
+    lineN++;
+    flipped = !flipped;
+    tablet.classList.toggle("flipped", flipped);
+    mark();
+    tbmsg.innerHTML = lineN === 1
+      ? "You have turned the tablet 180°. Line 2 is now the right way up — and line 1, which you just read, is upside down. That is reverse boustrophedon."
+      : lineN === 2
+        ? "Rotate again for line 3. A reader holding this in their hands would be turning it over and over, which is one reason the tablets have worn edges."
+        : "Last line. Notice that you cannot skim a tablet like this — the physical object controls the order in which you read it.";
+  });
+  document.getElementById("resetbtn").addEventListener("click", function () {
+    lineN = 0; flipped = false; tablet.classList.remove("flipped"); mark();
+    tbmsg.textContent = "Back to the bottom line, right way up.";
+  });
+  buildTablet();
+
+  /* ---------- Decipherment checklist ---------- */
+  var CHK = [
+    [false, "No.", "The Rosetta Stone gave Egyptologists the same text in a script they could read. There is no rongorongo bilingual — no tablet with a Spanish, Tahitian or English translation beside it. Nothing anchors the signs to known words."],
+    [false, "Barely.", "Roughly 15,000 characters survive in total. That sounds like a lot until you compare it with Linear B, where decipherers had thousands of tablets of repetitive administrative records. Fifteen thousand characters across 27 objects is thin — too thin to run the statistics that usually crack a script."],
+    [true, "Yes — and this is the hopeful one.", "We know the language of the island, and it is still spoken. Linear B was cracked partly by guessing that the underlying language was an early form of Greek. For rongorongo, the underlying language is almost certainly Rapa Nui. That is a real advantage, and it has still not been enough."],
+    [false, "Not since the 1800s.", "This is the painful item. There were people who could read these tablets, and the window to ask them was about a decade wide. Attempts to record readings in the late 1800s came after the slave raids and epidemics, and the results are considered unreliable."],
+    [false, "Mostly no.", "Nearly all 27 objects left the island in the 19th century with missionaries, sailors and collectors. We often do not know where a tablet was kept, what it was for, or who made it — and context is a large part of how scripts get deciphered."]
+  ];
+  var ckmsg = document.getElementById("ckmsg"), ckdone = 0;
+  document.querySelectorAll("#checks .chk").forEach(function (b) {
+    b.addEventListener("click", function () {
+      var C = CHK[Number(b.dataset.k)];
+      if (!b.classList.contains("yes") && !b.classList.contains("no")) { ckdone++; }
+      b.classList.add(C[0] ? "yes" : "no");
+      b.querySelector(".mk").textContent = C[0] ? "✓" : "✗";
+      ckmsg.innerHTML = "<strong>" + C[1] + "</strong> " + C[2] +
+        (ckdone === 5 ? "<br><br><strong>One out of five.</strong> That is why rongorongo is still unread — and why the 2024 dating work matters: when you cannot read a script, you learn what you can from the object itself." : "");
+    });
+  });
+
+  /* ---------- Fluency bars ---------- */
+  function setAges(now) {
+    var vals = now ? [70, 35, 10, 6.7] : [92, 85, 76, 80];
+    var pcs = now ? ["70%", "35%", "~10%", "6.7%"] : ["~90%", "~85%", "76%", "~80%"];
+    document.querySelectorAll("#ages .age").forEach(function (a, i) {
+      a.querySelector(".ab").style.width = vals[i] + "%";
+      a.querySelector(".pc").textContent = pcs[i];
+    });
+    document.getElementById("agemsg").innerHTML = now
+      ? "<strong>2016.</strong> A near-perfect staircase downward by age. In language shift, this shape is the diagnosis: the language is not being passed on, and every year the top of the staircase gets shorter."
+      : "<strong>Around 1976</strong>, when Rapa Nui was introduced as a school subject, roughly 76% of schoolchildren spoke it. The other bars here are illustrative, since no comparable full survey exists — the one firm figure is the 76%, and the point is how far it has fallen in forty years.";
+  }
+  document.getElementById("nowb").addEventListener("click", function () {
+    this.classList.add("on"); document.getElementById("thenb").classList.remove("on"); setAges(true);
+  });
+  document.getElementById("thenb").addEventListener("click", function () {
+    this.classList.add("on"); document.getElementById("nowb").classList.remove("on"); setAges(false);
+  });
+  setTimeout(function () { setAges(true); }, 400);
+
+  /* ---------- Myths ---------- */
+  var MYTH = [
+    ["The \u201cecocide\u201d story", "This is the famous version: islanders cut down every tree to move moai, destroyed their own environment and collapsed into warfare and starvation before Europeans arrived. It was popularised by a bestselling book and it is now heavily disputed. Deforestation was real — but researchers point to rats eating palm seeds as a major cause, and recent work finds little evidence of a massive pre-contact population crash. Be careful with any story that makes a catastrophe the victims' own fault."],
+    ["A pre-contact crash", "Recent studies of the island's population history have challenged the idea of a huge collapse before 1722. The catastrophic, documented, dated collapse is the one that happened in the 1860s and 1870s, and it was caused by slave raiding and introduced disease — not by the islanders."],
+    ["A \u201cvanished civilisation\u201d", "The moai were carved by the ancestors of people who are alive today. The Rapa Nui did not vanish: about 6,600 people identify as Rapa Nui, they live on the island, they run its festival and they are fighting for their language. Treating them as the mysterious remnant of a lost race is both wrong and insulting — and it is how the island is still described in a lot of popular writing."]
+  ];
+  var mymsg = document.getElementById("mymsg");
+  single("#myth .mb", function (b) {
+    var M = MYTH[Number(b.dataset.m)];
+    mymsg.innerHTML = "<strong style='color:var(--scoria)'>" + M[0] + "</strong><br>" + M[1];
+  });
+
+  /* ---------- Timeline ---------- */
+  var EVENTS = [
+    ["Settlement", "Polynesian voyagers reached Rapa Nui somewhere between about 1150 and 1280 CE, after crossing thousands of kilometres of open ocean in double-hulled canoes. It was among the last habitable places on earth to be settled, and the voyage that got them there is one of the great feats in human history."],
+    ["First European ship", "A Dutch expedition under Jacob Roggeveen arrived on Easter Sunday 1722 — hence the European name. A Spanish expedition followed in 1770 and claimed the island; Cook came in 1774. Each visit brought a little more contact, and with it disease."],
+    ["Raids and collapse", "From 1862 Peruvian slave raiders took around 1,500 people. Most died in Peru; the few repatriated brought smallpox back. Within fifteen years the island's population had fallen to roughly a hundred. The last masters of rongorongo were among the dead, and the script stopped being made."],
+    ["Annexation", "Chile annexed Rapa Nui in 1888. For much of the following century the island was leased to a sheep-ranching company, and islanders were largely confined to the settlement of Hanga Roa. Spanish became the language of school, government and work."],
+    ["Citizens, and a school subject", "Rapa Nui people were granted full Chilean citizenship in 1966. In 1976 the Rapa Nui language was introduced into the school curriculum — at a point when about three quarters of schoolchildren still spoke it. Within forty years that figure had fallen to around ten percent."],
+    ["Immersion and tourism", "Today the island lives on tourism, runs an immersion programme in one school and preschool language nests modelled on the Māori kōhanga reo, and holds the Tapati festival each February. Attitudes to the language are more positive than at any point in a century — and the number of child speakers is the lowest it has ever been."]
+  ];
+  var tlText = document.getElementById("tltext");
+  var evs = document.querySelectorAll("#tl .ev");
+  function setEvent(i) {
+    evs.forEach(function (e, k) { e.classList.toggle("on", k === i); });
+    tlText.innerHTML = '<strong style="color:var(--dawn); font-size:1.2rem">' + EVENTS[i][0] + "</strong><br>" + EVENTS[i][1];
+  }
+  evs.forEach(function (e, i) { e.addEventListener("click", function () { setEvent(i); }); });
+  setEvent(0);
+})();
+</script>
+<script src="../assets/deck.js"></script>
+</body>
+</html>
