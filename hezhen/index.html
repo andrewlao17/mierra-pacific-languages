@@ -1,0 +1,604 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Hezhen / Nanai: One People, Two Countries, One River</title>
+<link rel="stylesheet" href="../assets/deck.css">
+<style>
+@import url("https://fonts.googleapis.com/css2?family=Besley:wght@600;700&family=Public+Sans:wght@400;500;700;800&display=swap");
+
+/* ---------- Hezhen theme: the Amur, fish skin, a border down the water ---------- */
+:root {
+  --bg: #0b1317; --ink: #f3f0e8; --muted: #c3d2d6;
+  --line: rgba(243, 240, 232, .22); --panel: rgba(10, 24, 30, .86);
+  --river: #4a8da1; --skin: #e3d6bb; --salmon: #e08a6a;
+  --ru: #6c8fc0; --cn: #c0453c; --birch: #d8cfc0;
+  --rose: #c0453c; --accent: var(--skin);
+  --serif: "Besley", Georgia, serif; --sans: "Public Sans", system-ui, sans-serif;
+  --t: 0;
+  font-size: clamp(12px, 1.3vw, 28px);
+}
+h1 { font-family: var(--serif); font-size: 5.1rem; font-weight: 700; line-height: 1.06; }
+h2 { font-family: var(--serif); font-size: 2.5rem; font-weight: 700; line-height: 1.14; }
+.slide { padding: 7vh 4vw 8vh 6vw; }
+.text { max-width: 44vw; }
+.text.wide { max-width: 86vw; width: 86vw; }
+.stage { right: 5vw; top: 6vh; bottom: 10vh; width: 38vw;
+  display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 1.1rem; }
+ul.dots li { font-size: 1.04rem; }
+.card .word { font-family: var(--sans); font-weight: 800; }
+.card.revealed .meaning { max-height: 16rem; }
+.btn { background: var(--skin); color: #2a2110; }
+.loc .disc { border-color: var(--skin); box-shadow: 0 0 0 .55rem rgba(227,214,187,.16), 0 22px 40px rgba(0,0,0,.55); }
+.loc .tint { background: #cfe0bb; } .loc .sea { background: #16495a; }
+.loc .tag { background: #0c1e24; border-color: var(--skin); }
+.note { font-size: .82rem; color: var(--muted); }
+.quote { font-family: var(--serif); font-size: 1.65rem; font-weight: 700; line-height: 1.34; color: var(--skin); }
+
+/* ---------- Background: the Amur, scales, a hardening border ---------- */
+#amur { position: fixed; inset: 0; z-index: 0; overflow: hidden;
+  background: linear-gradient(180deg, #0a1216 0%, #16333f 34%, #2a5767 50%, #16333f 66%, #0d1a1c 100%); }
+#amur .bankN, #amur .bankS { position: absolute; left: 0; right: 0; height: 32vh; }
+#amur .bankN { top: 0; background: linear-gradient(180deg, #1d2e2a, #16343c);
+  box-shadow: inset 0 -30px 50px rgba(0,0,0,.4); }
+#amur .bankS { bottom: 0; background: linear-gradient(0deg, #231e1a, #16343c);
+  box-shadow: inset 0 30px 50px rgba(0,0,0,.4); }
+#amur .bankN::after, #amur .bankS::after { content: ""; position: absolute; inset: 0; transition: opacity 1.7s ease; }
+#amur .bankN::after { background: linear-gradient(180deg, rgba(108,143,192,.28), transparent); opacity: var(--t); }
+#amur .bankS::after { background: linear-gradient(0deg, rgba(192,69,60,.26), transparent); opacity: var(--t); }
+#amur .water2 { position: absolute; left: 0; right: 0; top: 32vh; bottom: 32vh;
+  background: linear-gradient(180deg, #2f6a7e, #3f8599 50%, #2a5f72); }
+#amur .water2::before { content: ""; position: absolute; inset: 0;
+  background: repeating-linear-gradient(180deg, rgba(255,255,255,.07) 0 2px, transparent 2px 13px);
+  animation: flow 9s ease-in-out infinite alternate; }
+@keyframes flow { to { transform: translateX(14px); } }
+#amur .border3 { position: absolute; left: 0; right: 0; top: 50vh; height: 0;
+  border-top: 3px dashed var(--skin); opacity: calc(var(--t) * 1.2); transition: opacity 1.7s ease; }
+#amur .border3 span { position: absolute; right: 4vw; top: -1.5rem; font: 800 .7rem var(--sans);
+  letter-spacing: .09em; color: var(--skin); }
+#amur .scales { position: absolute; inset: 0; opacity: .07;
+  background-image: radial-gradient(circle at 50% 0, transparent 12px, var(--skin) 13px, transparent 14px);
+  background-size: 26px 13px; }
+#amur .fish i { position: absolute; width: 2.4vw; height: .9vw; border-radius: 50% 10% 50% 10%;
+  background: var(--salmon); opacity: .5; animation: swim 19s linear infinite; }
+@keyframes swim { from { left: -6%; } to { left: 104%; } }
+#amur .shade { position: absolute; inset: 0;
+  background: linear-gradient(90deg, rgba(3,8,10,.95) 0%, rgba(3,8,10,.76) 52%, rgba(3,8,10,.24) 100%); }
+
+/* ---------- Photos ---------- */
+.board { position: relative; margin: 0; width: var(--w, 19vw); padding: .6rem .6rem .5rem;
+  background: var(--birch); border-radius: .2rem; box-shadow: 0 18px 34px rgba(0,0,0,.6);
+  transform: rotate(var(--r, 0deg)); transition: transform .9s cubic-bezier(.2,.8,.2,1), opacity .7s ease; }
+.slide:not(.active) .board { opacity: 0; transform: translateY(46px) rotate(var(--r, 0deg)); }
+.slide.active .board { transition-delay: calc(.4s + var(--d, 0) * .16s); }
+.board img { display: block; width: 100%; aspect-ratio: var(--ar, 4 / 3); object-fit: cover; background: #c6bfae; }
+.board figcaption { color: #1f2620; font-size: .73rem; font-weight: 700; line-height: 1.25; margin: .4rem .1rem 0; font-family: var(--serif); }
+
+/* ---------- Shared ---------- */
+.switch { display: flex; gap: .4rem; margin: .4rem 0 .6rem; flex-wrap: wrap; }
+.sbtn { font: inherit; font-weight: 700; font-size: .92rem; color: var(--ink); background: var(--panel);
+  border: 2px solid var(--line); border-radius: .3rem; padding: .25em .9em; cursor: pointer; transition: transform .2s; }
+.sbtn:hover { transform: translateY(-2px); }
+.sbtn.on { background: var(--skin); border-color: var(--skin); color: #2a2110; }
+
+/* ---------- Two countries ---------- */
+.splitrow { display: grid; grid-template-columns: 1fr 7rem 1fr; gap: .3rem; align-items: center;
+  padding: .3rem 0; border-bottom: 1px solid rgba(255,255,255,.08); cursor: pointer; }
+.splitrow:hover { background: rgba(255,255,255,.04); }
+.splitrow .mid { text-align: center; font-size: .7rem; letter-spacing: .06em; text-transform: uppercase; color: var(--muted); font-weight: 700; }
+.splitrow .ruv { text-align: right; color: var(--ru); font-weight: 800; font-size: .95rem; }
+.splitrow .cnv { text-align: left; color: var(--cn); font-weight: 800; font-size: .95rem; }
+.splithead { display: grid; grid-template-columns: 1fr 7rem 1fr; gap: .3rem; margin-bottom: .2rem; }
+.splithead div { font-family: var(--serif); font-weight: 700; font-size: 1rem; }
+.splithead .a { text-align: right; color: var(--ru); } .splithead .b { text-align: left; color: var(--cn); }
+#spl2msg { min-height: 5.4em; margin-top: .4rem; }
+
+/* ---------- Fish skin stepper ---------- */
+.fsteps { display: grid; gap: .3rem; }
+.fs { font: inherit; text-align: left; font-weight: 700; font-size: .86rem; color: var(--ink); background: var(--panel);
+  border: 2px solid var(--line); border-radius: .3rem; padding: .4em .7em; cursor: pointer; opacity: .45; transition: opacity .4s; }
+.fs.on { opacity: 1; border-color: var(--salmon); }
+.fsview { height: 7rem; display: grid; place-items: center; margin: .4rem 0; }
+.fsview svg { height: 100%; }
+#fsmsg { min-height: 5em; }
+
+/* ---------- Yimakan ---------- */
+.ygen { display: grid; grid-template-columns: repeat(2, 1fr); gap: .4rem; }
+.yg { font: inherit; text-align: left; font-weight: 700; font-size: .86rem; color: var(--ink); background: var(--panel);
+  border: 2px solid var(--line); border-radius: .3rem; padding: .45em .7em; cursor: pointer; }
+.yg:hover { border-color: var(--salmon); }
+.yg.on { border-color: var(--salmon); background: rgba(224,138,106,.14); }
+.yg b { display: block; font-family: var(--sans); color: var(--salmon); font-size: .98rem; }
+#ymsg { min-height: 5.4em; margin-top: .4rem; }
+
+/* ---------- Collapse chart ---------- */
+.colchart { display: flex; align-items: flex-end; gap: 1rem; height: 17vh; padding: .5rem .6rem 0; }
+.col { flex: 1; height: 100%; display: flex; flex-direction: column; align-items: center; justify-content: flex-end; }
+.col .n { font-family: var(--serif); font-size: 1.05rem; font-weight: 700; }
+.col .colbar { width: 100%; max-width: 3.4rem; height: 0; border-radius: .3rem .3rem 0 0; background: var(--c);
+  transition: height 1.5s cubic-bezier(.2,.8,.2,1) .6s; }
+.slide.active .col .colbar { height: var(--h); }
+.col .y { color: var(--muted); font-size: .74rem; margin-top: .3rem; }
+
+/* ---------- Course recap ---------- */
+.recap { display: grid; grid-template-columns: repeat(2, 1fr); gap: .4rem; }
+.rc { font: inherit; text-align: left; font-weight: 700; font-size: .84rem; color: var(--ink); background: var(--panel);
+  border: 2px solid var(--line); border-left: 6px solid var(--rcc, var(--skin)); border-radius: .3rem; padding: .4em .7em; cursor: pointer; }
+.rc:hover { transform: translateX(3px); }
+#rcmsg { min-height: 6.4em; margin-top: .4rem; }
+
+/* ---------- Timeline ---------- */
+.tl { display: grid; grid-template-columns: repeat(6, 1fr); gap: .55rem; margin-top: 1rem; position: relative; padding-bottom: 1.4rem; }
+.tl::after { content: ""; position: absolute; left: 0; right: 0; bottom: .45rem; height: 3px; border-radius: 3px;
+  background: linear-gradient(90deg, var(--river), var(--cn), var(--skin)); }
+.ev { font: inherit; text-align: left; color: #121c1e; background: var(--ec); border: 0; border-radius: .3rem;
+  padding: .65rem .75rem; cursor: pointer; transition: transform .25s, box-shadow .25s; }
+.ev:hover { transform: translateY(-4px); }
+.ev.on { box-shadow: 0 0 0 3px #fff, 0 10px 24px rgba(0,0,0,.4); transform: translateY(-6px); }
+.ev .yr { font-family: var(--serif); font-weight: 700; font-size: 1.22rem; line-height: 1; display: block; }
+.ev small { display: block; font-weight: 600; font-size: .76rem; margin-top: .3rem; }
+#tltext { min-height: 5.4rem; margin-top: .4rem; }
+
+.opt.right { background: #4b8f6d; }
+.opt.wrong { background: var(--cn); }
+
+@media (max-width: 820px) {
+  .slide { padding: 6vh 6vw 12vh; }
+  h1 { font-size: 2.9rem; }
+  .text, .text.wide { max-width: none; width: auto; }
+  .stage { position: relative; inset: auto; width: 100%; margin-top: 1.5rem; }
+  .board { width: 74vw; }
+  .stage .panel { width: 100% !important; max-width: none !important; }
+  .tl { grid-template-columns: repeat(2, 1fr); }
+  .recap, .ygen { grid-template-columns: 1fr; }
+  .splitrow, .splithead { grid-template-columns: 1fr 5rem 1fr; }
+}
+</style>
+</head>
+<body data-map="BlankMap-Equirectangular.svg">
+
+<div id="amur" aria-hidden="true">
+  <div class="bankN"></div>
+  <div class="water2"></div>
+  <div class="bankS"></div>
+  <div class="border3"><span>the Amur — an international border since 1858</span></div>
+  <div class="fish"></div>
+  <div class="scales"></div>
+  <div class="shade"></div>
+</div>
+<div class="progress"></div>
+
+<main>
+
+<!-- 1. Title -->
+<section class="slide" style="--accent: var(--skin)">
+  <div class="text">
+    <p class="kicker in">Rare Languages of the Asia-Pacific · Module 38 · final module</p>
+    <h1 class="in" style="--d:1">Hezhen / Nanai</h1>
+    <p class="in" style="--d:2; font-size:1.3rem; font-weight:800; color:var(--skin)">赫哲 · нанай · the Amur River, China and Russia</p>
+    <div class="bar in" style="--d:3"></div>
+    <p class="lead in" style="--d:4">One people, one language, and a river that became an international border in 1858 — so that half of them are now a Russian minority and half a Chinese one, with two names, two scripts and two completely different fates</p>
+    <p class="muted in" style="--d:5">Watch the water. The two banks are starting to look different.</p>
+  </div>
+  <div class="stage">
+    <figure class="board" style="--w:24vw; --r:1.5deg; --d:0">
+      <img data-wiki="Amur River" data-width="1200" alt="The Amur River">
+      <figcaption>The Amur — 2,800 km of river that is also a frontier between two states</figcaption>
+    </figure>
+  </div>
+</section>
+
+<!-- 2. Where and who -->
+<section class="slide" data-tr="left" style="--accent: var(--river)">
+  <div class="text">
+    <p class="kicker in">Where and who</p>
+    <h2 class="in" style="--d:1">People of the river</h2>
+    <div class="bar in" style="--d:2"></div>
+    <ul class="dots">
+      <li class="in" style="--d:3">They live along the <strong>Amur</strong>, the <strong>Ussuri</strong> and the <strong>Sungari</strong> — the great rivers of the Russian Far East and north-east China. Fishers above all, and hunters.</li>
+      <li class="in" style="--d:4">The language is <strong>Southern Tungusic</strong>: the same branch you met in the Uilta module, and a close relative of Uilta and Ulch. Its distant cousin is historical Manchu.</li>
+      <li class="in" style="--d:5">Their self-name is <span class="hl">Nani</span> — roughly "people of this place." The Chinese name <strong>Hezhen</strong> is explained as "people who live along the lower course of the river." Russians long called them <em>Gold</em> or <em>Goldi</em>.</li>
+      <li class="in" style="--d:6">In Russia the 2010 census counted <strong>12,003</strong> Nanai; in China the Hezhe numbered <strong>5,373</strong> in 2020 — the second-smallest of China's 56 recognised ethnic groups.</li>
+    </ul>
+    <p class="note in" style="--d:7">Roughly 18,000 people in total, one language, and a political line through the middle of their homeland. This module is about what that line did.</p>
+  </div>
+  <div class="stage">
+    <div class="loc" data-lat="48.0" data-lon="134.5" data-zoom="5" style="--s:13vw; --d:0">
+      <div class="disc"><div class="lmap"></div><div class="tint"></div><div class="sea"></div><span class="pinpt"></span></div>
+      <span class="tag">The Amur basin — Khabarovsk Krai, Russia and Heilongjiang, China</span>
+    </div>
+    <div class="panel in" style="--d:4; width:34vw">
+      <strong>The river is the point</strong>
+      <p class="note" style="margin:.3rem 0 0">For this culture the Amur is not a boundary, it is the centre. Fish supplied food, trade, tools, thread and clothing; the calendar ran on salmon runs; settlements faced the water.</p>
+      <p class="note" style="margin:.4rem 0 0">Which is exactly why the 19th-century treaties were so destructive. They turned the middle of a world into the edge of two.</p>
+    </div>
+  </div>
+</section>
+
+<!-- 3. Two countries -->
+<section class="slide" data-tr="zoom" style="--accent: var(--skin)">
+  <div class="text">
+    <p class="kicker in">The experiment</p>
+    <h2 class="in" style="--d:1">The same language, run twice</h2>
+    <div class="bar in" style="--d:2"></div>
+    <p class="in" style="--d:3">This is as close as endangered-language studies gets to a controlled experiment. One language, one people, split by a border in <strong>1858</strong>, then subjected to two very different states for 170 years.</p>
+    <p class="in" style="--d:4">Compare the two sides in the panel. Click any row.</p>
+    <p class="note in" style="--d:5">Keep a running question as you go: <em>which side did better, and why?</em> The answer is not as simple as it first looks — and it is the question this whole course has been circling.</p>
+  </div>
+  <div class="stage">
+    <div class="panel in" style="--d:3; width:36vw">
+      <div class="splithead"><div class="a">Russia</div><div></div><div class="b">China</div></div>
+      <div id="splitbox"></div>
+      <p id="spl2msg" aria-live="polite">Click a row to compare.</p>
+    </div>
+  </div>
+</section>
+
+<!-- 4. Fish skin -->
+<section class="slide" style="--accent: var(--salmon)">
+  <div class="text">
+    <p class="kicker in">Cultural significance</p>
+    <h2 class="in" style="--d:1">Clothes made of fish</h2>
+    <div class="bar in" style="--d:2"></div>
+    <ul class="dots">
+      <li class="in" style="--d:3">The Hezhen are the only people in China — and among very few anywhere — to have developed a <strong>complete clothing tradition from fish skin</strong>: coats, trousers, boots, gloves, thread and all.</li>
+      <li class="in" style="--d:4">It is a brilliant solution to a specific problem. On the Amur you have abundant large fish and limited large game, and fish skin, properly prepared, is light, tough and <strong>water-resistant</strong> — which matters enormously if you spend your life in a boat.</li>
+      <li class="in" style="--d:5">The practice gave them an exonym: Chinese sources called them <em>Yupi Dazi</em>, the "fish-skin Tartars." They were also known as the dog-using people, for the sled dogs they hunted with.</li>
+      <li class="in" style="--d:6">Step through the process in the panel. Note how much of it is knowledge, not material.</li>
+    </ul>
+    <p class="note in" style="--d:7">Every stage of that process has its own vocabulary — the species, the tools, the state of the skin at each point. When the craft becomes a heritage demonstration performed in Mandarin, those words have nothing left to do.</p>
+  </div>
+  <div class="stage">
+    <div class="panel in" style="--d:3; width:35vw">
+      <strong>How a fish becomes a coat:</strong>
+      <div class="fsview" id="fsview"></div>
+      <div class="fsteps" id="fsteps">
+        <button class="fs" data-f="0">1 · Choose the fish</button>
+        <button class="fs" data-f="1">2 · Skin and scale it</button>
+        <button class="fs" data-f="2">3 · Dry it</button>
+        <button class="fs" data-f="3">4 · Pound it soft</button>
+        <button class="fs" data-f="4">5 · Cut and sew</button>
+      </div>
+      <p id="fsmsg" aria-live="polite">Click step 1.</p>
+    </div>
+  </div>
+</section>
+
+<!-- 5. Yimakan -->
+<section class="slide" data-tr="left" style="--accent: var(--salmon)">
+  <div class="text">
+    <p class="kicker in">The epic</p>
+    <h2 class="in" style="--d:1">Yimakan</h2>
+    <div class="bar in" style="--d:2"></div>
+    <ul class="dots">
+      <li class="in" style="--d:3">The Hezhen had <strong>no script of their own</strong>. Everything — history, genealogy, mythology, law, survival knowledge — was carried in speech. The grandest form of that is <span class="hl">Yimakan</span>: long narrative epics, partly sung and partly spoken, performed solo, without instruments.</li>
+      <li class="in" style="--d:4">A Yimakan performance can run for days. The stories tell of tribal alliances, battles, heroes and shamanic journeys, and they are performed at weddings, funerals, hunts and the arrival of guests.</li>
+      <li class="in" style="--d:5">Yimakan sits alongside other genres — <em>telungu</em> legends, <em>shuohuli</em> tales, <em>jialinkuo</em> songs. Click them in the panel.</li>
+      <li class="in" style="--d:6">And here is the point for this course: <strong>Yimakan is performed in Hezhen</strong>. You cannot teach the epic without teaching the language. The two cannot be separated, and that turns out to matter enormously.</li>
+    </ul>
+    <p class="note in" style="--d:7">Compare the Uilta module, where the culture was documented but the language went anyway; and Kristang, where the festivals thrive while the creole fades. A tradition that <em>requires</em> the language is a different kind of asset.</p>
+  </div>
+  <div class="stage">
+    <div class="panel in" style="--d:3; width:35vw">
+      <strong>Four Hezhen oral genres:</strong>
+      <div class="ygen" id="ygen" style="margin-top:.5rem">
+        <button class="yg" data-y="0"><b>yimakan</b>sung epics</button>
+        <button class="yg" data-y="1"><b>telungu</b>legendary stories</button>
+        <button class="yg" data-y="2"><b>shuohuli</b>tales</button>
+        <button class="yg" data-y="3"><b>jialinkuo</b>popular songs</button>
+      </div>
+      <p id="ymsg" aria-live="polite">Click each.</p>
+    </div>
+  </div>
+</section>
+
+<!-- 6. The near-extinction -->
+<section class="slide" style="--accent: var(--cn)">
+  <div class="text">
+    <p class="kicker in">The twentieth century</p>
+    <h2 class="in" style="--d:1">Three hundred people</h2>
+    <div class="bar in" style="--d:2"></div>
+    <ul class="dots">
+      <li class="in" style="--d:3">The treaties of <strong>1858 and 1860</strong> fixed the Amur as the Russia–China border. A people who had moved freely along both banks woke up as subjects of two empires, with their relatives on the far shore.</li>
+      <li class="in" style="--d:4">Then came the twentieth century. During the <strong>Japanese occupation of Manchuria</strong>, the Hezhen on the Chinese side were displaced, forced into resettlement and devastated by disease and opium. Chinese accounts put their number at only about <strong>300 people</strong> by the end of the Second World War.</li>
+      <li class="in" style="--d:5">From roughly 300 in 1945 to over 5,000 today is a real demographic recovery. The language did not recover with it.</li>
+      <li class="in" style="--d:6">That gap — population up, language down — is the single most repeated pattern in this entire course. You saw it with the Gelao, the Métis, the Kristang and the Rapa Nui.</li>
+    </ul>
+    <p class="in" style="--d:7">On the Russian side the pressures were different in kind and similar in effect: collectivisation, resettlement into consolidated villages, Russian-language boarding schools.</p>
+  </div>
+  <div class="stage">
+    <div class="panel in" style="--d:3; width:34vw">
+      <strong>The Hezhe in China</strong>
+      <div class="colchart">
+        <div class="col"><div class="n">~300</div><div class="colbar" style="--h:6%; --c: var(--cn)"></div><div class="y">1945</div></div>
+        <div class="col"><div class="n">4,245</div><div class="colbar" style="--h:76%; --c: var(--river)"></div><div class="y">1990</div></div>
+        <div class="col"><div class="n">5,354</div><div class="colbar" style="--h:94%; --c: var(--skin)"></div><div class="y">2010</div></div>
+        <div class="col"><div class="n">5,373</div><div class="colbar" style="--h:95%; --c: var(--skin)"></div><div class="y">2020</div></div>
+      </div>
+      <p class="note" style="margin:.4rem 0 0">The people came back from the edge of destruction in three generations. The number of fluent speakers has gone the other way across the same period.</p>
+    </div>
+  </div>
+</section>
+
+<!-- 7. Timeline -->
+<section class="slide" data-tr="zoom" style="--accent: var(--river)">
+  <div class="text wide">
+    <p class="kicker in">History</p>
+    <h2 class="in" style="--d:1">A river, a border, a recovery</h2>
+    <div class="bar in" style="--d:2"></div>
+    <p class="in" style="--d:3">Click each moment to explore it.</p>
+    <div class="tl in" id="tl" style="--d:4">
+      <button class="ev" style="--ec: var(--river)"><span class="yr">pre-1858</span><span></span><small>One people, both banks</small></button>
+      <button class="ev" style="--ec: #9cc3cf"><span class="yr">1858–60</span><small>The treaties</small></button>
+      <button class="ev" style="--ec: var(--cn)"><span class="yr">1931–45</span><small>Occupation</small></button>
+      <button class="ev" style="--ec: #e0968f"><span class="yr">1930s–80s</span><small>Two states, two schools</small></button>
+      <button class="ev" style="--ec: #e8d5a8"><span class="yr">2011</span><small>UNESCO: urgent</small></button>
+      <button class="ev" style="--ec: var(--skin)"><span class="yr">2025</span><small>Off the urgent list</small></button>
+    </div>
+    <div class="panel in" id="tltext" style="--d:5" aria-live="polite"></div>
+  </div>
+</section>
+
+<!-- 8. The language now -->
+<section class="slide" style="--accent: var(--river)">
+  <div class="text">
+    <p class="kicker in">Where the language stands</p>
+    <h2 class="in" style="--d:1">Eleven per cent, and falling</h2>
+    <div class="bar in" style="--d:2"></div>
+    <ul class="dots">
+      <li class="in" style="--d:3"><strong>In Russia:</strong> the 2010 census recorded about <strong>1,347</strong> Nanai speakers — roughly <strong>11%</strong> of the ethnic population — and the 2021 figure is around a thousand. UNESCO classes Nanai as <strong>severely endangered</strong>.</li>
+      <li class="in" style="--d:4">The language has held on best in the <strong>Nanai District of Khabarovsk Krai</strong>, which has ethnic autonomous status, an active community, published books and school textbooks. Even there, estimates of native speakers run to only about <strong>100–150</strong>.</li>
+      <li class="in" style="--d:5"><strong>In China:</strong> figures vary from roughly a hundred fluent speakers down to a handful of elders; UNESCO's Red Book has listed Hezhe as nearly extinct. Everyone is bilingual in Mandarin, and Chinese characters are used for writing.</li>
+      <li class="in" style="--d:6">The split also shaped the writing. Russia gave Nanai a Latin alphabet in the 1930s and then Cyrillic; China never gave Hezhen a script at all.</li>
+    </ul>
+    <p class="note in" style="--d:7">Note the dialect geography: the variety spoken in China is called Hezhe or Qile'en; the Russian side has Najkhin, Kur-Urmi, Bikin and others. A border does not just divide speakers — over time it divides a language.</p>
+  </div>
+  <div class="stage">
+    <div class="cards in" style="--d:3; grid-template-columns:1fr; width:34vw">
+      <div class="card" style="--cardc: var(--ru)"><div class="word">Does autonomy help?</div><div class="meaning">It appears to. The one place Nanai has best survived is the district with ethnic autonomous status, an active community of writers and teachers, and books in the language. That is three modules' worth of evidence in one data point — but even there, native speakers number in the low hundreds. Autonomy slows the clock; it has not stopped it.</div><div class="tap">click to reveal</div></div>
+      <div class="card" style="--cardc: var(--cn)"><div class="word">Does a script matter?</div><div class="meaning">The Russian side got an alphabet in the 1930s and used it to publish textbooks. The Chinese side got none and writes in Chinese characters. The Russian side has more speakers. That is suggestive, not proof — the populations and policies differ in many other ways too — but it echoes the Uilta module exactly.</div><div class="tap">click to reveal</div></div>
+      <div class="card" style="--cardc: var(--skin)"><div class="word">Can the two halves help each other?</div><div class="meaning">They have started to. Russian Nanai have been invited to Hezhen festivals in China, and reports describe older Hezhen men and visiting Nanai speaking their own varieties and understanding one another across a border their great-grandparents did not have. Two endangered halves of one language, meeting again.</div><div class="tap">click to reveal</div></div>
+    </div>
+  </div>
+</section>
+
+<!-- 9. Good news -->
+<section class="slide" data-tr="left" style="--accent: var(--skin)">
+  <div class="text">
+    <p class="kicker in">Rare good news</p>
+    <h2 class="in" style="--d:1">A thing that almost never happens</h2>
+    <div class="bar in" style="--d:2"></div>
+    <ul class="dots">
+      <li class="in" style="--d:3">In <strong>2011</strong>, UNESCO inscribed Hezhen Yimakan storytelling on the <strong>List of Intangible Cultural Heritage in Need of Urgent Safeguarding</strong> — the emergency ward. At that point the tradition had come down to a very small number of practising storytellers.</li>
+      <li class="in" style="--d:4">What followed was a sustained safeguarding programme: transmission classes, recording of surviving performers, support for apprentices, and teaching in schools. In Tongjiang, a primary school teaches Yimakan alongside fish-skin craft and pottery.</li>
+      <li class="in" style="--d:5">In <strong>December 2025</strong>, UNESCO moved Yimakan <em>off</em> the urgent list and onto the Representative List of the Intangible Cultural Heritage of Humanity — and added the safeguarding programme to its Register of Good Safeguarding Practices.</li>
+      <li class="in" style="--d:6">Things essentially never get better in this field. This one did.</li>
+    </ul>
+    <p class="in" style="--d:7">And UNESCO's own account credits the school teaching with two outcomes: it got young people interested — and <strong>it helped keep the Hezhen language alive</strong>, because you cannot perform the epic in Mandarin.</p>
+  </div>
+  <div class="stage">
+    <div class="panel in" style="--d:3; width:34vw">
+      <strong>Read it carefully, though</strong>
+      <p style="margin:.3rem 0 0">What was taken off the urgent list is the <em>storytelling tradition</em>, not the language. Hezhen still has very few fluent speakers, and performing an epic is not the same as chatting at home.</p>
+      <p style="margin:.5rem 0 0">What it does prove is something this course has argued all the way through: <strong>a language survives when it has a job to do</strong>. Give people a reason to use it that cannot be done in the big language, and the arithmetic changes.</p>
+    </div>
+    <div class="panel in" style="--d:5; width:34vw">
+      <strong>Your turn:</strong> name one thing in your own life that could only be done in one specific language. If you can't, that tells you something about why big languages win.
+    </div>
+  </div>
+</section>
+
+<!-- 10. Course close -->
+<section class="slide" data-tr="zoom" style="--accent: var(--skin)">
+  <div class="text wide">
+    <p class="kicker in">The end of the course</p>
+    <h2 class="in" style="--d:1">What thirty-eight languages taught us</h2>
+    <div class="bar in" style="--d:2"></div>
+    <p class="in" style="--d:3">From Ainu to Hezhen, from the Andamans to the Adelaide Plains, the same handful of mechanisms kept coming back. Click each one — you should be able to name three modules for every single card.</p>
+    <div class="recap in" id="recap" style="--d:4; margin-top:.7rem">
+      <button class="rc" data-r="0" style="--rcc: var(--cn)">Nobody has to ban a language</button>
+      <button class="rc" data-r="1" style="--rcc: var(--salmon)">The culture outlives the language</button>
+      <button class="rc" data-r="2" style="--rcc: var(--ru)">Numbers are arguments, not facts</button>
+      <button class="rc" data-r="3" style="--rcc: var(--river)">Borders cut languages in half</button>
+      <button class="rc" data-r="4" style="--rcc: var(--skin)">Small languages carry big information</button>
+      <button class="rc" data-r="5" style="--rcc: #8fae6c">Documentation is a seed, not a substitute</button>
+    </div>
+    <div class="panel in" id="rcmsg" style="--d:5" aria-live="polite"></div>
+  </div>
+</section>
+
+<!-- 11. Quiz -->
+<section class="slide" style="--accent: var(--skin)">
+  <div class="text wide center">
+    <p class="kicker in">Last review</p>
+    <h2 class="in" style="--d:1">Quick quiz!</h2>
+    <div class="bar in" style="--d:2"></div>
+    <div class="quizgrid">
+      <div class="quiz panel in" style="--d:3" data-right="Yes — fish skin, prepared and pounded soft, for coats, boots and thread." data-wrong="Hint: they live on one of the world's great salmon rivers.">
+        <div class="q">What were traditional Hezhen clothes made from?</div>
+        <div class="options"><button class="opt">Birch bark</button><button class="opt" data-correct>Fish skin</button><button class="opt">Reindeer hide</button></div>
+        <div class="feedback"></div>
+      </div>
+      <div class="quiz panel in" style="--d:4" data-right="Right — the Amur became the Russia–China border in 1858–60, splitting one people in two." data-wrong="Hint: look at the background of this deck.">
+        <div class="q">Why are there two names for one language?</div>
+        <div class="options"><button class="opt">Two different peoples</button><button class="opt" data-correct>A border split them</button><button class="opt">A spelling dispute</button></div>
+        <div class="feedback"></div>
+      </div>
+      <div class="quiz panel in" style="--d:5" data-right="Correct — in 2025 it moved off the urgent list, which almost never happens." data-wrong="Hint: the news was unusually good.">
+        <div class="q">What happened to Yimakan storytelling at UNESCO?</div>
+        <div class="options"><button class="opt">It was removed entirely</button><button class="opt" data-correct>It graduated off the urgent list</button><button class="opt">It was never listed</button></div>
+        <div class="feedback"></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- 12. Closing -->
+<section class="slide end" style="--accent: var(--skin)">
+  <div class="text">
+    <h1 class="in" style="font-size:4.2rem">Nani</h1>
+    <p class="lead in" style="--d:1; margin-top:.8rem">"People of this place." Thank you — that's the course. Questions?</p>
+    <p class="quote in" style="--d:2">At a festival on the Chinese bank of the Amur, old Hezhen men spoke Hezhen and visiting Russian Nanai spoke Nanai, and they understood each other perfectly — across a border drawn in 1858 by two governments that never asked them.</p>
+    <p class="note in" style="--d:3">That is what a language is: not a flag, not a border, not a census line. A way for people to recognise each other. Every module in this course has been about somebody trying to keep one.</p>
+  </div>
+  <details class="fine in" style="--d:4">
+    <summary>Sources &amp; image credits</summary>
+    <div class="box">
+      <h4>Sources</h4>
+      <ul>
+        <li><a href="https://en.wikipedia.org/wiki/Nanai_language">Nanai language (Wikipedia)</a> — classification, dialects, speaker figures, the Nanai District, scripts</li>
+        <li><a href="https://en.wikipedia.org/wiki/Nanai_people">Nanai people (Wikipedia)</a> — populations, the name Hezhen, fish-skin clothing, shamans, Qing rule</li>
+        <li><a href="https://ich.unesco.org/en/USL/hezhen-yimakan-storytelling-00530">UNESCO: Hezhen Yimakan storytelling</a> — the 2011 inscription on the Urgent Safeguarding List</li>
+        <li><a href="https://olachina.org/hezhen-yimakan">"Hezhen Yimakan: the epic that left UNESCO's urgent list"</a> — the 2025 transfer to the Representative List and the Register of Good Safeguarding Practices; school teaching in Tongjiang</li>
+        <li><a href="https://factsanddetails.com/china/cat5/sub88/entry-8472.html">Facts and Details: Hezhen life, culture, stories and fish-skin clothes</a> — yimakan, telungu, shuohuli and jialinkuo; the Wurigong festival and cross-border mutual intelligibility</li>
+        <li><a href="https://factsanddetails.com/china/cat5/sub88/entry-4362.html">Facts and Details: Hezhen history, fish, religion and dying language</a> — census figures, the Fish Skin Tribe, the endangered-language assessment</li>
+        <li><a href="https://www.kikiholidays.com/post/the-hezhen-china-s-fish-skin-people-and-the-last-guardians-of-the-amur">"The Hezhen: China's fish-skin people"</a> — the fish-skin clothing tradition and the 2025 UNESCO decision</li>
+        <li><a href="https://www.wikiwand.com/en/Nanai_people">Nanai people (Wikiwand)</a> — the China and Russia population breakdown</li>
+        <li><a href="https://en.wikipedia.org/wiki/Treaty_of_Aigun">Treaty of Aigun</a> and <a href="https://en.wikipedia.org/wiki/Convention_of_Peking">Convention of Peking</a> — how the Amur became a border</li>
+        <li><a href="https://en.wikipedia.org/wiki/Tungusic_languages">Tungusic languages (Wikipedia)</a></li>
+      </ul>
+      <h4>Images (Wikimedia Commons)</h4>
+      <ul id="credits"></ul>
+    </div>
+  </details>
+</section>
+
+</main>
+
+<nav class="controls">
+  <button id="prev" aria-label="Previous slide">‹</button>
+  <span id="counter">1 / 12</span>
+  <button id="next" aria-label="Next slide">›</button>
+  <button id="fs" aria-label="Fullscreen">⤢</button>
+</nav>
+<p class="hint">Use ← → to move. Press F for fullscreen.</p>
+
+<!-- Hezhen effects: the river border, the two-country comparison, fish skin, Yimakan, course recap -->
+<script>
+(function () {
+  var fish = document.querySelector("#amur .fish");
+  for (var k = 0; k < 9; k++) {
+    var f = document.createElement("i");
+    f.style.top = (36 + Math.random() * 26) + "vh";
+    f.style.animationDelay = (-Math.random() * 19) + "s";
+    f.style.animationDuration = (15 + Math.random() * 10) + "s";
+    fish.appendChild(f);
+  }
+  document.addEventListener("slidechange", function (e) {
+    document.body.style.setProperty("--t", e.detail.index / (e.detail.total - 1));
+  });
+
+  function single(sel, cb) {
+    var g = document.querySelectorAll(sel);
+    g.forEach(function (b) {
+      b.addEventListener("click", function () {
+        g.forEach(function (x) { x.classList.remove("on"); });
+        b.classList.add("on"); cb(b);
+      });
+    });
+  }
+
+  /* ---------- Two countries ---------- */
+  var SPLIT = [
+    ["Nanai", "the name", "Hezhe 赫哲", "Russia uses the people's own self-designation, Nanai, from <em>nani</em>. China uses Hezhen, explained as \u201cpeople of the lower river.\u201d Same people. Two official identities, two sets of paperwork, two entries in two national lists of minorities."],
+    ["12,003", "population", "5,373", "Russia's 2010 census; China's 2020 census. The Russian side is more than twice as large — and in China the Hezhe are the second-smallest of the 56 officially recognised ethnic groups."],
+    ["~1,000–1,350", "speakers", "a handful to ~150", "Russia's 2010 census recorded about 1,347 speakers, roughly 11% of the ethnic population, falling to around a thousand by 2021. Estimates for China range from about 150 fluent speakers down to a few elders, and UNESCO's Red Book has listed Hezhe as nearly extinct."],
+    ["Cyrillic", "writing", "none / Chinese", "The Soviet Union gave Nanai a Latin alphabet in the 1930s, then switched it to Cyrillic. China never created a script for Hezhen; Hezhe people write in Chinese. One side has textbooks. The other does not."],
+    ["taught in schools", "education", "heritage classes", "Nanai is taught in some secondary schools in Nanai villages in Russia, supported by the ethnic autonomous status of the Nanai District. In China, Hezhen appears mainly through cultural programmes — notably Yimakan classes — rather than as a school subject in its own right."],
+    ["severely endangered", "status", "nearly extinct", "UNESCO's assessments. Both halves are in trouble; the Russian half has more time. Neither has a generation of children learning it at home."],
+    ["autonomy, books", "what helped", "a UNESCO epic", "Here is the interesting twist. Russia's advantages are the conventional ones — territory, status, publishing, schooling. China's one great success is cultural: an epic tradition, internationally recognised, that cannot be performed in any other language. Different routes to the same goal, and neither has won yet."]
+  ];
+  var sb = document.getElementById("splitbox"), spl2 = document.getElementById("spl2msg");
+  SPLIT.forEach(function (s, i) {
+    var r = document.createElement("div");
+    r.className = "splitrow";
+    r.innerHTML = '<div class="ruv">' + s[0] + '</div><div class="mid">' + s[1] + '</div><div class="cnv">' + s[2] + "</div>";
+    r.addEventListener("click", function () { spl2.innerHTML = s[3]; });
+    sb.appendChild(r);
+  });
+  spl2.innerHTML = SPLIT[0][3];
+
+  /* ---------- Fish skin ---------- */
+  var FSK = [
+    ["Choose the fish", "Large fish only — chum salmon, carp, pike, sturgeon. Accounts of the tradition describe skins taken from fish weighing over fifty kilograms, because a coat needs big panels and few seams. The species determines the thickness, the pattern and what the finished garment is good for.",
+     '<svg viewBox="0 0 160 70"><path d="M20 35 q30 -26 74 0 q-44 26 -74 0z" fill="#e08a6a"/><path d="M94 35 l24 -16 v32z" fill="#e08a6a"/><circle cx="38" cy="31" r="3" fill="#2a1d14"/></svg>'],
+    ["Skin and scale it", "The skin is removed whole, in one piece if possible, then scraped clean of flesh and fat and de-scaled. Any residue left behind will rot later, so this stage decides whether the garment lasts a season or a decade.",
+     '<svg viewBox="0 0 160 70"><path d="M22 14 h116 v42 h-116z" fill="#e3d6bb"/><path d="M34 22 q16 -8 26 0 M64 22 q16 -8 26 0 M94 22 q16 -8 26 0 M34 36 q16 -8 26 0 M64 36 q16 -8 26 0 M94 36 q16 -8 26 0" stroke="#b9a884" stroke-width="2" fill="none"/></svg>'],
+    ["Dry it", "The cleaned skins are hung and air-dried. Dried fish skin is stiff and translucent, closer to parchment than to cloth — completely unwearable at this stage, which is why the next step exists.",
+     '<svg viewBox="0 0 160 70"><path d="M10 12 h140" stroke="#8a7a5c" stroke-width="3"/><g fill="#e3d6bb"><rect x="26" y="14" width="26" height="40" rx="3"/><rect x="66" y="14" width="26" height="40" rx="3"/><rect x="106" y="14" width="26" height="40" rx="3"/></g></svg>'],
+    ["Pound it soft", "This is the heart of the craft. The dried skins are pounded — traditionally in a wooden mortar or with a mallet, for a long time — until the fibres break down and the material turns soft, supple and pale. Done right, it feels like suede. Done wrong, it cracks.",
+     '<svg viewBox="0 0 160 70"><rect x="30" y="40" width="100" height="18" rx="4" fill="#e3d6bb"/><rect x="70" y="6" width="16" height="30" rx="4" fill="#8a7a5c"/><rect x="62" y="30" width="32" height="12" rx="4" fill="#6b5e43"/><path d="M50 36 l-6 -8 M110 36 l6 -8" stroke="#e08a6a" stroke-width="3"/></svg>'],
+    ["Cut and sew", "Panels are cut and sewn with thread also made from fish skin, cut in fine strips. The results are coats, trousers, boots, gloves and bags, often decorated with appliqué scrollwork and knotted buttons. Light, tough and water-resistant — the right coat for a life spent on a river.<br><br><strong>Note what the knowledge consists of:</strong> which fish, at what season, how long to pound, how to cut a strip that will not snap. None of it is written down anywhere.",
+     '<svg viewBox="0 0 160 70"><path d="M52 10 h56 l16 16 l-12 10 l-6 -6 v30 h-52 v-30 l-6 6 l-12 -10z" fill="#e3d6bb" stroke="#b9a884" stroke-width="2"/><path d="M68 26 q12 10 24 0" stroke="#b9a884" stroke-width="2" fill="none"/><circle cx="80" cy="44" r="3" fill="#8a7a5c"/><circle cx="80" cy="54" r="3" fill="#8a7a5c"/></svg>']
+  ];
+  var fsmsg = document.getElementById("fsmsg"), fsview = document.getElementById("fsview");
+  document.querySelectorAll("#fsteps .fs").forEach(function (b) {
+    b.addEventListener("click", function () {
+      document.querySelectorAll("#fsteps .fs").forEach(function (x) { x.classList.remove("on"); });
+      b.classList.add("on");
+      var F = FSK[Number(b.dataset.f)];
+      fsview.innerHTML = F[2];
+      fsmsg.innerHTML = "<strong style='color:var(--salmon)'>" + F[0] + "</strong><br>" + F[1];
+    });
+  });
+
+  /* ---------- Yimakan genres ---------- */
+  var YG = [
+    ["yimakan", "The great form: long narrative epics, partly chanted and partly spoken, performed by a single storyteller with no instruments. Performances can continue for days. The stories carry tribal history, heroic deeds, alliances and shamanic journeys — and for a people with no script, they <em>were</em> the archive."],
+    ["telungu", "Legendary stories — the traditional narratives of origins, spirits and the land, shorter than the epics and more widely known. Where Yimakan needs a trained performer, these circulate among everyone."],
+    ["shuohuli", "Tales: the everyday storytelling of ordinary evenings, including humour and the stories told to children. This is the layer that disappears first and is documented least, because it looks too ordinary to record."],
+    ["jialinkuo", "Popular songs, used in all parts of life — at work, at weddings, at funerals, on the water. Songs are often the last thing a shifting community keeps, because they can be sung correctly by someone who no longer speaks the language. You saw exactly this in the Kaurna module, where a songbook started a revival."]
+  ];
+  var ymsg = document.getElementById("ymsg");
+  single("#ygen .yg", function (b) {
+    var Y = YG[Number(b.dataset.y)];
+    ymsg.innerHTML = "<strong style='color:var(--salmon)'>" + Y[0] + "</strong><br>" + Y[1];
+  });
+
+  /* ---------- Course recap ---------- */
+  var RC = [
+    ["Nobody has to ban a language",
+     "The most common cause of language death in this course was not a law. It was a thousand reasonable decisions: parents choosing the language that gets their children work, young people avoiding embarrassment, communities adopting the language of church and radio.<br><br><strong>See:</strong> Tayap, where no one wanted it and it happened anyway. Hawai'i Sign Language, killed by a <em>better</em> sign language. Kristang, lost to a school timetable."],
+    ["The culture outlives the language",
+     "Festivals, dances, food, crafts and identity can all be thriving while the language quietly stops. Culture can be performed by people who do not speak it. A language has to be used thousands of times a week about nothing in particular.<br><br><strong>See:</strong> Gelao, Michif, Kristang, Rapa Nui — and the exception that proves the rule, Yimakan, which cannot be performed in another language."],
+    ["Numbers are arguments, not facts",
+     "Speaker counts measure different things depending on who is counting and why. Census figures record identity; fieldwork records fluency. Both are honest; they are not the same number.<br><br><strong>See:</strong> Uilta, 8 to 116. Dumi, 8 to 8,638. Michif, 1,845 reported against under a thousand fluent. Always ask who counted, and how."],
+    ["Borders cut languages in half",
+     "Lines drawn by distant governments split speech communities into separate minorities, with different scripts, schools, names and statistics — and over time, different languages.<br><br><strong>See:</strong> Uilta and Nivkh across the 50th parallel; Ket inside one state and Dene across an ocean; Gelao in China and Vietnam; and this module, where the Amur did it most cleanly of all."],
+    ["Small languages carry big information",
+     "The languages with the fewest speakers are repeatedly the ones that overturn confident generalisations about what human language can do.<br><br><strong>See:</strong> Hawai'i Sign Language, which lacks a feature thought universal in sign languages. Michif, which was supposed to be impossible. Dumi, whose verb complicates the whole history of Sino-Tibetan. Rongorongo, possibly the most recent independent invention of writing."],
+    ["Documentation is a seed, not a substitute",
+     "A grammar is not a speaker, and a recording is not a conversation. But good documentation made by people who cared has repeatedly turned out to be the thing a community could build from, decades later.<br><br><strong>See:</strong> Kaurna, rebuilt from two missionaries' notebooks ninety years after the last speaker died. Palenquero, revived from stigma to school subject. Kristang, found in a book by a twenty-year-old who then taught it to his grandfather.<br><br><strong>Which is the argument of this entire course:</strong> record it now, support the speakers who are still here, and leave the door open."]
+  ];
+  var rcmsg = document.getElementById("rcmsg");
+  document.querySelectorAll("#recap .rc").forEach(function (b) {
+    b.addEventListener("click", function () {
+      var R = RC[Number(b.dataset.r)];
+      rcmsg.innerHTML = "<strong style='color:var(--skin); font-size:1.15rem'>" + R[0] + "</strong><br>" + R[1];
+    });
+  });
+  rcmsg.innerHTML = "<strong style='color:var(--skin); font-size:1.15rem'>Six lessons, thirty-eight languages.</strong><br>Click any card. For each one, try to name three modules before you read the answer.";
+
+  /* ---------- Timeline ---------- */
+  var EVENTS = [
+    ["One people, both banks", "Before the mid-19th century the Nanai moved freely along the Amur, the Ussuri and the Sungari, fishing, trading and intermarrying across what is now an international frontier. They were under nominal Qing authority — which among other things imposed the queue hairstyle on Amur peoples — but the river was a highway, not an edge."],
+    ["The treaties", "The Treaty of Aigun in 1858 and the Convention of Peking in 1860 transferred vast territory from the Qing empire to Russia and fixed the Amur as the border. The Nanai were divided overnight between two states. Neither treaty mentioned them."],
+    ["Occupation", "During the Japanese occupation of Manchuria, the Hezhen on the Chinese side were displaced and resettled, and devastated by disease and opium. Chinese accounts put their total number at around 300 people by 1945 — a community that came within sight of disappearing entirely."],
+    ["Two states, two schools", "On the Soviet side: a Latin alphabet in the 1930s, then Cyrillic, textbooks, collectivisation, consolidated villages and Russian-language boarding schools. On the Chinese side: official recognition as one of the 56 nationalities, no script, and education in Mandarin. Two systems; in both, children stopped learning the language."],
+    ["UNESCO: urgent", "In 2011, Hezhen Yimakan storytelling was inscribed on UNESCO's List of Intangible Cultural Heritage in Need of Urgent Safeguarding. The tradition had come down to a very small number of practising storytellers. A safeguarding programme followed: recording the surviving performers, training apprentices, and teaching Yimakan in schools in Tongjiang."],
+    ["Off the urgent list", "In December 2025 UNESCO transferred Yimakan from the urgent list to the Representative List of the Intangible Cultural Heritage of Humanity, and placed the safeguarding programme on its Register of Good Safeguarding Practices. It is the rarest kind of news in this field — and UNESCO's own account credits the school teaching with helping keep the Hezhen language alive."]
+  ];
+  var tlText = document.getElementById("tltext");
+  var evs = document.querySelectorAll("#tl .ev");
+  function setEvent(i) {
+    evs.forEach(function (e, k) { e.classList.toggle("on", k === i); });
+    tlText.innerHTML = '<strong style="color:var(--skin); font-size:1.2rem">' + EVENTS[i][0] + "</strong><br>" + EVENTS[i][1];
+  }
+  evs.forEach(function (e, i) { e.addEventListener("click", function () { setEvent(i); }); });
+  setEvent(0);
+})();
+</script>
+<script src="../assets/deck.js"></script>
+</body>
+</html>
