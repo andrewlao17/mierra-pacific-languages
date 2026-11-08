@@ -1,0 +1,636 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Hawai'i Sign Language: The Last Undiscovered Language in America</title>
+<link rel="stylesheet" href="../assets/deck.css">
+<style>
+@import url("https://fonts.googleapis.com/css2?family=Newsreader:wght@600;700&family=Figtree:wght@400;500;700;900&display=swap");
+
+/* ---------- HSL theme: night ocean, warm light on hands ---------- */
+:root {
+  --bg: #091a1f;
+  --ink: #f2f4f0;
+  --muted: #bdd2d2;
+  --line: rgba(242, 244, 240, .22);
+  --panel: rgba(9, 30, 36, .86);
+  --sign: #f0c98a;
+  --ocean: #1f8fa0;
+  --lehua: #d94f3d;
+  --fern: #6aa86f;
+  --cream: #f2ece0;
+  --rose: #d94f3d;
+  --accent: var(--sign);
+  --serif: "Newsreader", Georgia, serif;
+  --sans: "Figtree", system-ui, sans-serif;
+  --t: 0;
+  font-size: clamp(12px, 1.3vw, 28px);
+}
+h1 { font-family: var(--serif); font-size: 5.4rem; font-weight: 700; line-height: 1.04; }
+h2 { font-family: var(--serif); font-size: 2.6rem; font-weight: 700; line-height: 1.12; }
+.slide { padding: 7vh 4vw 8vh 6vw; }
+.text { max-width: 44vw; }
+.text.wide { max-width: 86vw; width: 86vw; }
+.stage {
+  right: 5vw; top: 6vh; bottom: 10vh; width: 38vw;
+  display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 1.1rem;
+}
+ul.dots li { font-size: 1.04rem; }
+.card .word { font-family: var(--sans); font-weight: 900; }
+.card.revealed .meaning { max-height: 15rem; }
+.btn { background: var(--sign); color: #2b1d08; }
+.loc .disc { border-color: var(--sign); box-shadow: 0 0 0 .55rem rgba(240,201,138,.16), 0 22px 40px rgba(0,0,0,.55); }
+.loc .tint { background: #cfe0bb; }
+.loc .sea { background: #0e4753; }
+.loc .tag { background: #082227; border-color: var(--sign); }
+.note { font-size: .82rem; color: var(--muted); }
+.quote { font-family: var(--serif); font-size: 1.7rem; font-weight: 700; line-height: 1.32; color: var(--sign); }
+
+/* ---------- Background: hands in the dark, thinning out ---------- */
+#hands { position: fixed; inset: 0; z-index: 0; overflow: hidden; pointer-events: none;
+  background: radial-gradient(70% 60% at 30% 30%, #0e2f38 0%, #071419 70%, #040c10 100%); }
+#hands .h { position: absolute; width: 7vw; height: 9vw; opacity: 0; transition: opacity 1.6s ease;
+  animation: float 14s ease-in-out infinite alternate; }
+#hands .h svg { width: 100%; height: 100%; display: block; }
+@keyframes float { to { transform: translateY(-2.2vh) rotate(3deg); } }
+#hands .ridge { position: absolute; left: 0; right: 0; bottom: 0; height: 22vh; }
+#hands .ridge svg { width: 100%; height: 100%; display: block; }
+#hands .surf { position: absolute; left: 0; right: 0; bottom: 0; height: 9vh;
+  background: linear-gradient(180deg, rgba(31,143,160,.35), rgba(8,30,36,0)); }
+#hands .shade { position: absolute; inset: 0;
+  background: linear-gradient(90deg, rgba(3,10,13,.94) 0%, rgba(3,10,13,.74) 52%, rgba(3,10,13,.2) 100%); }
+
+/* ---------- Photos ---------- */
+.board { position: relative; margin: 0; width: var(--w, 19vw); padding: .6rem .6rem .5rem;
+  background: var(--cream); border-radius: .2rem; box-shadow: 0 18px 34px rgba(0,0,0,.6);
+  transform: rotate(var(--r, 0deg)); transition: transform .9s cubic-bezier(.2,.8,.2,1), opacity .7s ease; }
+.slide:not(.active) .board { opacity: 0; transform: translateY(46px) rotate(var(--r, 0deg)); }
+.slide.active .board { transition-delay: calc(.4s + var(--d, 0) * .16s); }
+.board img { display: block; width: 100%; aspect-ratio: var(--ar, 4 / 3); object-fit: cover; background: #cdc8b8; }
+.board figcaption { color: #1e2420; font-size: .73rem; font-weight: 700; line-height: 1.25; margin: .4rem .1rem 0; font-family: var(--serif); }
+
+/* ---------- Shared controls ---------- */
+.switch { display: flex; gap: .4rem; margin: .4rem 0 .6rem; flex-wrap: wrap; }
+.sbtn { font: inherit; font-weight: 700; font-size: .92rem; color: var(--ink); background: var(--panel);
+  border: 2px solid var(--line); border-radius: .3rem; padding: .25em .9em; cursor: pointer; transition: transform .2s; }
+.sbtn:hover { transform: translateY(-2px); }
+.sbtn.on { background: var(--sign); border-color: var(--sign); color: #2b1d08; }
+.out { min-height: 3.2em; margin-top: .5rem; }
+
+/* ---------- Myth buster ---------- */
+.myths { display: grid; gap: .4rem; }
+.my { font: inherit; text-align: left; font-weight: 600; font-size: .9rem; color: var(--ink); background: var(--panel);
+  border: 2px solid var(--line); border-radius: .3rem; padding: .45em .75em; cursor: pointer; }
+.my:hover { border-color: var(--lehua); }
+.my.on { border-color: var(--lehua); background: rgba(217,79,61,.14); }
+#mymsg { min-height: 6em; margin-top: .4rem; }
+.verdictx { font-family: var(--serif); font-size: 1.05rem; color: var(--lehua); }
+
+/* ---------- Sign builder ---------- */
+.builder { display: grid; grid-template-columns: 1fr 1fr; gap: .5rem; }
+.param { background: var(--panel); border: 2px solid var(--line); border-radius: .35rem; padding: .4rem; }
+.param h5 { margin: 0 0 .25rem; font-size: .72rem; letter-spacing: .07em; text-transform: uppercase; color: var(--muted); }
+.opts2 { display: flex; gap: .25rem; flex-wrap: wrap; }
+.opts2 button { font: inherit; font-weight: 700; font-size: .78rem; color: var(--ink); background: rgba(255,255,255,.06);
+  border: 2px solid transparent; border-radius: .25rem; padding: .2em .5em; cursor: pointer; }
+.opts2 button.on { border-color: var(--sign); background: rgba(240,201,138,.18); }
+.signview { display: grid; place-items: center; min-height: 9rem; background: rgba(255,255,255,.04);
+  border: 2px solid var(--line); border-radius: .35rem; margin-top: .5rem; position: relative; }
+.signview svg { width: 70%; max-width: 11rem; }
+.signview .lbl { position: absolute; bottom: .3rem; font-size: .72rem; color: var(--muted); }
+#sbmsg { min-height: 4.2em; margin-top: .4rem; }
+
+/* ---------- Lexicostat ---------- */
+.lexbar { height: 1.6rem; border-radius: .25rem; overflow: hidden; display: flex; margin-top: .4rem; }
+.lexbar b { display: block; height: 100%; transition: width 1.2s cubic-bezier(.2,.8,.2,1); }
+.lexbar .same { background: var(--fern); width: 0; }
+.lexbar .diff { background: var(--lehua); width: 0; }
+.thresh { position: relative; height: 1.4rem; margin-top: .2rem; }
+.thresh i { position: absolute; top: 0; bottom: 0; width: 3px; background: var(--sign); left: 80%; }
+.thresh span { position: absolute; left: 80%; transform: translateX(-50%); top: .2rem; font-size: .68rem; color: var(--sign); white-space: nowrap; }
+#lxmsg { min-height: 5em; margin-top: 1.2rem; }
+
+/* ---------- Generations ---------- */
+.gens { display: grid; gap: .4rem; }
+.gen { display: grid; grid-template-columns: 7rem 1fr; gap: .5rem; align-items: center; cursor: pointer; }
+.gen .bar { height: 2.2rem; border-radius: .3rem; display: flex; overflow: hidden; border: 2px solid transparent; }
+.gen.on .bar { border-color: var(--sign); }
+.gen .bar i { height: 100%; display: block; }
+.gen .bar .hsl { background: var(--sign); }
+.gen .bar .mix { background: repeating-linear-gradient(45deg, var(--sign) 0 6px, var(--ocean) 6px 12px); }
+.gen .bar .asl { background: var(--ocean); }
+.gen span { font-size: .8rem; font-weight: 700; }
+#gnmsg { min-height: 5.4em; margin-top: .4rem; }
+
+/* ---------- Timeline ---------- */
+.tl { display: grid; grid-template-columns: repeat(6, 1fr); gap: .55rem; margin-top: 1rem; position: relative; padding-bottom: 1.4rem; }
+.tl::after { content: ""; position: absolute; left: 0; right: 0; bottom: .45rem; height: 3px; border-radius: 3px;
+  background: linear-gradient(90deg, var(--sign), var(--lehua), var(--fern)); }
+.ev { font: inherit; text-align: left; color: #10211f; background: var(--ec); border: 0; border-radius: .3rem;
+  padding: .65rem .75rem; cursor: pointer; transition: transform .25s, box-shadow .25s; }
+.ev:hover { transform: translateY(-4px); }
+.ev.on { box-shadow: 0 0 0 3px #fff, 0 10px 24px rgba(0,0,0,.4); transform: translateY(-6px); }
+.ev .yr { font-family: var(--serif); font-weight: 700; font-size: 1.3rem; line-height: 1; display: block; }
+.ev small { display: block; font-weight: 700; font-size: .76rem; margin-top: .3rem; }
+#tltext { min-height: 5.4rem; margin-top: .4rem; }
+
+/* ---------- Quiz tint ---------- */
+.opt.right { background: var(--fern); }
+.opt.wrong { background: var(--lehua); }
+
+@media (max-width: 820px) {
+  .slide { padding: 6vh 6vw 12vh; }
+  h1 { font-size: 3.1rem; }
+  .text, .text.wide { max-width: none; width: auto; }
+  .stage { position: relative; inset: auto; width: 100%; margin-top: 1.5rem; }
+  .board { width: 74vw; }
+  .stage .panel { width: 100% !important; max-width: none !important; }
+  .tl { grid-template-columns: repeat(2, 1fr); }
+  .builder { grid-template-columns: 1fr; }
+  #hands .h { width: 16vw; height: 20vw; }
+}
+</style>
+</head>
+<body data-map="BlankMap-Equirectangular.svg">
+
+<div id="hands" aria-hidden="true">
+  <div class="handfield"></div>
+  <div class="ridge">
+    <svg viewBox="0 0 1600 220" preserveAspectRatio="none">
+      <path d="M0 220 V150 L180 96 L360 150 L520 70 L720 148 L900 86 L1100 150 L1300 100 L1600 152 V220 Z" fill="#0a2229"/>
+    </svg>
+  </div>
+  <div class="surf"></div>
+  <div class="shade"></div>
+</div>
+<div class="progress"></div>
+
+<main>
+
+<!-- 1. Title -->
+<section class="slide" style="--accent: var(--sign)">
+  <div class="text">
+    <p class="kicker in">Rare Languages of the Asia-Pacific · Module 31</p>
+    <h1 class="in" style="--d:1">Hawai'i Sign Language</h1>
+    <p class="in" style="--d:2; font-size:1.35rem; font-weight:900; color:var(--sign)">HSL · Hawaiʻi, United States</p>
+    <div class="bar in" style="--d:3"></div>
+    <p class="lead in" style="--d:4">A language isolate, used in one of the most studied places on earth, that linguistics did not formally recognise until <strong>2013</strong> — and that fewer than ten people now sign fluently</p>
+    <p class="muted in" style="--d:5">Watch the background: there are a lot of hands at the moment.</p>
+  </div>
+  <div class="stage">
+    <figure class="board" style="--w:24vw; --r:-1.5deg; --d:0">
+      <img data-wiki="Honolulu" data-width="1200" alt="Honolulu, Hawaiʻi">
+      <figcaption>Honolulu — where a Deaf community built its own language, and where almost nobody noticed</figcaption>
+    </figure>
+  </div>
+</section>
+
+<!-- 2. What a sign language is -->
+<section class="slide" data-tr="left" style="--accent: var(--lehua)">
+  <div class="text">
+    <p class="kicker in">First, clear the ground</p>
+    <h2 class="in" style="--d:1">Four things people get wrong</h2>
+    <div class="bar in" style="--d:2"></div>
+    <p class="in" style="--d:3">This module will not make sense unless we start here. Most people — including most people who have met a sign language — carry a set of assumptions about them that are simply false, and the falsehoods are the reason HSL went unrecognised for a century.</p>
+    <p class="in" style="--d:4">Click each statement in the panel.</p>
+    <p class="note in" style="--d:5">Sign languages are full human languages with their own grammar, their own history and their own family trees. They can be related to each other, borrow from each other, split into dialects and become endangered — exactly like spoken languages, because they are languages.</p>
+  </div>
+  <div class="stage">
+    <div class="panel in" style="--d:3; width:35vw">
+      <strong>True or false?</strong>
+      <div class="myths" id="myths" style="margin-top:.5rem">
+        <button class="my" data-m="0">"Sign language is universal."</button>
+        <button class="my" data-m="1">"ASL is English, done with hands."</button>
+        <button class="my" data-m="2">"Signing is just gestures and miming."</button>
+        <button class="my" data-m="3">"Deaf people everywhere have always had one."</button>
+      </div>
+      <p id="mymsg" aria-live="polite">Pick one.</p>
+    </div>
+  </div>
+</section>
+
+<!-- 3. Where and who -->
+<section class="slide" data-tr="zoom" style="--accent: var(--ocean)">
+  <div class="text">
+    <p class="kicker in">Where and who</p>
+    <h2 class="in" style="--d:1">A language that grew up on the islands</h2>
+    <div class="bar in" style="--d:2"></div>
+    <ul class="dots">
+      <li class="in" style="--d:3">Deaf people have always been born everywhere, including Hawaiʻi. Where enough of them come together, a sign language develops — and in Hawaiʻi one did, probably by the <strong>late 1800s</strong>.</li>
+      <li class="in" style="--d:4">It is a <strong>language isolate</strong>: it grew up in the islands, not imported, and it is not descended from any other known sign language.</li>
+      <li class="in" style="--d:5">In 2013, researchers estimated around <strong>40 people</strong> still used HSL, nearly all over 80. By 2021, reporting put the number of fluent signers in <strong>single figures</strong>.</li>
+      <li class="in" style="--d:6">A further group of about forty people — the generation in between — use <strong>CHSL</strong>, a blend of HSL and ASL that formed as the two languages collided. We will come back to them.</li>
+    </ul>
+    <p class="note in" style="--d:7">Note how this changes what "indigenous language of Hawaiʻi" means. Hawaiian — ʻŌlelo Hawaiʻi — is one. HSL is another, with a completely separate history, and it is in far worse shape.</p>
+  </div>
+  <div class="stage">
+    <div class="loc" data-lat="21.3" data-lon="-157.85" data-zoom="5" style="--s:13vw; --d:0">
+      <div class="disc"><div class="lmap"></div><div class="tint"></div><div class="sea"></div><span class="pinpt"></span></div>
+      <span class="tag">Hawaiʻi, United States</span>
+    </div>
+    <div class="panel in" style="--d:4; width:34vw">
+      <strong>How does a sign language start?</strong>
+      <p class="note" style="margin:.3rem 0 0">Put Deaf children together — in a school, a village, a neighbourhood — and within a generation or two they will build a full language with grammar, whether or not any adult teaches them one. It has been observed happening in real time, most famously in Nicaragua in the 1980s.</p>
+      <p class="note" style="margin:.4rem 0 0">This is one of the strongest pieces of evidence we have that humans are built for language, not merely for speech.</p>
+    </div>
+  </div>
+</section>
+
+<!-- 4. The 2013 announcement -->
+<section class="slide" style="--accent: var(--sign)">
+  <div class="text">
+    <p class="kicker in">How it was recognised</p>
+    <h2 class="in" style="--d:1">1 March 2013</h2>
+    <div class="bar in" style="--d:2"></div>
+    <ul class="dots">
+      <li class="in" style="--d:3">The person at the centre is <strong>Linda Yuen Lambrecht</strong>. Born Deaf, she began picking up HSL at about six months old from her older Deaf brothers, and grew up to teach American Sign Language at Kapiʻolani Community College.</li>
+      <li class="in" style="--d:4">She had spent years saying that the signing of the <em>kūpuna</em> — the elders — was not ASL and not a dialect of ASL. In 2010 she approached linguists at the University of Hawaiʻi at Mānoa.</li>
+      <li class="in" style="--d:5">A team formed: Lambrecht with <strong>Barbara Earth</strong>, <strong>James "Woody" Woodward</strong> and <strong>William O'Grady</strong>, and later others. They located and interviewed elderly signers across the islands and compared the vocabulary systematically.</li>
+      <li class="in" style="--d:6">On 1 March 2013, at a conference on language documentation held in Honolulu, they announced that HSL is a distinct language — described at the time as possibly the last undiscovered language in the United States.</li>
+    </ul>
+    <p class="note in" style="--d:7">"Discovered" is the wrong word, and the same problem came up in the Koro module. Deaf people in Hawaiʻi had been using HSL for a century. What changed in 2013 is that it entered the written record — which is what determines funding, recognition and whether anybody tries to save it.</p>
+  </div>
+  <div class="stage">
+    <div class="cards in" style="--d:3; grid-template-columns:1fr; width:34vw">
+      <div class="card" style="--cardc: var(--sign)"><div class="word">Why did it take so long?</div><div class="meaning">Because everyone assumed. Hearing people assumed all signing was ASL. Linguists studying Hawaiʻi studied spoken languages. And Deaf signers who used HSL had been told for decades that what they were doing was bad ASL, not a different language — so they often did not claim otherwise.</div><div class="tap">click to reveal</div></div>
+      <div class="card" style="--cardc: var(--ocean)"><div class="word">Who did the work?</div><div class="meaning">A Deaf community member led it. Lambrecht's own knowledge, her standing in the community and her ability to sign with elders are the reason the documentation exists. The hearing linguists brought comparative method and grant applications. Neither half would have worked alone.</div><div class="tap">click to reveal</div></div>
+      <div class="card" style="--cardc: var(--lehua)"><div class="word">Was everyone pleased?</div><div class="meaning">No. There has been real disagreement inside Hawaiʻi's Deaf community about whether HSL is a separate language and whether it is worth preserving — partly because of the decades of stigma attached to it. Communities are not single-minded, and a revival that pretends otherwise will fail.</div><div class="tap">click to reveal</div></div>
+    </div>
+  </div>
+</section>
+
+<!-- 5. The 80% test -->
+<section class="slide" data-tr="left" style="--accent: var(--fern)">
+  <div class="text">
+    <p class="kicker in">Think like a linguist</p>
+    <h2 class="in" style="--d:1">Different language, or just different style?</h2>
+    <div class="bar in" style="--d:2"></div>
+    <p class="in" style="--d:3">The claim "this is a separate language" needs evidence, and the evidence here is the same kind used in the Koro module: take a standard list of <strong>basic vocabulary</strong> — everyday, culture-independent concepts — and count how many items match.</p>
+    <p class="in" style="--d:4">For sign languages the researchers compare the building blocks of each sign. If two varieties share <strong>80% or more</strong> of basic vocabulary, they are usually treated as dialects of one language. Below that, separate languages.</p>
+    <p class="in" style="--d:5">Press the button in the panel.</p>
+    <p class="note in" style="--d:6">Woodward has been applying this method to sign languages across Asia since the 1960s, which is why he could run the comparison quickly once Lambrecht brought the question to the university.</p>
+  </div>
+  <div class="stage">
+    <div class="panel in" style="--d:3; width:35vw">
+      <strong>HSL compared with ASL — basic vocabulary:</strong>
+      <div class="lexbar"><b class="same" id="same"></b><b class="diff" id="diff"></b></div>
+      <div class="thresh"><i></i><span>80% = dialect threshold</span></div>
+      <div class="switch" style="justify-content:center; margin-top:1rem">
+        <button class="btn" id="runtest">run the comparison</button>
+      </div>
+      <p id="lxmsg" aria-live="polite">Guess first: how much do you think two sign languages used in the same state would share?</p>
+    </div>
+  </div>
+</section>
+
+<!-- 6. Sign builder -->
+<section class="slide" data-tr="zoom" style="--accent: var(--sign)">
+  <div class="text">
+    <p class="kicker in">Language lab</p>
+    <h2 class="in" style="--d:1">What a sign is made of</h2>
+    <div class="bar in" style="--d:2"></div>
+    <p class="in" style="--d:3">A spoken word is built from sounds. Change one sound in <em>bat</em> and you get <em>pat</em> — a different word. Sign languages work the same way, with different raw material.</p>
+    <p class="in" style="--d:4">Every sign is built from a small number of <strong>parameters</strong>: the shape of the hand, where it is placed, how it moves, which way the palm faces, and what the face and body are doing. Change one and you can change the word completely.</p>
+    <p class="in" style="--d:5">Build a sign in the panel and watch the parameters change.</p>
+    <p class="note in" style="--d:6">The face is grammar, not decoration. In many sign languages, raised eyebrows turn a statement into a question, and a particular mouth shape marks something as done carelessly. A signer with a blank face is speaking in monotone.</p>
+  </div>
+  <div class="stage">
+    <div class="panel in" style="--d:3; width:35vw">
+      <strong>Build a sign:</strong>
+      <div class="builder" style="margin-top:.5rem">
+        <div class="param"><h5>handshape</h5><div class="opts2" data-p="shape">
+          <button class="on" data-v="flat">flat</button><button data-v="fist">fist</button><button data-v="point">point</button><button data-v="open">open</button></div></div>
+        <div class="param"><h5>location</h5><div class="opts2" data-p="loc">
+          <button class="on" data-v="neutral">in front</button><button data-v="head">head</button><button data-v="chest">chest</button></div></div>
+        <div class="param"><h5>movement</h5><div class="opts2" data-p="move">
+          <button class="on" data-v="none">hold</button><button data-v="out">outward</button><button data-v="circle">circle</button><button data-v="tap">tap twice</button></div></div>
+        <div class="param"><h5>face</h5><div class="opts2" data-p="face">
+          <button class="on" data-v="neutral">neutral</button><button data-v="brows">brows up</button><button data-v="squint">squint</button></div></div>
+      </div>
+      <div class="signview" id="signview"><div class="lbl" id="signlbl"></div></div>
+      <p id="sbmsg" aria-live="polite"></p>
+      <p class="note" style="margin:.3rem 0 0">Schematic illustrations drawn for this module — not real HSL signs. The point is the structure, not the vocabulary.</p>
+    </div>
+  </div>
+</section>
+
+<!-- 7. Missing classifiers -->
+<section class="slide" style="--accent: var(--ocean)">
+  <div class="text">
+    <p class="kicker in">The surprise</p>
+    <h2 class="in" style="--d:1">The thing HSL doesn't have</h2>
+    <div class="bar in" style="--d:2"></div>
+    <p class="in" style="--d:3">Here is why HSL matters to linguistics far beyond Hawaiʻi.</p>
+    <ul class="dots">
+      <li class="in" style="--d:4">Most documented sign languages use <strong>verbal classifiers</strong>: handshapes that stand for a whole category of thing — a vehicle, a flat object, a standing person — and then move through space to show what that thing did. ASL uses them constantly.</li>
+      <li class="in" style="--d:5">They were widely assumed to be a <strong>universal</strong> of sign languages: a feature so natural to the visual medium that every sign language would develop it.</li>
+      <li class="in" style="--d:6"><strong>HSL does not have them.</strong></li>
+    </ul>
+    <p class="in" style="--d:7">That single fact rearranges a theoretical claim. If one sign language can do without a feature thought to be inevitable, then that feature is a choice languages make, not a consequence of using the hands. You cannot learn that from the big, well-studied sign languages. You learn it from the small ones.</p>
+    <p class="note in" style="--d:8">This is the argument of the whole course, stated in a single example: the languages with the fewest speakers are often the ones carrying the most information about what human language can be.</p>
+  </div>
+  <div class="stage">
+    <div class="panel in" style="--d:3; width:34vw">
+      <strong>Why "universals" need small languages</strong>
+      <p style="margin:.3rem 0 0">Suppose you study the ten largest sign languages and find a feature in all ten. It looks universal. But those ten are mostly related to each other, or have been in contact, or were shaped by the same deaf-education movements.</p>
+      <p style="margin:.5rem 0 0">A genuinely isolated language — one that grew up on its own, as HSL did — is the only real test. Which means every isolate that disappears takes a test with it.</p>
+    </div>
+    <div class="panel in" style="--d:5; width:34vw">
+      <strong>Discuss:</strong> if a rule holds in 99 languages and fails in one with eight speakers, is it still a rule? What should a scientist do with the exception?
+    </div>
+  </div>
+</section>
+
+<!-- 8. The school -->
+<section class="slide" data-tr="left" style="--accent: var(--lehua)">
+  <div class="text">
+    <p class="kicker in">History</p>
+    <h2 class="in" style="--d:1">The school that banned signing and saved the language</h2>
+    <div class="bar in" style="--d:2"></div>
+    <ul class="dots">
+      <li class="in" style="--d:3">In <strong>1914</strong> a school for Deaf children opened in Honolulu. Its philosophy was <strong>oralist</strong>: students were to learn to speak and lip-read, and signing was discouraged or forbidden. That was the mainstream of deaf education worldwide at the time.</li>
+      <li class="in" style="--d:4">And yet the school is the main reason HSL survived into the 20th century — because it gathered Deaf children in one place. They signed to each other out of sight of the teachers, and passed the language to each new intake of children.</li>
+      <li class="in" style="--d:5">Then came the reversal. From around the <strong>1940s</strong>, visitors and teachers from the US mainland brought <strong>ASL</strong>, and told Hawaiʻi's Deaf community that their signing was primitive and that ASL was better.</li>
+      <li class="in" style="--d:6">Lambrecht has described elders becoming embarrassed and switching to ASL because they had absorbed the idea that HSL was not good enough. That is how a language dies without anybody passing a law.</li>
+    </ul>
+    <p class="note in" style="--d:7">Hold both halves of this together: the institution that tried to suppress signing accidentally preserved a language, and the arrival of a <em>related kind of liberation</em> — a prestigious, fully recognised sign language — is what finally killed it.</p>
+  </div>
+  <div class="stage">
+    <div class="panel in" style="--d:3; width:34vw">
+      <strong>The same pattern, three modules</strong>
+      <p class="note" style="margin:.3rem 0 0"><strong>Kavalan:</strong> hid inside Amis villages to survive, and nearly lost the language doing it.</p>
+      <p class="note" style="margin:.3rem 0 0"><strong>Gelao:</strong> official recognition of the people, no support for the language.</p>
+      <p class="note" style="margin:.3rem 0 0"><strong>HSL:</strong> saved by a school that banned it, killed by a language that freed its signers.</p>
+      <p style="margin:.5rem 0 0">None of these are stories with a villain. They are stories about incentives — which is exactly why they keep repeating.</p>
+    </div>
+  </div>
+</section>
+
+<!-- 9. Three generations -->
+<section class="slide" data-tr="zoom" style="--accent: var(--sign)">
+  <div class="text">
+    <p class="kicker in">Language contact, live</p>
+    <h2 class="in" style="--d:1">The generation in the middle</h2>
+    <div class="bar in" style="--d:2"></div>
+    <p class="in" style="--d:3">When two languages meet in one community, the result is rarely a clean switch. It is usually a <strong>layered set of generations</strong>, and Hawaiʻi's Deaf community shows this almost diagrammatically.</p>
+    <p class="in" style="--d:4">Click the three bars in the panel.</p>
+    <p class="in" style="--d:5">The middle layer has a name: <strong>CHSL</strong>, Creole Hawaiʻi Sign Language — a blend used by roughly forty people who grew up between the HSL world and the ASL world. It is not broken HSL and it is not accented ASL. It is what happens when a community builds a bridge out of two languages.</p>
+    <p class="note in" style="--d:6">Linguists used to treat mixtures like this as decay. Modern work treats them as creations in their own right — and CHSL will probably outlast the language it came from.</p>
+  </div>
+  <div class="stage">
+    <div class="panel in" style="--d:3; width:35vw">
+      <strong>Three generations of Deaf Hawaiʻi:</strong>
+      <div class="gens" id="gens" style="margin-top:.5rem">
+        <div class="gen" data-g="0"><span>born before ~1940</span><div class="bar"><i class="hsl" style="width:100%"></i></div></div>
+        <div class="gen" data-g="1"><span>the middle</span><div class="bar"><i class="mix" style="width:100%"></i></div></div>
+        <div class="gen" data-g="2"><span>born after ~1970</span><div class="bar"><i class="asl" style="width:100%"></i></div></div>
+      </div>
+      <p id="gnmsg" aria-live="polite">Click a generation.</p>
+    </div>
+  </div>
+</section>
+
+<!-- 10. Timeline and now -->
+<section class="slide" style="--accent: var(--fern)">
+  <div class="text wide">
+    <p class="kicker in">History and now</p>
+    <h2 class="in" style="--d:1">A century and a quarter</h2>
+    <div class="bar in" style="--d:2"></div>
+    <p class="in" style="--d:3">Click each moment to explore it.</p>
+    <div class="tl in" id="tl" style="--d:4">
+      <button class="ev" style="--ec: var(--sign)"><span class="yr">late 1800s</span><small>A language forms</small></button>
+      <button class="ev" style="--ec: #f3dcb4"><span class="yr">1914</span><small>The school opens</small></button>
+      <button class="ev" style="--ec: var(--lehua)"><span class="yr">1940s</span><small>ASL arrives</small></button>
+      <button class="ev" style="--ec: #e8a08c"><span class="yr">2010</span><small>Lambrecht makes the case</small></button>
+      <button class="ev" style="--ec: var(--ocean)"><span class="yr">2013–16</span><small>Documented at last</small></button>
+      <button class="ev" style="--ec: var(--fern)"><span class="yr">today</span><small>Single figures</small></button>
+    </div>
+    <div class="panel in" id="tltext" style="--d:5" aria-live="polite"></div>
+  </div>
+</section>
+
+<!-- 11. Quiz -->
+<section class="slide" style="--accent: var(--sign)">
+  <div class="text wide center">
+    <p class="kicker in">Review</p>
+    <h2 class="in" style="--d:1">Quick quiz!</h2>
+    <div class="bar in" style="--d:2"></div>
+    <div class="quizgrid">
+      <div class="quiz panel in" style="--d:3" data-right="Yes — hundreds of sign languages exist, and they are unrelated to the spoken languages around them." data-wrong="Hint: think about what you learned on slide two.">
+        <div class="q">Which statement is true?</div>
+        <div class="options"><button class="opt">Sign language is universal</button><button class="opt" data-correct>Sign languages are many and distinct</button><button class="opt">Signing is miming</button></div>
+        <div class="feedback"></div>
+      </div>
+      <div class="quiz panel in" style="--d:4" data-right="Right — around 80% of basic vocabulary differs, far past the dialect threshold." data-wrong="Hint: the two are not closely related at all.">
+        <div class="q">How much of HSL's basic vocabulary differs from ASL?</div>
+        <div class="options"><button class="opt">About 10%</button><button class="opt">About 40%</button><button class="opt" data-correct>About 80%</button></div>
+        <div class="feedback"></div>
+      </div>
+      <div class="quiz panel in" style="--d:5" data-right="Correct — verbal classifiers, once thought universal among sign languages." data-wrong="Hint: it's a feature everyone assumed every sign language had.">
+        <div class="q">What does HSL lack that surprised linguists?</div>
+        <div class="options"><button class="opt">Facial expression</button><button class="opt" data-correct>Verbal classifiers</button><button class="opt">Verbs</button></div>
+        <div class="feedback"></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- 12. Closing -->
+<section class="slide end" style="--accent: var(--sign)">
+  <div class="text">
+    <h1 class="in" style="font-size:4.2rem">A language with no sound</h1>
+    <p class="lead in" style="--d:1; margin-top:.8rem">…and no less of a language for it. Thank you! Questions?</p>
+    <p class="quote in" style="--d:2">Hawai'i Sign Language was invisible for a century, not because it was hidden, but because nobody looked. It took a Deaf woman insisting, for years, that what her elders were doing with their hands was not a worse version of somebody else's language.</p>
+    <p class="note in" style="--d:3">If a language can hide in plain sight in Honolulu, ask yourself what else is out there — and who is not being believed about it.</p>
+  </div>
+  <details class="fine in" style="--d:4">
+    <summary>Sources &amp; image credits</summary>
+    <div class="box">
+      <h4>Sources</h4>
+      <ul>
+        <li><a href="https://en.wikipedia.org/wiki/Hawai%CA%BBi_Sign_Language">Hawaiʻi Sign Language (Wikipedia)</a> — isolate status, ~40 signers in 2013, CHSL, the absence of verbal classifiers</li>
+        <li><a href="https://manoa.hawaii.edu/news/article.php?aId=5600">University of Hawaiʻi at Mānoa: "Research team discovers existence of Hawaiʻi Sign Language" (1 March 2013)</a></li>
+        <li><a href="https://phys.org/news/2013-03-team-hawaii-language.html">Phys.org coverage of the 2013 announcement</a> — origins in the late 1800s, the 1914 oralist school</li>
+        <li><a href="https://www.cnn.com/2021/10/08/americas/hawaii-sign-language-extinction-as-equals-intl-cmd/index.html">CNN (2021): "The fight to save Hawaii Sign Language from extinction"</a> — Lambrecht, the ELDP-funded project, fewer than ten fluent signers</li>
+        <li><a href="https://www.hawaiipublicradio.org/arts-culture/2016-11-22/hawaii-sign-language-still-whispers">Hawaiʻi Public Radio (2016): "Hawaiʻi Sign Language still whispers"</a> — the documentation project, the study guide and dictionary, disagreement within the community</li>
+        <li><a href="https://www.hawaiinewsnow.com/story/21440949/nearly-lost-language-discovered-in-hawaii/">Hawaiʻi News Now (2013): "Nearly lost language discovered in Hawaiʻi"</a> — Woodward on the 80% basic-vocabulary figure</li>
+        <li><a href="https://islandscene.com/sign-preservation">Island Scene: "Sign preservation"</a> — Lambrecht learning HSL from infancy; the 1940s stigma</li>
+        <li>Lambrecht, Earth &amp; Woodward, "History and documentation of old Hawaiʻi Sign Language and Deaf lives in the past," 3rd International Conference on Language Documentation and Conservation (2013)</li>
+        <li>Clark, Rarrick, Rentz &amp; Stabile, work on Hawaiʻi Sign Language and CHSL</li>
+        <li><a href="https://en.wikipedia.org/wiki/List_of_endangered_languages_in_the_United_States">List of endangered languages in the United States (Wikipedia)</a></li>
+      </ul>
+      <h4>Images (Wikimedia Commons)</h4>
+      <ul id="credits"></ul>
+    </div>
+  </details>
+</section>
+
+</main>
+
+<nav class="controls">
+  <button id="prev" aria-label="Previous slide">‹</button>
+  <span id="counter">1 / 12</span>
+  <button id="next" aria-label="Next slide">›</button>
+  <button id="fs" aria-label="Fullscreen">⤢</button>
+</nav>
+<p class="hint">Use ← → to move. Press F for fullscreen.</p>
+
+<!-- HSL effects: thinning hands, myth buster, lexicostatistics, sign builder, generations, timeline -->
+<script>
+(function () {
+  /* ---------- Background hands ---------- */
+  function handSVG(op) {
+    return '<svg viewBox="0 0 80 110"><g fill="none" stroke="var(--sign)" stroke-width="5" stroke-linecap="round" opacity="' + op + '">' +
+      '<path d="M22 104 q-6 -28 0 -46 q4 -12 14 -12 q10 0 12 12 q4 20 0 46"/>' +
+      '<path d="M22 60 V26 M34 56 V14 M46 56 V18 M58 60 V30"/>' +
+      '<path d="M22 64 q-10 -8 -14 2 q-4 10 8 16"/></g></svg>';
+  }
+  var field = document.querySelector("#hands .handfield");
+  var HS = [];
+  for (var k = 0; k < 26; k++) {
+    var h = document.createElement("div");
+    h.className = "h";
+    h.style.left = (3 + Math.random() * 92) + "%";
+    h.style.top = (6 + Math.random() * 62) + "%";
+    h.style.animationDelay = (-Math.random() * 14) + "s";
+    h.style.transform = "rotate(" + (Math.random() * 30 - 15) + "deg)";
+    h.innerHTML = handSVG(0.5 + Math.random() * 0.4);
+    h.dataset.keep = k < 6 ? "1" : "0";
+    field.appendChild(h);
+    HS.push(h);
+  }
+  function tune(t) {
+    HS.forEach(function (h, i) {
+      if (h.dataset.keep === "1") h.style.opacity = String(0.55 + t * 0.45);
+      else h.style.opacity = String(Math.max(0, 0.6 - t * 0.85));
+    });
+  }
+  document.addEventListener("slidechange", function (e) {
+    var t = e.detail.index / (e.detail.total - 1);
+    document.body.style.setProperty("--t", t);
+    tune(t);
+  });
+  tune(0);
+
+  function single(selector, callback) {
+    var grp = document.querySelectorAll(selector);
+    grp.forEach(function (b) {
+      b.addEventListener("click", function () {
+        grp.forEach(function (x) { x.classList.remove("on"); });
+        b.classList.add("on");
+        callback(b);
+      });
+    });
+  }
+
+  /* ---------- Myth buster ---------- */
+  var MYTHS = [
+    ["False.", "There are hundreds of sign languages worldwide, and they are no more mutually intelligible than spoken languages are. A Deaf American and a Deaf Japanese person cannot simply sign to each other. There is an auxiliary system called International Sign used at international events, but it is a contact system, not a universal language."],
+    ["False, and it is the most common error.", "American Sign Language is not English. It has its own grammar, its own word order and its own vocabulary, and it is historically related to <em>French</em> Sign Language, not to English. British Sign Language and ASL are unrelated — two countries with the same spoken language and two unrelated sign languages."],
+    ["False.", "Some signs look like what they mean, just as some spoken words sound like what they mean. But signing is rule-governed: a fixed vocabulary, grammatical structure, regional dialects, slang, poetry and puns. Watch two fluent signers at speed and the idea that it is miming disappears immediately."],
+    ["False — and this is the saddest one.", "Deaf people have always existed, but a sign language needs a <em>community</em>. Deaf children raised in isolation, with no access to signing, can be left without a full first language — a situation called language deprivation. Sign languages form where Deaf people gather, which is why schools for the Deaf have been so central to their history."]
+  ];
+  var mymsg = document.getElementById("mymsg");
+  single("#myths .my", function (b) {
+    var M = MYTHS[Number(b.dataset.m)];
+    mymsg.innerHTML = "<span class='verdictx'>" + M[0] + "</span><br>" + M[1];
+  });
+
+  /* ---------- Lexicostatistics ---------- */
+  document.getElementById("runtest").addEventListener("click", function () {
+    document.getElementById("same").style.width = "20%";
+    document.getElementById("diff").style.width = "80%";
+    document.getElementById("lxmsg").innerHTML =
+      "<strong style='color:var(--fern)'>Green: shared.</strong> <strong style='color:var(--lehua)'>Red: different.</strong><br>" +
+      "Roughly <strong>80% of HSL's basic vocabulary differs from ASL</strong> — so the two share about one item in five. That is nowhere near the 80% threshold for dialects of one language. Some reports put the overall difference as high as 91%.<br><br>" +
+      "For comparison: this is not a close call. It is the kind of result you get from two languages that have no common ancestor at all.";
+  });
+
+  /* ---------- Sign builder ---------- */
+  var SH = {
+    flat: 'M20 86 q-4 -26 0 -42 q3 -10 12 -10 q9 0 11 10 q3 18 0 42 Z M20 50 V18 M31 46 V10 M42 46 V14 M53 50 V22',
+    fist: 'M18 84 q-4 -24 2 -36 q6 -12 20 -10 q14 2 16 16 q2 16 -2 30 Z M22 44 q8 -8 16 -2 M34 42 q8 -8 16 -2',
+    point: 'M20 86 q-4 -26 0 -42 q3 -10 12 -10 q9 0 11 10 q3 18 0 42 Z M31 46 V4 M20 50 q4 -8 10 -6 M42 48 q4 -8 9 -4',
+    open: 'M20 88 q-6 -28 0 -46 q4 -12 13 -12 q9 0 11 12 q3 20 0 46 Z M12 54 L4 24 M24 48 V8 M36 46 V4 M48 50 L56 14 M58 58 L68 34'
+  };
+  var state = { shape: "flat", loc: "neutral", move: "none", face: "neutral" };
+  var LOCY = { neutral: 58, head: 26, chest: 46 };
+  var LOCLBL = { neutral: "neutral space, in front of the body", head: "at the head", chest: "at the chest" };
+  var MOVELBL = { none: "held still", out: "moving outward", circle: "circling", tap: "tapping twice" };
+  var FACELBL = { neutral: "neutral face", brows: "eyebrows raised", squint: "eyes squinted" };
+  function drawSign() {
+    var v = document.getElementById("signview");
+    var y = LOCY[state.loc];
+    var mv = state.move === "out" ? '<path d="M78 ' + y + ' h22 l-7 -7 m7 7 l-7 7" stroke="var(--lehua)" stroke-width="4" fill="none" stroke-linecap="round"/>'
+      : state.move === "circle" ? '<path d="M86 ' + (y - 10) + ' a12 12 0 1 1 -0.1 0" stroke="var(--lehua)" stroke-width="4" fill="none"/>'
+      : state.move === "tap" ? '<path d="M80 ' + (y - 6) + ' v-10 M80 ' + (y + 6) + ' v10" stroke="var(--lehua)" stroke-width="4" stroke-linecap="round"/>' : "";
+    var face = '<circle cx="30" cy="22" r="15" fill="none" stroke="var(--line)" stroke-width="2"/>' +
+      (state.face === "brows" ? '<path d="M23 15 q4 -4 8 0 M33 15 q4 -4 8 0" stroke="var(--sign)" stroke-width="2.5" fill="none"/>' :
+       state.face === "squint" ? '<path d="M23 20 h8 M33 20 h8" stroke="var(--sign)" stroke-width="2.5"/>' :
+       '<circle cx="26" cy="20" r="1.8" fill="var(--line)"/><circle cx="35" cy="20" r="1.8" fill="var(--line)"/>');
+    v.innerHTML = '<svg viewBox="0 0 120 100">' + face +
+      '<g transform="translate(40,' + (y - 40) + ')"><path d="' + SH[state.shape] + '" fill="none" stroke="var(--sign)" stroke-width="4.5" stroke-linecap="round" stroke-linejoin="round"/></g>' +
+      mv + '</svg><div class="lbl" id="signlbl"></div>';
+    document.getElementById("signlbl").textContent =
+      state.shape + " hand · " + LOCLBL[state.loc] + " · " + MOVELBL[state.move] + " · " + FACELBL[state.face];
+  }
+  document.querySelectorAll(".opts2").forEach(function (grp) {
+    var p = grp.dataset.p;
+    grp.querySelectorAll("button").forEach(function (b) {
+      b.addEventListener("click", function () {
+        grp.querySelectorAll("button").forEach(function (x) { x.classList.remove("on"); });
+        b.classList.add("on");
+        state[p] = b.dataset.v;
+        drawSign();
+        var MSG = {
+          shape: "You changed the <strong>handshape</strong>. In a real sign language this alone can make it a different word — the equivalent of swapping one consonant for another.",
+          loc: "You changed the <strong>location</strong>. Many sign languages have pairs of words that differ only in where the hand is placed — forehead versus chin, say.",
+          move: "You changed the <strong>movement</strong>. Movement often carries grammar as well as meaning: repeating a sign can turn a verb into a noun, or mark something as happening over and over.",
+          face: "You changed the <strong>face</strong>. This is not expression in the acting sense — it is grammar. Raised eyebrows can mark a question across the whole sentence, the way a rising tone does in spoken English."
+        };
+        document.getElementById("sbmsg").innerHTML = MSG[p];
+      });
+    });
+  });
+  drawSign();
+  document.getElementById("sbmsg").innerHTML = "Change any one parameter and you may have changed the word. Four small dials, and a full vocabulary comes out of them.";
+
+  /* ---------- Generations ---------- */
+  var GENS = [
+    ["The HSL generation", "Born before roughly 1940. They grew up signing HSL with each other, mostly learning it from other Deaf children rather than from parents — over 90% of Deaf children are born to hearing parents, so sign languages typically pass sideways between peers, not down through families. In 2013 about forty of these signers were left, nearly all over 80."],
+    ["The CHSL generation", "The in-between group — roughly forty people who grew up as ASL arrived and HSL was being pushed aside. What they sign is <strong>Creole Hawaiʻi Sign Language</strong>: a genuine blend of the two systems, with features of each. It is a language in its own right, produced by contact rather than by decline."],
+    ["The ASL generation", "Born after roughly 1970. Deaf people in Hawaiʻi today sign ASL, which is the language of Deaf education, interpreting, television and the national Deaf community in the United States. They are not doing anything wrong: ASL is a rich language with a huge community, and it opens doors that HSL cannot. That is precisely why the shift happened."]
+  ];
+  var gnmsg = document.getElementById("gnmsg");
+  document.querySelectorAll("#gens .gen").forEach(function (g) {
+    g.addEventListener("click", function () {
+      document.querySelectorAll("#gens .gen").forEach(function (x) { x.classList.remove("on"); });
+      g.classList.add("on");
+      var G = GENS[Number(g.dataset.g)];
+      gnmsg.innerHTML = "<strong style='color:var(--sign)'>" + G[0] + "</strong><br>" + G[1];
+    });
+  });
+
+  /* ---------- Timeline ---------- */
+  var EVENTS = [
+    ["A language forms", "Researchers think HSL came into being among Deaf people in Hawaiʻi by the late 1800s. Nobody designed it and nobody wrote it down. Like every sign language on earth, it emerged because Deaf people found each other and needed to talk."],
+    ["The school opens", "A school for the Deaf was founded in Honolulu in 1914. Its official philosophy was oralist — speech and lip-reading, with signing discouraged. But by bringing Deaf children together in one place, it gave HSL exactly what a language needs: a community of children using it with each other every day."],
+    ["ASL arrives", "From around the 1940s, people from the US mainland brought American Sign Language, along with the message that HSL was primitive and ASL was proper. ASL came with books, teachers, interpreters and a national community. HSL came with none of those. The outcome was not really in doubt."],
+    ["Lambrecht makes the case", "Linda Yuen Lambrecht, who had signed HSL since infancy and taught ASL professionally, approached linguists at the University of Hawaiʻi in 2010 with a claim she had been making for years: the elders' signing is a different language. This time somebody ran the comparison."],
+    ["Documented at last", "The announcement came on 1 March 2013, and a three-year documentation project followed, funded through the Endangered Languages Documentation Programme and led by Lambrecht and Woodward with Barbara Earth. They produced recordings, a study guide and a bilingual dictionary, and tracked down elderly signers across the islands — including filming Lambrecht signing the legend of Māui in HSL."],
+    ["Single figures", "The grant ran out. Fluent signers are now estimated in single figures, all elderly and scattered. HSL has been taught in a course at the University of Hawaiʻi and at a Deaf services centre in Honolulu, and the recordings exist — which is more than was true in 2012, and less than is needed."]
+  ];
+  var tlText = document.getElementById("tltext");
+  var evs = document.querySelectorAll("#tl .ev");
+  function setEvent(i) {
+    evs.forEach(function (e, k) { e.classList.toggle("on", k === i); });
+    tlText.innerHTML = '<strong style="color:var(--sign); font-size:1.2rem">' + EVENTS[i][0] + "</strong><br>" + EVENTS[i][1];
+  }
+  evs.forEach(function (e, i) { e.addEventListener("click", function () { setEvent(i); }); });
+  setEvent(0);
+})();
+</script>
+<script src="../assets/deck.js"></script>
+</body>
+</html>
