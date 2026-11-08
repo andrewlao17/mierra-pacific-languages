@@ -1,0 +1,659 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Kristang: Portuguese Words, Malay Grammar, Malacca Sun</title>
+<link rel="stylesheet" href="../assets/deck.css">
+<style>
+@import url("https://fonts.googleapis.com/css2?family=Petrona:wght@600;700&family=Outfit:wght@400;500;700;900&display=swap");
+
+/* ---------- Kristang theme: azulejo blue, Malacca red, Straits gold ---------- */
+:root {
+  --bg: #0c141d;
+  --ink: #f3f1e8;
+  --muted: #c6d2da;
+  --line: rgba(243, 241, 232, .22);
+  --panel: rgba(12, 26, 38, .86);
+  --azul: #3a7fc4;
+  --tile: #e8eef6;
+  --red: #c23b32;
+  --gold: #e8a53c;
+  --sea: #1f7a8c;
+  --palm: #55975c;
+  --rose: #c23b32;
+  --accent: var(--gold);
+  --serif: "Petrona", Georgia, serif;
+  --sans: "Outfit", system-ui, sans-serif;
+  --t: 0;
+  font-size: clamp(12px, 1.3vw, 28px);
+}
+h1 { font-family: var(--serif); font-size: 5.4rem; font-weight: 700; line-height: 1.04; }
+h2 { font-family: var(--serif); font-size: 2.6rem; font-weight: 700; line-height: 1.12; }
+.slide { padding: 7vh 4vw 8vh 6vw; }
+.text { max-width: 44vw; }
+.text.wide { max-width: 86vw; width: 86vw; }
+.stage {
+  right: 5vw; top: 6vh; bottom: 10vh; width: 38vw;
+  display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 1.1rem;
+}
+ul.dots li { font-size: 1.04rem; }
+.speak .line, .card .word { font-family: var(--sans); font-weight: 900; }
+.card.revealed .meaning { max-height: 15rem; }
+.btn { background: var(--gold); color: #2e1e05; }
+.syl.on { background: var(--gold); color: #2e1e05; }
+.loc .disc { border-color: var(--gold); box-shadow: 0 0 0 .55rem rgba(232,165,60,.16), 0 22px 40px rgba(0,0,0,.55); }
+.loc .tint { background: #cfe0bb; }
+.loc .sea { background: #14596a; }
+.loc .tag { background: #0e1c28; border-color: var(--gold); }
+.note { font-size: .82rem; color: var(--muted); }
+.quote { font-family: var(--serif); font-size: 1.7rem; font-weight: 700; line-height: 1.32; color: var(--gold); }
+
+/* ---------- Background: tiles turning, the Straits ---------- */
+#straits { position: fixed; inset: 0; z-index: 0; overflow: hidden; pointer-events: none;
+  background: linear-gradient(180deg, #0a1018 0%, #16304a 40%, #3c5a6e 62%, #1b3340 100%); }
+#straits .tiles { position: absolute; inset: 0 0 30vh 0; display: grid;
+  grid-template-columns: repeat(10, 1fr); grid-auto-rows: 1fr; opacity: .3; }
+#straits .tl2 { position: relative; }
+#straits .tl2 svg { position: absolute; inset: 0; width: 100%; height: 100%; transition: opacity 1.4s ease; }
+#straits .tl2 .b { opacity: 1; }
+#straits .tl2 .m { opacity: 0; }
+#straits .tl2.flip .b { opacity: 0; }
+#straits .tl2.flip .m { opacity: 1; }
+#straits .sun { position: absolute; right: 20vw; width: 10vw; height: 10vw; border-radius: 50%;
+  bottom: calc(26vh + var(--t) * 4vh);
+  background: radial-gradient(circle at 50% 50%, #ffeec0, #e8a53c 56%, rgba(232,165,60,0) 72%);
+  opacity: calc(.5 + var(--t) * .5); transition: bottom 1.7s ease, opacity 1.7s ease; }
+#straits .water { position: absolute; left: 0; right: 0; bottom: 0; height: 30vh;
+  background: linear-gradient(180deg, #2a6f85 0%, #0c2733 100%); }
+#straits .water::before { content: ""; position: absolute; inset: 0;
+  background: repeating-linear-gradient(180deg, rgba(255,255,255,.08) 0 2px, transparent 2px 15px);
+  animation: swell 8s ease-in-out infinite alternate; }
+@keyframes swell { to { transform: translateY(7px); } }
+#straits .boats { position: absolute; left: 0; right: 0; bottom: 24vh; height: 10vh; }
+#straits .boats svg { width: 100%; height: 100%; display: block; }
+#straits .shade { position: absolute; inset: 0;
+  background: linear-gradient(90deg, rgba(4,9,14,.95) 0%, rgba(4,9,14,.76) 52%, rgba(4,9,14,.24) 100%); }
+
+/* ---------- Photos ---------- */
+.board { position: relative; margin: 0; width: var(--w, 19vw); padding: .6rem .6rem .5rem;
+  background: var(--tile); border-radius: .2rem; box-shadow: 0 18px 34px rgba(0,0,0,.6);
+  transform: rotate(var(--r, 0deg)); transition: transform .9s cubic-bezier(.2,.8,.2,1), opacity .7s ease; }
+.slide:not(.active) .board { opacity: 0; transform: translateY(46px) rotate(var(--r, 0deg)); }
+.slide.active .board { transition-delay: calc(.4s + var(--d, 0) * .16s); }
+.board img { display: block; width: 100%; aspect-ratio: var(--ar, 4 / 3); object-fit: cover; background: #c3ccd6; }
+.board figcaption { color: #16222c; font-size: .73rem; font-weight: 700; line-height: 1.25; margin: .4rem .1rem 0; font-family: var(--serif); }
+
+/* ---------- Shared controls ---------- */
+.switch { display: flex; gap: .4rem; margin: .4rem 0 .6rem; flex-wrap: wrap; }
+.sbtn { font: inherit; font-weight: 700; font-size: .92rem; color: var(--ink); background: var(--panel);
+  border: 2px solid var(--line); border-radius: .3rem; padding: .25em .9em; cursor: pointer; transition: transform .2s; }
+.sbtn:hover { transform: translateY(-2px); }
+.sbtn.on { background: var(--gold); border-color: var(--gold); color: #2e1e05; }
+.out { min-height: 3.2em; margin-top: .5rem; }
+
+/* ---------- Whose grammar sorter ---------- */
+.feats2 { display: grid; gap: .35rem; }
+.ft { font: inherit; text-align: left; font-weight: 600; font-size: .86rem; color: var(--ink); background: var(--panel);
+  border: 2px solid var(--line); border-radius: .3rem; padding: .4em .7em; cursor: pointer; }
+.ft:hover { border-color: var(--gold); }
+.ft.on { border-color: var(--gold); background: rgba(232,165,60,.16); }
+.ft.solved { opacity: .6; }
+.ft.solved::after { content: " ✓"; color: var(--palm); font-weight: 900; }
+.srcs { display: grid; grid-template-columns: 1fr 1fr; gap: .4rem; margin-top: .5rem; }
+.src { font: inherit; font-weight: 700; font-size: .9rem; color: var(--ink); border-radius: .3rem;
+  border: 2px solid var(--line); padding: .5em .3em; cursor: pointer; text-align: center; }
+.src.pt { background: rgba(58,127,196,.16); }
+.src.ms { background: rgba(85,151,92,.16); }
+#ftmsg { min-height: 5em; margin-top: .4rem; }
+
+/* ---------- Tense switcher ---------- */
+.tsent { text-align: center; font-family: var(--sans); font-weight: 900; font-size: 2rem; margin: .5rem 0 .2rem; }
+.tsent em { font-style: normal; color: var(--gold); }
+.tmean { text-align: center; font-size: 1rem; color: var(--muted); min-height: 1.5em; }
+#tsmsg { min-height: 5em; margin-top: .5rem; }
+
+/* ---------- Word detective ---------- */
+.pairlist { display: grid; gap: .3rem; }
+.pr { display: grid; grid-template-columns: 1fr auto 1fr; gap: .4rem; align-items: center;
+  background: var(--panel); border: 2px solid var(--line); border-radius: .3rem; padding: .35em .6em; cursor: pointer; }
+.pr:hover { border-color: var(--azul); }
+.pr b { font-family: var(--sans); font-weight: 800; font-size: 1.05rem; }
+.pr .pt2 { color: var(--azul); text-align: right; }
+.pr .kr { color: var(--gold); }
+.pr span.ar { color: var(--muted); }
+#wdmsg { min-height: 4.6em; margin-top: .4rem; }
+
+/* ---------- Revival plan ---------- */
+.phases { display: grid; gap: .35rem; }
+.ph2 { font: inherit; text-align: left; font-weight: 700; font-size: .86rem; color: var(--ink); background: var(--panel);
+  border: 2px solid var(--line); border-left: 6px solid var(--pc, var(--gold)); border-radius: .3rem; padding: .4em .7em; cursor: pointer; }
+.ph2:hover { transform: translateX(3px); }
+#phmsg2 { min-height: 5.4em; margin-top: .4rem; }
+
+/* ---------- Timeline ---------- */
+.tl { display: grid; grid-template-columns: repeat(6, 1fr); gap: .55rem; margin-top: 1rem; position: relative; padding-bottom: 1.4rem; }
+.tl::after { content: ""; position: absolute; left: 0; right: 0; bottom: .45rem; height: 3px; border-radius: 3px;
+  background: linear-gradient(90deg, var(--azul), var(--red), var(--gold)); }
+.ev { font: inherit; text-align: left; color: #121c22; background: var(--ec); border: 0; border-radius: .3rem;
+  padding: .65rem .75rem; cursor: pointer; transition: transform .25s, box-shadow .25s; }
+.ev:hover { transform: translateY(-4px); }
+.ev.on { box-shadow: 0 0 0 3px #fff, 0 10px 24px rgba(0,0,0,.4); transform: translateY(-6px); }
+.ev .yr { font-family: var(--serif); font-weight: 700; font-size: 1.3rem; line-height: 1; display: block; }
+.ev small { display: block; font-weight: 700; font-size: .76rem; margin-top: .3rem; }
+#tltext { min-height: 5.4rem; margin-top: .4rem; }
+
+/* ---------- Quiz tint ---------- */
+.opt.right { background: var(--palm); }
+.opt.wrong { background: var(--red); }
+
+@media (max-width: 820px) {
+  .slide { padding: 6vh 6vw 12vh; }
+  h1 { font-size: 3.1rem; }
+  .text, .text.wide { max-width: none; width: auto; }
+  .stage { position: relative; inset: auto; width: 100%; margin-top: 1.5rem; }
+  .board { width: 74vw; }
+  .stage .panel, .stage .speak { width: 100% !important; max-width: none !important; }
+  .tl { grid-template-columns: repeat(2, 1fr); }
+  #straits .tiles { grid-template-columns: repeat(6, 1fr); }
+}
+</style>
+</head>
+<body data-map="BlankMap-Equirectangular.svg">
+
+<div id="straits" aria-hidden="true">
+  <div class="tiles" id="tiles"></div>
+  <div class="sun"></div>
+  <div class="boats">
+    <svg viewBox="0 0 1600 120" preserveAspectRatio="none">
+      <g fill="#0d2630">
+        <path d="M180 100 h120 l-18 16 h-84 z M240 100 V44 M240 48 q34 16 34 36 h-34 z"/>
+        <path d="M680 104 h100 l-15 14 h-70 z M730 104 V56 M730 60 q28 14 28 32 h-28 z"/>
+        <path d="M1180 98 h140 l-20 18 h-100 z M1250 98 V38 M1250 42 q38 18 38 40 h-38 z"/>
+      </g>
+    </svg>
+  </div>
+  <div class="water"></div>
+  <div class="shade"></div>
+</div>
+<div class="progress"></div>
+
+<main>
+
+<!-- 1. Title -->
+<section class="slide" style="--accent: var(--gold)">
+  <div class="text">
+    <p class="kicker in">Rare Languages of the Asia-Pacific · Module 34</p>
+    <h1 class="in" style="--d:1">Kristang</h1>
+    <p class="in" style="--d:2; font-size:1.35rem; font-weight:900; color:var(--gold)">Papia Kristang · Melaka, Malaysia &amp; Singapore</p>
+    <div class="bar in" style="--d:3"></div>
+    <p class="lead in" style="--d:4">Portuguese words, Malay grammar, five hundred years of Malacca sun — and a revival run by people in their twenties who are teaching the language back to their own grandparents</p>
+    <p class="muted in" style="--d:5">Watch the wall behind: the tiles are changing pattern.</p>
+  </div>
+  <div class="stage">
+    <figure class="board" style="--w:24vw; --r:1.5deg; --d:0">
+      <img data-wiki="Malacca City" data-width="1200" alt="Malacca, Malaysia">
+      <figcaption>Melaka — a port that changed hands three times and kept a Portuguese language throughout</figcaption>
+    </figure>
+  </div>
+</section>
+
+<!-- 2. Where and who -->
+<section class="slide" data-tr="left" style="--accent: var(--sea)">
+  <div class="text">
+    <p class="kicker in">Where and who</p>
+    <h2 class="in" style="--d:1">The Portuguese-Eurasians</h2>
+    <div class="bar in" style="--d:2"></div>
+    <ul class="dots">
+      <li class="in" style="--d:3">The Kristang are descendants of Portuguese settlers who took Malacca in <strong>1511</strong> and of the Malay and other Asian people they married. Catholic, Malaysian, and in Singapore part of the Eurasian community.</li>
+      <li class="in" style="--d:4">The name comes from Portuguese <em>cristão</em>, Christian. The language is <span class="hl">Papia Kristang</span> — "Christian speech" — and speakers may also just call it <em>Papia</em>, "speech," or <em>Linggu Mai</em>, "mother tongue."</li>
+      <li class="in" style="--d:5">Figures vary a great deal. Older counts give around <strong>2,000</strong> speakers; recent estimates put perhaps <strong>750</strong> in Malacca and <strong>fewer than 100</strong> in Singapore, nearly all elderly. One report suggested as few as fifty fully fluent speakers anywhere.</li>
+      <li class="in" style="--d:6">UNESCO classes it as <strong>severely endangered</strong>: spoken mainly by grandparents, and no longer learned by children at home.</li>
+    </ul>
+    <p class="note in" style="--d:7">Kristang's closest sibling in name is <strong>Papiamento</strong>, the Portuguese-based creole of the Caribbean — <em>papia</em> and <em>papiamento</em> come from the same word for "to chat." Two creoles, two oceans, one Portuguese empire.</p>
+  </div>
+  <div class="stage">
+    <div class="loc" data-lat="2.19" data-lon="102.25" data-zoom="5" style="--s:13vw; --d:0">
+      <div class="disc"><div class="lmap"></div><div class="tint"></div><div class="sea"></div><span class="pinpt"></span></div>
+      <span class="tag">Melaka, Malaysia — and Singapore, 250 km south</span>
+    </div>
+    <div class="speak panel compact in" data-tempo="540" style="--d:4; width:33vw">
+      <div class="line" data-syl="pa·pia kris·tang"></div><p class="gloss">the name of the language — "Christian speech"</p>
+      <div class="line" data-syl="yo sa ka·za"></div><p class="gloss">my house — and already the grammar is not Portuguese</p>
+      <button class="btn play">▶ Say them</button>
+    </div>
+  </div>
+</section>
+
+<!-- 3. 1511 -->
+<section class="slide" data-tr="zoom" style="--accent: var(--red)">
+  <div class="text">
+    <p class="kicker in">How it started</p>
+    <h2 class="in" style="--d:1">A port worth taking</h2>
+    <div class="bar in" style="--d:2"></div>
+    <ul class="dots">
+      <li class="in" style="--d:3">Malacca sat on the strait that every ship between India and China had to pass. Whoever held it taxed half the trade of Asia. The Portuguese took it in <strong>1511</strong>.</li>
+      <li class="in" style="--d:4">Portuguese officials actively encouraged their men to marry local women — there were far too few Portuguese to hold a colony otherwise. Those households produced the first children who grew up speaking neither pure Portuguese nor pure Malay.</li>
+      <li class="in" style="--d:5">The result was <strong>Papia Kristang</strong>: vocabulary overwhelmingly Portuguese, grammar shaped by Malay, with traces of other languages in the port — the Portuguese sailors, Malay market traders, Indian merchants and Chinese communities who all passed through.</li>
+      <li class="in" style="--d:6">Then the Portuguese lost Malacca to the <strong>Dutch in 1641</strong> and the Dutch to the <strong>British in 1824</strong>. The Portuguese language left with the empire. The creole stayed, in the families, for another four hundred years.</li>
+    </ul>
+    <p class="note in" style="--d:7">That is the remarkable part of this module: Kristang outlived Portuguese rule in Malacca by longer than the United States has existed.</p>
+  </div>
+  <div class="stage">
+    <div class="cards in" style="--d:3; grid-template-columns:1fr; width:34vw">
+      <div class="card" style="--cardc: var(--azul)"><div class="word">Why did it survive the Dutch?</div><div class="meaning">Because it had stopped being the coloniser's language and become the community's own. The Kristang were Catholic in a Protestant-ruled and then Muslim-majority setting, and the language marked who they were. Being a minority kept it alive — for a while.</div><div class="tap">click to reveal</div></div>
+      <div class="card" style="--cardc: var(--palm)"><div class="word">How did it reach Singapore?</div><div class="meaning">In the 1820s, when the British founded Singapore, Eurasian families moved down from Malacca in large numbers and brought Kristang with them. Singapore's Kristang community is a branch of Malacca's — which is why a revival in Singapore can draw on speakers in Malaysia.</div><div class="tap">click to reveal</div></div>
+      <div class="card" style="--cardc: var(--gold)"><div class="word">Is it the only one?</div><div class="meaning">Portuguese expansion produced creoles all over the world — in Cape Verde, Guinea-Bissau, São Tomé, India, Sri Lanka, Macau, Timor and the Caribbean. Kristang is the one that survived on the Malay Peninsula, and it is usually described as Southeast Asia's only surviving Portuguese-based creole.</div><div class="tap">click to reveal</div></div>
+    </div>
+  </div>
+</section>
+
+<!-- 4. Whose grammar -->
+<section class="slide" style="--accent: var(--palm)">
+  <div class="text">
+    <p class="kicker in">Language lab</p>
+    <h2 class="in" style="--d:1">Whose grammar is this?</h2>
+    <div class="bar in" style="--d:2"></div>
+    <p class="in" style="--d:3">Open a Kristang sentence and you will recognise almost every word if you know any Portuguese or Spanish. Then try to parse it, and nothing works the way you expect.</p>
+    <p class="in" style="--d:4">That is because the two parents divided the labour. Sort the features in the panel and see who contributed what.</p>
+    <ul class="dots">
+      <li class="in" style="--d:5">Possession runs <strong>possessor + <em>sa</em> + thing</strong>: <em>yo sa kaza</em> "my house," <em>barku sa lemi</em> "the boat's rudder." The word <em>sa</em> comes from Portuguese <em>sua</em> — but the pattern comes from Malay.</li>
+      <li class="in" style="--d:6">Pronouns are Portuguese in origin and Malay-ish in shape: <em>yo, bos, eli, nus, bolotu, olotu</em>. The plural ones are built by adding a word meaning "other" — <em>bos</em> + <em>otru</em> gives <em>bolotu</em>, "you lot."</li>
+    </ul>
+  </div>
+  <div class="stage">
+    <div class="panel in" style="--d:3; width:35vw">
+      <strong>Click a feature, then its source:</strong>
+      <div class="feats2" id="feats2" style="margin-top:.5rem">
+        <button class="ft" data-a="pt">Almost all the vocabulary</button>
+        <button class="ft" data-a="ms">Verbs never change their form</button>
+        <button class="ft" data-a="ms">Possessor comes before the thing owned</button>
+        <button class="ft" data-a="ms">Tense shown by separate little words</button>
+        <button class="ft" data-a="pt">Adjectives come after the noun</button>
+        <button class="ft" data-a="ms">Words repeated to change meaning</button>
+      </div>
+      <div class="srcs" id="srcs">
+        <button class="src pt" data-s="pt">Portuguese</button>
+        <button class="src ms" data-s="ms">Malay</button>
+      </div>
+      <p id="ftmsg" aria-live="polite">Six features, two sources.</p>
+    </div>
+  </div>
+</section>
+
+<!-- 5. Tense switcher -->
+<section class="slide" data-tr="left" style="--accent: var(--gold)">
+  <div class="text">
+    <p class="kicker in">Language lab</p>
+    <h2 class="in" style="--d:1">Four little words do all the work</h2>
+    <div class="bar in" style="--d:2"></div>
+    <p class="in" style="--d:3">Portuguese verbs are famously demanding: <em>leio, leste, lerei, lia, leria</em> — dozens of forms for one verb. Kristang threw the whole system out.</p>
+    <p class="in" style="--d:4">The verb never changes. Instead a small word goes in front of it:</p>
+    <ul class="dots">
+      <li class="in" style="--d:5"><strong>nothing at all</strong> — habitual, what someone generally does</li>
+      <li class="in" style="--d:6"><span class="hl">ja</span> — completed, it happened · <span class="hl">ta</span> — in progress, it's happening · <span class="hl">logu</span> (or <em>lo</em>) — it will happen</li>
+    </ul>
+    <p class="in" style="--d:7">Switch the particle in the panel and watch the sentence travel through time without the verb moving a letter.</p>
+    <p class="note in" style="--d:8">This is one of the most characteristic things creoles do, and it is not simplification in the sense of being poorer. It is a different, extremely regular solution to the same problem — and a learner can master it in an afternoon.</p>
+  </div>
+  <div class="stage">
+    <div class="panel in" style="--d:3; width:35vw">
+      <strong>Diego and his book:</strong>
+      <div class="tsent" id="tsent"></div>
+      <div class="tmean" id="tmean"></div>
+      <div class="switch" style="justify-content:center; margin-top:.5rem">
+        <button class="sbtn on" data-m="0">(no marker)</button>
+        <button class="sbtn" data-m="1">ja</button>
+        <button class="sbtn" data-m="2">ta</button>
+        <button class="sbtn" data-m="3">logu</button>
+      </div>
+      <p id="tsmsg" aria-live="polite"></p>
+    </div>
+  </div>
+</section>
+
+<!-- 6. Word detective -->
+<section class="slide" style="--accent: var(--azul)">
+  <div class="text">
+    <p class="kicker in">Word detective</p>
+    <h2 class="in" style="--d:1">Portuguese, five hundred years later</h2>
+    <div class="bar in" style="--d:2"></div>
+    <p class="in" style="--d:3">The vocabulary is Portuguese, but Portuguese put through the sound system of the Malay-speaking world. Two changes do most of the work:</p>
+    <ul class="dots">
+      <li class="in" style="--d:4">Malay has no <strong>v</strong> sound, so Portuguese <em>v</em> became <strong>b</strong>. <em>Vós</em> → <strong>bos</strong>. <em>Novo</em> → <strong>nubu</strong>. <em>Vai</em> → <strong>bai</strong>.</li>
+      <li class="in" style="--d:5">Endings get trimmed and vowels shift, so <em>casa</em> → <strong>kaza</strong>, <em>comer</em> → <strong>kumí</strong>, <em>chegar</em> → <strong>chegá</strong>.</li>
+      <li class="in" style="--d:6">And the letters <em>ch</em>, pronounced "sh" in Portuguese, came out as "ch" as in <em>church</em>.</li>
+    </ul>
+    <p class="in" style="--d:7">Click the pairs in the panel. If you have ever studied a Romance language, you should be able to decode most of them cold.</p>
+  </div>
+  <div class="stage">
+    <div class="panel in" style="--d:3; width:35vw">
+      <strong>Portuguese → Kristang:</strong>
+      <div class="pairlist" id="pairlist" style="margin-top:.5rem"></div>
+      <p id="wdmsg" aria-live="polite">Click any pair.</p>
+    </div>
+  </div>
+</section>
+
+<!-- 7. Culture -->
+<section class="slide" data-tr="zoom" style="--accent: var(--red)">
+  <div class="text">
+    <p class="kicker in">Cultural significance</p>
+    <h2 class="in" style="--d:1">A settlement, a saint and a dance</h2>
+    <div class="bar in" style="--d:2"></div>
+    <ul class="dots">
+      <li class="in" style="--d:3">In <strong>1933</strong>, under British rule, a <strong>Portuguese Settlement</strong> was established at Ujong Pasir in Malacca — a neighbourhood for the Portuguese-Eurasian community, many of them fishing families. It is still the heart of Kristang life, and still where most speakers live.</li>
+      <li class="in" style="--d:4">The year turns on the Catholic calendar. The biggest event is the <strong>Festa San Pedro</strong>, the feast of St Peter, patron of fishermen: boats are decorated and blessed, and the settlement fills with music.</li>
+      <li class="in" style="--d:5">The music itself is a creole in its own right — the <strong>branyo</strong>, danced to a beat that is part Portuguese folk dance and part Malay <em>joget</em>, with songs sung in Kristang.</li>
+      <li class="in" style="--d:6">Food, saints' days, dances, songs: the culture is in robust health and widely celebrated. The language is the piece that has slipped — which is the pattern you met in the Gelao module, on the other side of the South China Sea.</li>
+    </ul>
+    <p class="note in" style="--d:7">Recent development and land reclamation along the Malacca coast have been a live concern for the Settlement, because a fishing community cut off from the sea loses more than a view.</p>
+  </div>
+  <div class="stage">
+    <div class="panel in" style="--d:3; width:34vw">
+      <strong>Why culture outlasts language</strong>
+      <p class="note" style="margin:.3rem 0 0">A festival happens once a year and can be performed by people who do not speak the language. A dance can be learned from video. Food needs no grammar.</p>
+      <p class="note" style="margin:.4rem 0 0">A language needs to be used thousands of times a week, by people talking to each other about nothing in particular. That is a far higher bar — and it is why the visible parts of a culture can be thriving while the language quietly stops.</p>
+    </div>
+    <div class="panel in" style="--d:5; width:34vw">
+      <strong>Discuss:</strong> name three things you do every week that you could keep doing in a language you only half know. Now name three you couldn't. The second list is the hard part of a revival.
+    </div>
+  </div>
+</section>
+
+<!-- 8. Timeline -->
+<section class="slide" style="--accent: var(--azul)">
+  <div class="text wide">
+    <p class="kicker in">History</p>
+    <h2 class="in" style="--d:1">Five centuries on the strait</h2>
+    <div class="bar in" style="--d:2"></div>
+    <p class="in" style="--d:3">Click each moment to explore it.</p>
+    <div class="tl in" id="tl" style="--d:4">
+      <button class="ev" style="--ec: var(--red)"><span class="yr">1511</span><small>The Portuguese take Malacca</small></button>
+      <button class="ev" style="--ec: #e8a79e"><span class="yr">1641</span><small>The Dutch arrive</small></button>
+      <button class="ev" style="--ec: var(--azul)"><span class="yr">1820s</span><small>Down to Singapore</small></button>
+      <button class="ev" style="--ec: #9cc3e4"><span class="yr">1933</span><small>The Settlement</small></button>
+      <button class="ev" style="--ec: #e9c48c"><span class="yr">1950s–2000s</span><small>English takes over</small></button>
+      <button class="ev" style="--ec: var(--gold)"><span class="yr">2016 →</span><small>Kodrah Kristang</small></button>
+    </div>
+    <div class="panel in" id="tltext" style="--d:5" aria-live="polite"></div>
+  </div>
+</section>
+
+<!-- 9. The decline -->
+<section class="slide" data-tr="left" style="--accent: var(--red)">
+  <div class="text">
+    <p class="kicker in">Why it declined</p>
+    <h2 class="in" style="--d:1">The language of getting on</h2>
+    <div class="bar in" style="--d:2"></div>
+    <p class="in" style="--d:3">Kristang did not lose to Malay or Chinese. It lost to <strong>English</strong>.</p>
+    <ul class="dots">
+      <li class="in" style="--d:4">Under British rule and after independence, the Eurasian community's advantage was English: it got you into mission schools, the civil service, clerical work. Families switched deliberately, and it worked.</li>
+      <li class="in" style="--d:5">In Singapore, national language policy from the 1960s onward organised education around English plus one official "mother tongue" — Mandarin, Malay or Tamil. Kristang was not on the list, so there was no space for it in school at all.</li>
+      <li class="in" style="--d:6">Add intermarriage, urban dispersal and a widespread sense that the creole was "broken Portuguese," and transmission stopped within about two generations.</li>
+    </ul>
+    <p class="in" style="--d:7">The founder of the Singapore revival discovered Kristang existed <strong>in a book, in 2015</strong>, while researching endangered languages — and then realised it was his own grandparents' language. His grandparents barely spoke it.</p>
+    <p class="note in" style="--d:8">Sit with that. A language can vanish so completely that a member of the community can grow up without knowing its name.</p>
+  </div>
+  <div class="stage">
+    <div class="panel in" style="--d:3; width:34vw">
+      <strong>Four pressures, one outcome</strong>
+      <p class="note" style="margin:.3rem 0 0"><strong>Economic:</strong> English paid better.</p>
+      <p class="note" style="margin:.3rem 0 0"><strong>Educational:</strong> no slot in the school system.</p>
+      <p class="note" style="margin:.3rem 0 0"><strong>Social:</strong> the creole marked you as rural or uneducated.</p>
+      <p class="note" style="margin:.3rem 0 0"><strong>Demographic:</strong> a small community, marrying out, spreading across cities.</p>
+      <p style="margin:.5rem 0 0">Every module in this course has some version of this list. The items change; the arithmetic does not.</p>
+    </div>
+  </div>
+</section>
+
+<!-- 10. Kodrah Kristang -->
+<section class="slide" style="--accent: var(--gold)">
+  <div class="text">
+    <p class="kicker in">Why it matters now</p>
+    <h2 class="in" style="--d:1">Awaken, Kristang</h2>
+    <div class="bar in" style="--d:2"></div>
+    <ul class="dots">
+      <li class="in" style="--d:3">In <strong>March 2016</strong>, a linguistics undergraduate named <strong>Kevin Martens Wong</strong> started <span class="hl">Kodrah Kristang</span> — "Awaken, Kristang" — in Singapore, with one of the remaining elderly speakers, Bernard Mesenas.</li>
+      <li class="in" style="--d:4">Free weekly classes. Within a year, around <strong>200 students</strong>. A language festival. Teaching materials, a dictionary project, beginner textbooks — and learners in Melaka and Singapore sitting in the same online classrooms.</li>
+      <li class="in" style="--d:5">There is a <strong>thirty-year plan</strong> in phases, with a target of producing a new generation of speakers by the 2040s. Not a campaign. A programme with a timeline longer than the people running it have been alive.</li>
+      <li class="in" style="--d:6">And the detail that captures the whole thing: Wong learned Kristang from books and from the last speakers — and then <strong>taught it to his own grandfather</strong>, who came to the classes.</li>
+    </ul>
+    <p class="note in" style="--d:7">Compare the Kaurna module. Kaurna had to be rebuilt with no speakers at all. Kristang still has speakers, in two countries, and a cohort of motivated young learners. On paper, it is in a better position than almost any language in this course.</p>
+  </div>
+  <div class="stage">
+    <div class="panel in" style="--d:3; width:35vw">
+      <strong>What a revival actually needs:</strong>
+      <div class="phases" id="phases" style="margin-top:.5rem">
+        <button class="ph2" data-p="0" style="--pc: var(--red)">1 · Find the speakers</button>
+        <button class="ph2" data-p="1" style="--pc: var(--gold)">2 · Make it learnable</button>
+        <button class="ph2" data-p="2" style="--pc: var(--azul)">3 · Make it social</button>
+        <button class="ph2" data-p="3" style="--pc: var(--palm)">4 · Make new words</button>
+        <button class="ph2" data-p="4" style="--pc: var(--sea)">5 · Make children</button>
+      </div>
+      <p id="phmsg2" aria-live="polite">Click each phase.</p>
+    </div>
+  </div>
+</section>
+
+<!-- 11. Quiz -->
+<section class="slide" style="--accent: var(--gold)">
+  <div class="text wide center">
+    <p class="kicker in">Review on the strait</p>
+    <h2 class="in" style="--d:1">Quick quiz!</h2>
+    <div class="bar in" style="--d:2"></div>
+    <div class="quizgrid">
+      <div class="quiz panel in" style="--d:3" data-right="Yes — vocabulary from Portuguese, grammar shaped by Malay." data-wrong="Hint: think about which half supplies words and which supplies rules.">
+        <div class="q">What are Kristang's two main ingredients?</div>
+        <div class="options"><button class="opt">Dutch words, English grammar</button><button class="opt" data-correct>Portuguese words, Malay grammar</button><button class="opt">Malay words, Portuguese grammar</button></div>
+        <div class="feedback"></div>
+      </div>
+      <div class="quiz panel in" style="--d:4" data-right="Right — ja, ta and logu do the work, and the verb never changes." data-wrong="Hint: Kristang threw out Portuguese conjugation entirely.">
+        <div class="q">How does Kristang mark tense?</div>
+        <div class="options"><button class="opt">By changing the verb ending</button><button class="opt" data-correct>With a small word before the verb</button><button class="opt">It doesn't mark tense</button></div>
+        <div class="feedback"></div>
+      </div>
+      <div class="quiz panel in" style="--d:5" data-right="Correct — English, through schooling and work, not Malay or Chinese." data-wrong="Hint: which language opened doors under the British and after?">
+        <div class="q">Which language did Kristang mainly lose ground to?</div>
+        <div class="options"><button class="opt">Malay</button><button class="opt" data-correct>English</button><button class="opt">Mandarin</button></div>
+        <div class="feedback"></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- 12. Closing -->
+<section class="slide end" style="--accent: var(--gold)">
+  <div class="text">
+    <h1 class="in" style="font-size:4.6rem">Kodrah Kristang</h1>
+    <p class="lead in" style="--d:1; margin-top:.8rem">"Awaken, Kristang." Thank you! Questions?</p>
+    <p class="quote in" style="--d:2">A language born in 1511 out of a conquest, kept alive for four centuries by families with no empire behind them, nearly lost to a school timetable — and woken up by a twenty-year-old who found it in a book and then taught it to his grandfather.</p>
+    <p class="note in" style="--d:3">The plan runs to the 2040s. The people who will decide whether it works are currently about your age.</p>
+  </div>
+  <details class="fine in" style="--d:4">
+    <summary>Sources &amp; image credits</summary>
+    <div class="box">
+      <h4>Sources</h4>
+      <ul>
+        <li><a href="https://apics-online.info/surveys/42">Baxter, "Papiá Kristang," <em>Atlas of Pidgin and Creole Language Structures Online</em></a> — pronouns, <em>sa</em> possessives, the TMA system</li>
+        <li>Baxter, <em>A Grammar of Kristang (Malacca Creole Portuguese)</em> (1988)</li>
+        <li><a href="https://en.wikipedia.org/wiki/Kristang_language">Kristang language (Wikipedia)</a> — history, speaker numbers, grammar examples</li>
+        <li><a href="https://scholarspace.manoa.hawaii.edu/server/api/core/bitstreams/31b5e84b-6219-420b-8325-ea45a5e2ba11/content">Wong, "Kodrah Kristang: the initiative to revitalize the Kristang language in Singapore," <em>Language Documentation &amp; Conservation</em></a></li>
+        <li><a href="https://www.acu.ac.uk/the-acu-review/awaken-kristang/">Wong, "Awaken, Kristang" (ACU Review)</a> — discovering the language in 2015</li>
+        <li><a href="https://blog.nus.edu.sg/ellnews/2016/12/15/kodrah-kristang-awaken-kristang-2/">National University of Singapore: Kodrah Kristang</a> — speaker estimates for Singapore and Malacca</li>
+        <li><a href="https://www.malaymail.com/news/malaysia/2017/03/21/as-malacca-loses-kristang-singapore-group-seeks-to-revive-500-year-old-tong/1339725">Malay Mail (2017): "As Malacca loses Kristang, Singapore group seeks to revive 500-year-old tongue"</a> — 200 students; Prof Stefanie Pillai on the Malaccan community</li>
+        <li><a href="https://southeastasiaglobe.com/saving-malaysias-centuries-old-portuguese-language/">Southeast Asia Globe: "Saving the Malay Peninsula's centuries-old Portuguese creole"</a> — the Portuguese Settlement, the thirty-year plan</li>
+        <li><a href="https://thelanguagecloset.com/2024/11/02/papia-kristang/">The Language Closet: "Papia Kristang"</a> — the v → b change, <em>sa</em> from <em>sua</em>, the tense markers</li>
+        <li><a href="https://kreolmagazine.com/culture/history-and-culture/papia-kristang-the-creole-portuguese-of-malacca-and-singapore/">Kreol Magazine: "Papia Kristang"</a> — sample texts and the negator <em>ngka</em></li>
+        <li><a href="https://malaysia4u.com/kristang-eurasian-guide">"Kristang and Eurasian heritage in Malaysia"</a> — UNESCO status, classes in Melaka</li>
+        <li><a href="https://jpl.letras.ulisboa.pt/article/id/10294/">de Santana Silva, on variation and null subjects in Papiá Kristang, <em>Journal of Portuguese Linguistics</em></a></li>
+        <li><a href="https://fass.nus.edu.sg/elts/kevin-martens-wong">Kevin Martens Wong, National University of Singapore</a> — ongoing Kodrah Kristang teaching and publications</li>
+      </ul>
+      <h4>Images (Wikimedia Commons)</h4>
+      <ul id="credits"></ul>
+    </div>
+  </details>
+</section>
+
+</main>
+
+<nav class="controls">
+  <button id="prev" aria-label="Previous slide">‹</button>
+  <span id="counter">1 / 12</span>
+  <button id="next" aria-label="Next slide">›</button>
+  <button id="fs" aria-label="Fullscreen">⤢</button>
+</nav>
+<p class="hint">Use ← → to move. Press F for fullscreen.</p>
+
+<!-- Kristang effects: turning tiles, grammar sorter, tense switcher, word pairs, revival phases -->
+<script>
+(function () {
+  /* ---------- Tile wall ---------- */
+  var tiles = document.getElementById("tiles");
+  var TL = [];
+  for (var k = 0; k < 70; k++) {
+    var t = document.createElement("div");
+    t.className = "tl2";
+    t.innerHTML =
+      '<svg class="b" viewBox="0 0 40 40"><rect width="40" height="40" fill="#e8eef6"/>' +
+      '<g fill="none" stroke="#3a7fc4" stroke-width="2"><path d="M20 6 q10 10 0 14 q-10 -4 0 -14z"/><path d="M20 34 q10 -10 0 -14 q-10 4 0 14z"/>' +
+      '<path d="M6 20 q10 10 14 0 q-4 -10 -14 0z"/><path d="M34 20 q-10 10 -14 0 q4 -10 14 0z"/><rect x="2" y="2" width="36" height="36"/></g></svg>' +
+      '<svg class="m" viewBox="0 0 40 40"><rect width="40" height="40" fill="#f4e7cf"/>' +
+      '<g fill="none" stroke="#c23b32" stroke-width="2"><path d="M4 20 q8 -12 16 0 q8 12 16 0"/><path d="M4 30 q8 -12 16 0 q8 12 16 0"/><path d="M4 10 q8 -12 16 0 q8 12 16 0"/></g>' +
+      '<g fill="#55975c"><circle cx="12" cy="20" r="2"/><circle cx="28" cy="30" r="2"/><circle cx="28" cy="10" r="2"/></g></svg>';
+    t.dataset.th = (Math.random()).toFixed(3);
+    tiles.appendChild(t);
+    TL.push(t);
+  }
+  function tune(x) {
+    TL.forEach(function (t) { t.classList.toggle("flip", parseFloat(t.dataset.th) < x); });
+  }
+  document.addEventListener("slidechange", function (e) {
+    var x = e.detail.index / (e.detail.total - 1);
+    document.body.style.setProperty("--t", x);
+    tune(x);
+  });
+  tune(0);
+
+  function single(selector, callback) {
+    var grp = document.querySelectorAll(selector);
+    grp.forEach(function (b) {
+      b.addEventListener("click", function () {
+        grp.forEach(function (x) { x.classList.remove("on"); });
+        b.classList.add("on");
+        callback(b);
+      });
+    });
+  }
+
+  /* ---------- Grammar sorter ---------- */
+  var FTEXT = [
+    "<strong>Portuguese.</strong> Open any Kristang sentence and the words are Portuguese: <em>kaza</em>, <em>kumí</em>, <em>bendé</em>, <em>skribé</em>. This is what makes the language feel familiar to a Romance-language speaker — right up until they try to understand it.",
+    "<strong>Malay.</strong> Portuguese verbs change constantly for person and tense. Kristang verbs never change at all. The invariable verb is a hallmark of creoles and matches how Malay works.",
+    "<strong>Malay.</strong> <em>Yo sa kaza</em> — literally \u201cI's house.\u201d The marker <em>sa</em> is from Portuguese <em>sua</em>, but Portuguese says <em>a minha casa</em>, with the possessive first and agreeing in gender. The Kristang pattern matches Malay's <em>punya</em> construction.",
+    "<strong>Malay.</strong> <em>ja</em> for completed, <em>ta</em> for in progress, <em>logu</em> for future — separate words carrying tense and aspect, rather than endings. Malay does the same thing with <em>sudah</em>, <em>sedang</em> and <em>akan</em>.",
+    "<strong>Portuguese.</strong> One place where the Romance pattern won: the adjective follows the noun, as in Portuguese <em>casa nova</em>. Malay does this too, so here the two parents agreed — which is often why a feature survives.",
+    "<strong>Malay.</strong> Reduplication — saying a word twice to change its meaning — is everywhere in Malay and is not a Portuguese device at all. Kristang uses it productively."
+  ];
+  var fpick = null, fdone = 0, ftmsg = document.getElementById("ftmsg");
+  document.querySelectorAll("#feats2 .ft").forEach(function (f, i) {
+    f.dataset.i = i;
+    f.addEventListener("click", function () {
+      if (f.classList.contains("solved")) return;
+      document.querySelectorAll("#feats2 .ft").forEach(function (x) { x.classList.remove("on"); });
+      f.classList.add("on"); fpick = f;
+      ftmsg.textContent = "Portuguese or Malay?";
+    });
+  });
+  document.querySelectorAll("#srcs .src").forEach(function (s) {
+    s.addEventListener("click", function () {
+      if (!fpick) { ftmsg.textContent = "Pick a feature first."; return; }
+      if (s.dataset.s === fpick.dataset.a) {
+        fpick.classList.add("solved"); fpick.classList.remove("on"); fdone++;
+        ftmsg.innerHTML = FTEXT[Number(fpick.dataset.i)] +
+          (fdone === 6 ? "<br><br><strong>All six.</strong> Words from one parent, rules from the other — and notice which half a listener notices first." : "");
+        fpick = null;
+      } else {
+        ftmsg.innerHTML = "<strong style='color:var(--red)'>Other one.</strong> Ask yourself whether this is about <em>which words exist</em> or <em>how they are put together</em>.";
+      }
+    });
+  });
+
+  /* ---------- Tense switcher ---------- */
+  var TM = [
+    ["", "Diego les buku", "Diego reads books / Diego is a reader",
+     "With <strong>no marker at all</strong>, the sentence describes what someone generally does. Portuguese would need a present-tense ending here; Kristang needs nothing."],
+    ["ja", "Diego <em>ja</em> les buku", "Diego read the book",
+     "<strong>ja</strong> marks the action as completed. It comes from Portuguese <em>já</em>, \u201calready\u201d — and it does the same job as Malay <em>sudah</em>. A Portuguese adverb doing a Malay grammatical job: that is Kristang in one word."],
+    ["ta", "Diego <em>ta</em> les buku", "Diego is reading the book",
+     "<strong>ta</strong> marks something in progress. An attested example: <em>Diego ta les buku</em>. Another: <em>Ta kái chua</em> — literally \u201cis falling rain,\u201d meaning \u201cit's raining.\u201d"],
+    ["logu", "Diego <em>logu</em> les buku", "Diego will read the book",
+     "<strong>logu</strong> — often shortened to <em>lo</em> — marks the future. From Portuguese <em>logo</em>, \u201csoon.\u201d Three ordinary Portuguese adverbs were promoted into a complete tense system."]
+  ];
+  function setTM(i) {
+    document.getElementById("tsent").innerHTML = TM[i][1];
+    document.getElementById("tmean").textContent = "\u201c" + TM[i][2] + "\u201d";
+    document.getElementById("tsmsg").innerHTML = TM[i][3];
+  }
+  single("[data-m]", function (b) { setTM(Number(b.dataset.m)); });
+  setTM(0);
+
+  /* ---------- Word pairs ---------- */
+  var PAIRS = [
+    ["vós", "bos", "you", "Portuguese <em>v</em> has no equivalent in Malay, so it became <em>b</em> throughout the language. This one word also tells you the creole formed early: <em>vós</em> was already old-fashioned in Portugal before long."],
+    ["novo", "nubu", "new", "The same v → b change, plus a vowel shift. Say it out loud and the Portuguese is still audible."],
+    ["vai", "bai", "go", "From the Portuguese verb form <em>vai</em>, \u201cgoes\u201d — frozen into the single invariable Kristang verb. Creoles very often take one form of a verb and use it for all persons and tenses."],
+    ["casa", "kaza", "house", "Spelling follows pronunciation rather than Portuguese convention. As in <em>yo sa kaza</em>, \u201cmy house.\u201d"],
+    ["comer", "kumí", "eat", "Infinitive endings get trimmed and stress shifts to the last syllable — a pattern running through the whole verb vocabulary."],
+    ["chegar", "chegá", "arrive", "Same trimming. And the <em>ch</em>, which is \u201csh\u201d in Portuguese, is pronounced \u201cch\u201d as in <em>church</em> in Kristang."],
+    ["escrever", "skribé", "write", "The initial vowel drops and the consonants shuffle. This is the kind of change that makes a word unrecognisable in speech but obvious once written side by side."],
+    ["sua", "sa", "possessive marker", "The most important word on this list. Portuguese <em>sua</em> means \u201chis/her,\u201d but in Kristang it was reduced to <em>sa</em> and turned into a general possessive marker on a Malay pattern — a Portuguese word doing a job Portuguese never gave it."]
+  ];
+  var plist = document.getElementById("pairlist"), wdmsg = document.getElementById("wdmsg");
+  PAIRS.forEach(function (p, i) {
+    var row = document.createElement("div");
+    row.className = "pr";
+    row.innerHTML = '<b class="pt2">' + p[0] + '</b><span class="ar">→</span><b class="kr">' + p[1] +
+      ' <span style="color:var(--muted); font-weight:400; font-size:.8rem">' + p[2] + "</span></b>";
+    row.addEventListener("click", function () { wdmsg.innerHTML = p[3]; });
+    plist.appendChild(row);
+  });
+
+  /* ---------- Revival phases ---------- */
+  var PH = [
+    ["Find the speakers", "You cannot revive what you have not recorded. Kodrah Kristang began by locating the remaining fluent speakers in Singapore and working with them — alongside the existing published descriptions of the Malaccan variety, especially the grammar written in the 1980s. Without that earlier documentation there would have been nothing to teach from."],
+    ["Make it learnable", "Classes, textbooks, a dictionary, an orthography people can actually use. This sounds obvious and it is the step most revivals underestimate: a language with no teaching materials can only be learned by sitting with an elder, which does not scale."],
+    ["Make it social", "Weekly classes, an annual language festival, online rooms shared between Melaka and Singapore learners. Languages live in groups, not in individuals — one person studying alone will stop. Two hundred people meeting weekly will not."],
+    ["Make new words", "A language documented in the 20th century has no word for things that did not exist then. Revivals build committees to coin vocabulary — you saw the same problem in the Kaurna module. Decide on the record, publish it, let the community accept or reject it."],
+    ["Make children", "The last step and the hardest. Everything above can succeed completely and still produce no child who speaks the language at home. That is where every revival in this course currently stands, including this one — which is why the plan runs thirty years and not three."]
+  ];
+  var phmsg2 = document.getElementById("phmsg2");
+  document.querySelectorAll("#phases .ph2").forEach(function (b) {
+    b.addEventListener("click", function () {
+      var P = PH[Number(b.dataset.p)];
+      phmsg2.innerHTML = "<strong style='color:var(--gold)'>" + P[0] + "</strong><br>" + P[1];
+    });
+  });
+
+  /* ---------- Timeline ---------- */
+  var EVENTS = [
+    ["The Portuguese take Malacca", "In 1511 a Portuguese fleet captured Malacca, the richest trading port in Southeast Asia. Portugal had nowhere near enough settlers to hold it, so officials encouraged marriage with local women. The households that resulted produced the first speakers of a new language — Portuguese words, local grammar, learned by children as a mother tongue."],
+    ["The Dutch arrive", "The Dutch took Malacca in 1641, and the British took it from them in 1824. Portuguese rule lasted 130 years; the Portuguese-Eurasian community and its creole have now lasted nearly four hundred more. The language stopped being the coloniser's and became the community's."],
+    ["Down to Singapore", "When the British founded Singapore in 1819, Eurasian families moved down from Malacca in large numbers through the 1820s, taking Kristang with them. The Singapore community has been a distinct branch ever since — and is where the modern revival started."],
+    ["The Settlement", "In 1933 the colonial administration established a Portuguese Settlement at Ujong Pasir in Malacca: a neighbourhood for the Portuguese-Eurasian community, largely fishing families. It concentrated the community in one place, and it is the single biggest reason there are still speakers there today."],
+    ["English takes over", "Through the mid-20th century, families switched to English for school and work. In Singapore, language policy from the 1960s organised education around English plus one official mother tongue — and Kristang was not one of the options. Transmission to children stopped within about two generations."],
+    ["Kodrah Kristang", "Kevin Martens Wong discovered the language in 2015 while researching endangered languages, realised it was his own family's, and launched Kodrah Kristang in March 2016 with the elderly speaker Bernard Mesenas. Free weekly classes drew around 200 students in the first year, and the initiative now runs textbooks, a festival, a dictionary project and a thirty-year plan."]
+  ];
+  var tlText = document.getElementById("tltext");
+  var evs = document.querySelectorAll("#tl .ev");
+  function setEvent(i) {
+    evs.forEach(function (e, k) { e.classList.toggle("on", k === i); });
+    tlText.innerHTML = '<strong style="color:var(--gold); font-size:1.2rem">' + EVENTS[i][0] + "</strong><br>" + EVENTS[i][1];
+  }
+  evs.forEach(function (e, i) { e.addEventListener("click", function () { setEvent(i); }); });
+  setEvent(0);
+})();
+</script>
+<script src="../assets/deck.js"></script>
+</body>
+</html>
