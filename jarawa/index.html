@@ -1,0 +1,636 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Jarawa: The Ang, the Forest and the Road</title>
+<link rel="stylesheet" href="../assets/deck.css">
+<style>
+@import url("https://fonts.googleapis.com/css2?family=Faustina:wght@600;700&family=Sora:wght@400;500;600;800&display=swap");
+
+/* ---------- Jarawa theme: Andaman forest, turquoise sea, laterite road ---------- */
+:root {
+  --bg: #07140f;
+  --ink: #eff4ec;
+  --muted: #bed3c4;
+  --line: rgba(239, 244, 236, .22);
+  --panel: rgba(8, 28, 20, .86);
+  --forest: #3a7f4c;
+  --sea: #23a3ab;
+  --road: #b05a33;
+  --clay: #e8e0cf;
+  --amber: #f2c14e;
+  --alert: #d9452f;
+  --rose: #d9452f;
+  --accent: var(--sea);
+  --serif: "Faustina", Georgia, serif;
+  --sans: "Sora", system-ui, sans-serif;
+  --t: 0;
+  font-size: clamp(12px, 1.3vw, 28px);
+}
+h1 { font-family: var(--serif); font-size: 5.2rem; font-weight: 700; line-height: 1.06; }
+h2 { font-family: var(--serif); font-size: 2.5rem; font-weight: 700; line-height: 1.14; }
+.slide { padding: 7vh 4vw 8vh 6vw; }
+.text { max-width: 44vw; }
+.text.wide { max-width: 86vw; width: 86vw; }
+.stage {
+  right: 5vw; top: 6vh; bottom: 10vh; width: 38vw;
+  display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 1.1rem;
+}
+ul.dots li { font-size: 1.04rem; }
+.card .word { font-family: var(--sans); font-weight: 800; }
+.card.revealed .meaning { max-height: 15rem; }
+.btn { background: var(--sea); color: #052226; }
+.loc .disc { border-color: var(--sea); box-shadow: 0 0 0 .55rem rgba(35,163,171,.16), 0 22px 40px rgba(0,0,0,.55); }
+.loc .tint { background: #cfe0bb; }
+.loc .sea { background: #0f5560; }
+.loc .tag { background: #08201a; border-color: var(--sea); }
+.note { font-size: .82rem; color: var(--muted); }
+.quote { font-family: var(--serif); font-size: 1.65rem; font-weight: 700; line-height: 1.34; color: var(--sea); }
+
+/* ---------- Background: forest, sea, and the road with its convoy ---------- */
+#andaman { position: fixed; inset: 0; z-index: 0; overflow: hidden; pointer-events: none;
+  background: linear-gradient(180deg, #05100c 0%, #0b2a20 40%, #12463c 66%, #082018 100%); }
+#andaman .seaband { position: absolute; left: 0; right: 0; top: 24vh; height: 10vh;
+  background: linear-gradient(180deg, #1b7e86, #0d4c55); opacity: .7; }
+#andaman .canopy2 { position: absolute; left: 0; right: 0; top: 0; height: 28vh; }
+#andaman .canopy2 svg, #andaman .under svg { width: 100%; height: 100%; display: block; }
+#andaman .under { position: absolute; left: 0; right: 0; bottom: 0; height: 56vh; }
+#andaman .road { position: absolute; left: -5%; right: -5%; bottom: 20vh; height: 7vh;
+  background: linear-gradient(180deg, #8a4526, #b05a33 40%, #6e3620);
+  transform: rotate(-2.2deg); box-shadow: 0 0 40px rgba(0,0,0,.6); }
+#andaman .road::after { content: ""; position: absolute; left: 0; right: 0; top: 48%; height: 2px;
+  background: repeating-linear-gradient(90deg, rgba(255,255,255,.35) 0 26px, transparent 26px 60px); }
+#andaman .convoy { position: absolute; left: -5%; right: -5%; bottom: 21vh; height: 4vh; transform: rotate(-2.2deg); }
+#andaman .convoy i { position: absolute; width: 1.6vw; height: 1vh; border-radius: .3vh; background: var(--amber);
+  box-shadow: 0 0 10px 3px rgba(242,193,78,.5); opacity: 0; transition: opacity 1.4s ease;
+  animation: drive 11s linear infinite; }
+@keyframes drive { from { left: -8%; } to { left: 104%; } }
+#andaman .shade { position: absolute; inset: 0;
+  background: linear-gradient(90deg, rgba(2,8,6,.95) 0%, rgba(2,8,6,.76) 52%, rgba(2,8,6,.24) 100%); }
+
+/* ---------- Photos ---------- */
+.board { position: relative; margin: 0; width: var(--w, 19vw); padding: .6rem .6rem .5rem;
+  background: var(--clay); border-radius: .2rem; box-shadow: 0 18px 34px rgba(0,0,0,.6);
+  transform: rotate(var(--r, 0deg)); transition: transform .9s cubic-bezier(.2,.8,.2,1), opacity .7s ease; }
+.slide:not(.active) .board { opacity: 0; transform: translateY(46px) rotate(var(--r, 0deg)); }
+.slide.active .board { transition-delay: calc(.4s + var(--d, 0) * .16s); }
+.board img { display: block; width: 100%; aspect-ratio: var(--ar, 4 / 3); object-fit: cover; background: #c7c2b0; }
+.board figcaption { color: #1b2419; font-size: .73rem; font-weight: 700; line-height: 1.25; margin: .4rem .1rem 0; font-family: var(--serif); }
+
+/* ---------- Shared controls ---------- */
+.switch { display: flex; gap: .4rem; margin: .4rem 0 .6rem; flex-wrap: wrap; }
+.sbtn { font: inherit; font-weight: 600; font-size: .92rem; color: var(--ink); background: var(--panel);
+  border: 2px solid var(--line); border-radius: .3rem; padding: .25em .9em; cursor: pointer; transition: transform .2s; }
+.sbtn:hover { transform: translateY(-2px); }
+.sbtn.on { background: var(--sea); border-color: var(--sea); color: #052226; }
+.out { min-height: 3.2em; margin-top: .5rem; }
+
+/* ---------- Two families tree ---------- */
+.famtree { position: relative; width: 100%; aspect-ratio: 6 / 5; max-width: 18rem; margin: .3rem auto; }
+.famtree svg { position: absolute; inset: 0; width: 100%; height: 100%; }
+.fnode { position: absolute; transform: translate(-50%, -50%); font: 700 .68rem var(--sans);
+  background: var(--panel); border: 2px solid var(--line); border-radius: .3rem; color: var(--ink);
+  padding: .2em .5em; cursor: pointer; white-space: nowrap; }
+.fnode:hover { border-color: var(--sea); }
+.fnode.on { border-color: var(--sea); background: rgba(35,163,171,.2); }
+.fnode.gone { border-style: dashed; opacity: .7; }
+#famsg2 { min-height: 6em; margin-top: .4rem; }
+
+/* ---------- Cognates ---------- */
+.cgrid { display: grid; grid-template-columns: 5.5rem 1fr 1fr; gap: .3rem; font-family: var(--sans); }
+.cgrid div { padding: .32rem .2rem; text-align: center; font-weight: 700; font-size: .95rem; border-radius: .2rem; }
+.cgrid .hd3 { font-size: .68rem; letter-spacing: .06em; text-transform: uppercase; color: var(--muted); }
+.cgrid .gl3 { text-align: left; font-size: .8rem; color: var(--muted); font-weight: 400; }
+.cgrid .ja { background: rgba(35,163,171,.16); color: var(--sea); }
+.cgrid .on2 { background: rgba(58,127,76,.18); color: var(--forest); }
+.cgrid .rw { cursor: pointer; }
+#cgmsg { min-height: 4.6em; margin-top: .4rem; }
+
+/* ---------- Collapse chart ---------- */
+.colchart { display: flex; align-items: flex-end; gap: 1rem; height: 18vh; padding: .5rem .6rem 0; }
+.col { flex: 1; height: 100%; display: flex; flex-direction: column; align-items: center; justify-content: flex-end; }
+.col .n { font-family: var(--serif); font-size: 1.05rem; font-weight: 700; }
+.col .colbar { width: 100%; max-width: 3.4rem; height: 0; border-radius: .3rem .3rem 0 0; background: var(--c);
+  transition: height 1.5s cubic-bezier(.2,.8,.2,1) .6s; }
+.slide.active .col .colbar { height: var(--h); }
+.col .y { color: var(--muted); font-size: .74rem; margin-top: .3rem; }
+
+/* ---------- Road stepper ---------- */
+.roadline { position: relative; height: 4.5rem; margin: .5rem 0; }
+.roadline .strip { position: absolute; left: 0; right: 0; top: 1.6rem; height: 1.2rem;
+  background: linear-gradient(180deg, #8a4526, #b05a33 50%, #6e3620); border-radius: .2rem; }
+.rstop { position: absolute; top: .4rem; transform: translateX(-50%); width: 1.1rem; height: 1.1rem;
+  border-radius: 50%; border: 2px solid var(--amber); background: var(--panel); cursor: pointer; }
+.rstop:hover { transform: translateX(-50%) scale(1.2); }
+.rstop.on { background: var(--amber); }
+.rstop span { position: absolute; top: 1.5rem; left: 50%; transform: translateX(-50%);
+  font-size: .64rem; font-weight: 700; color: var(--muted); white-space: nowrap; }
+#rdmsg { min-height: 6em; margin-top: 1rem; }
+
+/* ---------- Deliberation ---------- */
+.optcols { display: grid; grid-template-columns: repeat(3, 1fr); gap: .4rem; }
+.oc { background: var(--panel); border: 2px solid var(--line); border-radius: .3rem; padding: .5rem .4rem; cursor: pointer; text-align: center; }
+.oc:hover { border-color: var(--amber); }
+.oc.on { border-color: var(--amber); background: rgba(242,193,78,.12); }
+.oc h5 { margin: 0 0 .2rem; font-family: var(--serif); font-size: .92rem; color: var(--amber); }
+.oc p { margin: 0; font-size: .74rem; color: var(--muted); }
+#delmsg { min-height: 6.4em; margin-top: .4rem; }
+
+/* ---------- Timeline ---------- */
+.tl { display: grid; grid-template-columns: repeat(6, 1fr); gap: .55rem; margin-top: 1rem; position: relative; padding-bottom: 1.4rem; }
+.tl::after { content: ""; position: absolute; left: 0; right: 0; bottom: .45rem; height: 3px; border-radius: 3px;
+  background: linear-gradient(90deg, var(--forest), var(--road), var(--alert)); }
+.ev { font: inherit; text-align: left; color: #10221a; background: var(--ec); border: 0; border-radius: .3rem;
+  padding: .65rem .75rem; cursor: pointer; transition: transform .25s, box-shadow .25s; }
+.ev:hover { transform: translateY(-4px); }
+.ev.on { box-shadow: 0 0 0 3px #fff, 0 10px 24px rgba(0,0,0,.4); transform: translateY(-6px); }
+.ev .yr { font-family: var(--serif); font-weight: 700; font-size: 1.25rem; line-height: 1; display: block; }
+.ev small { display: block; font-weight: 600; font-size: .76rem; margin-top: .3rem; }
+#tltext { min-height: 5.4rem; margin-top: .4rem; }
+
+/* ---------- Quiz tint ---------- */
+.opt.right { background: var(--forest); }
+.opt.wrong { background: var(--alert); }
+
+@media (max-width: 820px) {
+  .slide { padding: 6vh 6vw 12vh; }
+  h1 { font-size: 3rem; }
+  .text, .text.wide { max-width: none; width: auto; }
+  .stage { position: relative; inset: auto; width: 100%; margin-top: 1.5rem; }
+  .board { width: 74vw; }
+  .stage .panel { width: 100% !important; max-width: none !important; }
+  .tl { grid-template-columns: repeat(2, 1fr); }
+  .optcols { grid-template-columns: 1fr; }
+}
+</style>
+</head>
+<body data-map="BlankMap-Equirectangular.svg">
+
+<div id="andaman" aria-hidden="true">
+  <div class="seaband"></div>
+  <div class="canopy2">
+    <svg viewBox="0 0 1600 280" preserveAspectRatio="none">
+      <g fill="#0a2a1a"><ellipse cx="90" cy="20" rx="190" ry="96"/><ellipse cx="400" cy="0" rx="210" ry="104"/>
+      <ellipse cx="720" cy="26" rx="196" ry="100"/><ellipse cx="1040" cy="-4" rx="216" ry="108"/><ellipse cx="1380" cy="22" rx="200" ry="98"/></g>
+    </svg>
+  </div>
+  <div class="under">
+    <svg viewBox="0 0 1600 560" preserveAspectRatio="none">
+      <g stroke="#0e3522" stroke-width="20" stroke-linecap="round">
+        <path d="M90 560 V60"/><path d="M420 560 V30"/><path d="M760 560 V70"/><path d="M1100 560 V40"/><path d="M1430 560 V80"/>
+      </g>
+      <g stroke="#11insufficient" /></g>
+      <g stroke="#124029" stroke-width="9" opacity=".85">
+        <path d="M230 560 V180"/><path d="M580 560 V150"/><path d="M930 560 V190"/><path d="M1270 560 V160"/>
+      </g>
+      <g fill="#0d3220" opacity=".9">
+        <ellipse cx="90" cy="70" rx="110" ry="46"/><ellipse cx="420" cy="42" rx="120" ry="50"/>
+        <ellipse cx="760" cy="80" rx="112" ry="46"/><ellipse cx="1100" cy="50" rx="124" ry="50"/><ellipse cx="1430" cy="90" rx="108" ry="44"/>
+      </g>
+    </svg>
+  </div>
+  <div class="road"></div>
+  <div class="convoy"></div>
+  <div class="shade"></div>
+</div>
+<div class="progress"></div>
+
+<main>
+
+<!-- 1. Title -->
+<section class="slide" style="--accent: var(--sea)">
+  <div class="text">
+    <p class="kicker in">Rare Languages of the Asia-Pacific · Module 37</p>
+    <h1 class="in" style="--d:1">Jarawa</h1>
+    <p class="in" style="--d:2; font-size:1.3rem; font-weight:800; color:var(--sea)">the Ang · Andaman Islands, India</p>
+    <div class="bar in" style="--d:3"></div>
+    <p class="lead in" style="--d:4">A few hundred people who kept the outside world at a distance until 1998 — and a road, built illegally through their forest, that a court ordered closed in 2002 and that is still carrying tourists today</p>
+    <p class="muted in" style="--d:5">Watch the road. The headlights are starting.</p>
+  </div>
+  <div class="stage">
+    <figure class="board" style="--w:24vw; --r:-1.5deg; --d:0">
+      <img data-wiki="Andaman Islands" data-width="1200" alt="Forest and coast of the Andaman Islands">
+      <figcaption>The Andaman Islands — forest, reef and one road down the middle</figcaption>
+    </figure>
+    <div class="panel in" style="--d:3; width:30vw">
+      <p class="note" style="margin:0"><strong>A note on the pictures in this module.</strong> There are none of Jarawa people. Photographs of them circulate widely, most taken without consent and many taken from vehicles on the road you can see behind these slides. Looking at Jarawa people is the harm this module is about, so we are not going to do it.</p>
+    </div>
+  </div>
+</section>
+
+<!-- 2. Where and who -->
+<section class="slide" data-tr="left" style="--accent: var(--forest)">
+  <div class="text">
+    <p class="kicker in">Where and who</p>
+    <h2 class="in" style="--d:1">The people who call themselves "us"</h2>
+    <div class="bar in" style="--d:2"></div>
+    <ul class="dots">
+      <li class="in" style="--d:3">They live on the western side of South and Middle Andaman Island, in a reserve of around <strong>1,028 square kilometres</strong> of dense evergreen forest, as hunters, gatherers and fishers.</li>
+      <li class="in" style="--d:4">Population estimates run from about <strong>270 to 500</strong>. A survey in 2001–02 recorded 266 speakers — around 70% of the ethnic population at the time.</li>
+      <li class="in" style="--d:5">They call themselves <span class="hl">Ang</span>, meaning roughly "we people" or "human being." <strong>"Jarawa" is not their word.</strong> It comes from Aka-Bea, the language of a neighbouring people who were traditionally their enemies, and means something like "people to be afraid of."</li>
+      <li class="in" style="--d:6">The Andamanese peoples are among the oldest continuously settled populations outside Africa. Precise dates are genuinely disputed — you will see everything from 26,000 to 55,000 years — but the depth is not.</li>
+    </ul>
+    <p class="note in" style="--d:7">This module uses "Jarawa" because that is the name in every source, law and news report. Keep in mind whose word it is.</p>
+  </div>
+  <div class="stage">
+    <div class="loc" data-lat="12.1" data-lon="92.8" data-zoom="6" style="--s:13vw; --d:0">
+      <div class="disc"><div class="lmap"></div><div class="tint"></div><div class="sea"></div><span class="pinpt"></span></div>
+      <span class="tag">Jarawa Tribal Reserve, Andaman Islands, India</span>
+    </div>
+    <div class="panel in" style="--d:4; width:34vw">
+      <strong>Two words you already know</strong>
+      <p class="note" style="margin:.3rem 0 0">The Jarawa bow is <em>aao</em>; the iron-tipped arrow is <em>aetaho</em>. These are among the handful of Jarawa words that appear in general reference sources.</p>
+      <p class="note" style="margin:.4rem 0 0">That is the state of public knowledge of this language: a few nouns for objects outsiders found interesting. There is no published dictionary a student can open.</p>
+    </div>
+  </div>
+</section>
+
+<!-- 3. Two families -->
+<section class="slide" data-tr="zoom" style="--accent: var(--sea)">
+  <div class="text">
+    <p class="kicker in">The family tree</p>
+    <h2 class="in" style="--d:1">Two unrelated families, one small archipelago</h2>
+    <div class="bar in" style="--d:2"></div>
+    <p class="in" style="--d:3">The Andaman Islands are about 350 km long. They contain — or contained — <strong>two entirely unrelated language families</strong>, as different from each other as English is from Chinese.</p>
+    <ul class="dots">
+      <li class="in" style="--d:4"><strong>Great Andamanese</strong>: once around ten languages across the northern and central islands.</li>
+      <li class="in" style="--d:5"><strong>Ongan</strong>: Jarawa and Önge, and presumably also the unknown language of <strong>North Sentinel Island</strong>, whose people have refused all contact.</li>
+      <li class="in" style="--d:6">Neither family has any demonstrated relatives anywhere on earth. Click the tree.</li>
+    </ul>
+    <p class="note in" style="--d:7">One linguist, Juliette Blevins, has argued that Ongan is a long-lost sister of Proto-Austronesian — the family you met in the Yami, Kavalan and Enggano modules. It is a minority view and most specialists are unconvinced, but it shows what is at stake: these languages may hold information about very deep human history.</p>
+  </div>
+  <div class="stage">
+    <div class="panel in" style="--d:3; width:35vw">
+      <div class="famtree" id="famtree">
+        <svg viewBox="0 0 100 84">
+          <path d="M28 14 V30 M28 30 H12 M28 30 H44 M72 14 V30 M72 30 H58 M72 30 H86 M86 30 V44 M58 30 V44 M12 30 V44 M44 30 V44" stroke="rgba(239,244,236,.35)" stroke-width="1.2" fill="none"/>
+        </svg>
+        <div class="fnode" data-f="0" style="left:28%; top:12%">Great Andamanese</div>
+        <div class="fnode gone" data-f="1" style="left:12%; top:52%">Aka-Bea †</div>
+        <div class="fnode gone" data-f="2" style="left:44%; top:66%">eight more †</div>
+        <div class="fnode" data-f="3" style="left:72%; top:12%">Ongan</div>
+        <div class="fnode" data-f="4" style="left:58%; top:52%">Önge</div>
+        <div class="fnode" data-f="5" style="left:88%; top:66%">Jarawa</div>
+        <div class="fnode" data-f="6" style="left:88%; top:88%">Sentinelese?</div>
+      </div>
+      <p id="famsg2" aria-live="polite">Click any node.</p>
+    </div>
+  </div>
+</section>
+
+<!-- 4. Cognates -->
+<section class="slide" style="--accent: var(--forest)">
+  <div class="text">
+    <p class="kicker in">Language lab</p>
+    <h2 class="in" style="--d:1">How do you prove two languages are cousins?</h2>
+    <div class="bar in" style="--d:2"></div>
+    <p class="in" style="--d:3">You cannot do it by asking the speakers, and you cannot do it from a map. You do it the way the Pazeh, Enggano and Koro modules did it: by lining up <strong>basic vocabulary</strong> and looking for regular correspondences.</p>
+    <p class="in" style="--d:4">Jarawa and Önge are spoken on different islands by peoples with very little contact — and the words line up. Click the rows.</p>
+    <ul class="dots">
+      <li class="in" style="--d:5">Notice the pattern: Önge tends to carry a final vowel where Jarawa has dropped it. One rule, applied consistently.</li>
+      <li class="in" style="--d:6">That regularity is what separates real relatedness from coincidence. Any two languages share a few lookalikes; only related ones share a <em>system</em>.</li>
+    </ul>
+    <p class="note in" style="--d:7">Look at the third row especially. Both languages have a shared inherited word meaning "foreigner" — which tells you that the distinction between <em>us</em> and <em>outsiders</em> is older than either language.</p>
+  </div>
+  <div class="stage">
+    <div class="panel in" style="--d:3; width:35vw">
+      <div class="cgrid" id="cgrid">
+        <div class="hd3 gl3">meaning</div><div class="hd3">Jarawa</div><div class="hd3">Önge</div>
+      </div>
+      <p id="cgmsg" aria-live="polite">Click a row.</p>
+      <p class="note" style="margin:.4rem 0 0">These are among the very few Jarawa words published in standard reference sources, and they are here because they do linguistic work — not as souvenirs.</p>
+    </div>
+  </div>
+</section>
+
+<!-- 5. The warning -->
+<section class="slide" data-tr="left" style="--accent: var(--alert)">
+  <div class="text">
+    <p class="kicker in">The warning next door</p>
+    <h2 class="in" style="--d:1">What happened to the Great Andamanese</h2>
+    <div class="bar in" style="--d:2"></div>
+    <p class="in" style="--d:3">Everything the Jarawa face has already happened, once, on the same islands, within recorded history.</p>
+    <ul class="dots">
+      <li class="in" style="--d:4">In 1858 the British established a penal colony at Port Blair. The Great Andamanese — perhaps <strong>5,000 people</strong> speaking around ten related languages — made contact.</li>
+      <li class="in" style="--d:5">Within a few decades, introduced disease had destroyed them. Measles, influenza, syphilis and pneumonia swept through a population with no acquired immunity. By the mid-20th century a few dozen remained.</li>
+      <li class="in" style="--d:6">The languages went with the people. In <strong>2010</strong>, Boa Sr, the last speaker of Bo, died. Present-day Great Andamanese is a mixture of what survived, spoken by a tiny handful of people.</li>
+    </ul>
+    <p class="in" style="--d:7">The Jarawa kept outsiders out — sometimes violently — for the whole of that period. That is the single reason they are still here.</p>
+  </div>
+  <div class="stage">
+    <div class="panel in" style="--d:3; width:34vw">
+      <strong>The Great Andamanese population</strong>
+      <div class="colchart">
+        <div class="col"><div class="n">~5,000</div><div class="colbar" style="--h:94%; --c: var(--forest)"></div><div class="y">1858</div></div>
+        <div class="col"><div class="n">~600</div><div class="colbar" style="--h:22%; --c: var(--amber)"></div><div class="y">1901</div></div>
+        <div class="col"><div class="n">19</div><div class="colbar" style="--h:5%; --c: var(--alert)"></div><div class="y">1961</div></div>
+        <div class="col"><div class="n">~50</div><div class="colbar" style="--h:8%; --c: var(--sea)"></div><div class="y">today</div></div>
+      </div>
+      <p class="note" style="margin:.4rem 0 0">The population has recovered slightly. The ten languages have not: what remains is one mixed variety with a very small number of speakers.</p>
+    </div>
+  </div>
+</section>
+
+<!-- 6. 1998 -->
+<section class="slide" style="--accent: var(--sea)">
+  <div class="text">
+    <p class="kicker in">The turning point</p>
+    <h2 class="in" style="--d:1">1998: they came out</h2>
+    <div class="bar in" style="--d:2"></div>
+    <ul class="dots">
+      <li class="in" style="--d:3">For most of the 19th and 20th centuries the Jarawa met intruders — loggers, poachers, settlers, officials — with arrows. That reputation protected their forest better than any law did.</li>
+      <li class="in" style="--d:4">From the mid-1990s this changed. Jarawa individuals began visiting settlements on the edge of the reserve, at first in small numbers, and from <strong>1998</strong> contact became regular and friendly.</li>
+      <li class="in" style="--d:5">Why is genuinely uncertain. The road, the pressure on their forest and its honey, government contact parties handing out bananas and coconuts, and curiosity are all part of the picture.</li>
+      <li class="in" style="--d:6">The consequences arrived fast. Measles outbreaks followed within a year or two. Today some Jarawa use jetties, markets and hospitals near the road, and some children have turned up at settler schools asking to be taught.</li>
+    </ul>
+    <p class="in" style="--d:7">Note what this is <em>not</em>. It is not a people being dragged out of the forest. It is a people making choices, under pressure, with very little information about what the choices cost.</p>
+  </div>
+  <div class="stage">
+    <div class="cards in" style="--d:3; grid-template-columns:1fr; width:34vw">
+      <div class="card" style="--cardc: var(--sea)"><div class="word">Why does disease hit so hard?</div><div class="meaning">Resistance to common infections is built up across generations of exposure. A population that has been separate for thousands of years has none, so an illness that a settler shrugs off can kill. This is not a theory: it is the documented history of the Great Andamanese, the Amazon and the Americas.</div><div class="tap">click to reveal</div></div>
+      <div class="card" style="--cardc: var(--amber)"><div class="word">What about the honey?</div><div class="meaning">Jarawa honey-collecting is renowned, and honey is a major part of both diet and exchange. Outsiders poaching in the reserve take honey, game and fish. A hunter-gatherer economy that is being quietly emptied gives people a very practical reason to come to the road.</div><div class="tap">click to reveal</div></div>
+      <div class="card" style="--cardc: var(--forest)"><div class="word">Are they "uncontacted"?</div><div class="meaning">Not any more, and the word was always wrong. The Jarawa knew exactly who was outside their forest; they chose the terms of engagement. Their neighbours on North Sentinel Island still do. "Uncontacted" means "has decided against it."</div><div class="tap">click to reveal</div></div>
+    </div>
+  </div>
+</section>
+
+<!-- 7. The road -->
+<section class="slide" data-tr="zoom" style="--accent: var(--road)">
+  <div class="text">
+    <p class="kicker in">The road</p>
+    <h2 class="in" style="--d:1">A highway through a reserve</h2>
+    <div class="bar in" style="--d:2"></div>
+    <p class="in" style="--d:3">The <strong>Andaman Trunk Road</strong> was built in the 1970s, straight through a reserve that had been created to protect the Jarawa. It pushed the Middle Andaman Jarawa westward and cut their forest in two.</p>
+    <p class="in" style="--d:4">It has been the subject of litigation for over twenty years. Step along it in the panel.</p>
+    <p class="note in" style="--d:5">An honest note on the other side: the road is the main land link for settler communities in the islands, who use it for hospitals, schools and supplies. The alternative is a sea route. This is a real conflict of interests, not a cartoon — which is why it has taken decades and is still unresolved.</p>
+  </div>
+  <div class="stage">
+    <div class="panel in" style="--d:3; width:35vw">
+      <strong>The Andaman Trunk Road, 1970s to now:</strong>
+      <div class="roadline" id="roadline">
+        <div class="strip"></div>
+        <button class="rstop" data-r="0" style="left:6%"><span>1970s</span></button>
+        <button class="rstop" data-r="1" style="left:30%"><span>2002</span></button>
+        <button class="rstop" data-r="2" style="left:54%"><span>2012</span></button>
+        <button class="rstop" data-r="3" style="left:74%"><span>2013</span></button>
+        <button class="rstop" data-r="4" style="left:94%"><span>now</span></button>
+      </div>
+      <p id="rdmsg" aria-live="polite">Click a point on the road.</p>
+    </div>
+  </div>
+</section>
+
+<!-- 8. Human safaris -->
+<section class="slide" style="--accent: var(--alert)">
+  <div class="text">
+    <p class="kicker in">What the road carries</p>
+    <h2 class="in" style="--d:1">"Human safaris"</h2>
+    <div class="bar in" style="--d:2"></div>
+    <ul class="dots">
+      <li class="in" style="--d:3">Convoys of vehicles travel the road through the reserve, carrying tourists who hope to see Jarawa people. The practice has been widely documented and is known, in the campaign against it, as the <strong>human safari</strong>.</li>
+      <li class="in" style="--d:4">In <strong>2012</strong>, a video published by <em>The Observer</em> appeared to show Jarawa women being instructed to dance for tourists. It caused an international outcry; the Indian government ordered a crackdown; the matter was raised in the British Parliament; a police officer was arrested.</li>
+      <li class="in" style="--d:5">The islands receive on the order of <strong>200,000 tourists a year</strong>. Rules on photographing or interacting with Jarawa people exist and are repeatedly reported as being broken.</li>
+      <li class="in" style="--d:6">The harms are not only about dignity. Every vehicle is a disease vector, every handout changes an economy, and documented cases include sexual exploitation of Jarawa women.</li>
+    </ul>
+    <p class="in" style="--d:7">The reason this module shows you no photographs should now be clear. A picture of a Jarawa person taken from a moving vehicle is not a document. It is the thing itself.</p>
+  </div>
+  <div class="stage">
+    <div class="panel in" style="--d:3; width:34vw">
+      <strong>Why does it keep happening?</strong>
+      <p class="note" style="margin:.3rem 0 0">Because there is money in it, the road is the practical route north, enforcement is thin, and the demand does not go away. Tour operators do not advertise "human safari"; they advertise a drive, and what happens on it is left to chance and to drivers.</p>
+      <p style="margin:.5rem 0 0"><strong>Discuss:</strong> who is responsible here — the tourist in the vehicle, the operator, the local administration, the Supreme Court, or the demand itself? Rank them, and defend your order.</p>
+    </div>
+  </div>
+</section>
+
+<!-- 9. The policy question -->
+<section class="slide" data-tr="left" style="--accent: var(--amber)">
+  <div class="text">
+    <p class="kicker in">The hardest question in this course</p>
+    <h2 class="in" style="--d:1">Isolation, integration, or self-determination?</h2>
+    <div class="bar in" style="--d:2"></div>
+    <p class="in" style="--d:3">In the course of the litigation, India's Supreme Court reportedly asked the island authorities a blunt question: do you intend to keep the Jarawa isolated, or to attempt to integrate them into mainstream society?</p>
+    <p class="in" style="--d:4">That is a real policy fork, and every option carries a cost. Work through the three in the panel before deciding what you think.</p>
+    <p class="note in" style="--d:5">India's official Jarawa policy favours allowing the Jarawa to decide their own pace of engagement, rather than assimilation. The gap between a written policy and a road carrying tourists through a reserve is the subject of this entire module.</p>
+  </div>
+  <div class="stage">
+    <div class="panel in" style="--d:3; width:35vw">
+      <strong>Three policies. Pick one.</strong>
+      <div class="optcols" id="optcols" style="margin-top:.5rem">
+        <div class="oc" data-o="0"><h5>Isolate</h5><p>Close the road, enforce the reserve, no contact</p></div>
+        <div class="oc" data-o="1"><h5>Integrate</h5><p>Schools, healthcare, citizenship, the mainstream</p></div>
+        <div class="oc" data-o="2"><h5>Let them choose</h5><p>Protect the land, follow their pace</p></div>
+      </div>
+      <p id="delmsg" aria-live="polite">Click each one. None of them is free.</p>
+    </div>
+  </div>
+</section>
+
+<!-- 10. The language -->
+<section class="slide" style="--accent: var(--sea)">
+  <div class="text wide">
+    <p class="kicker in">History and record</p>
+    <h2 class="in" style="--d:1">A language we have barely written down</h2>
+    <div class="bar in" style="--d:2"></div>
+    <p class="in" style="--d:3">Click each moment to explore it.</p>
+    <div class="tl in" id="tl" style="--d:4">
+      <button class="ev" style="--ec: var(--forest)"><span class="yr">deep past</span><small>Two families</small></button>
+      <button class="ev" style="--ec: #a4cfa8"><span class="yr">1858</span><small>The penal colony</small></button>
+      <button class="ev" style="--ec: var(--road)"><span class="yr">1970s</span><small>The road</small></button>
+      <button class="ev" style="--ec: #e9b58e"><span class="yr">1998</span><small>Contact</small></button>
+      <button class="ev" style="--ec: var(--alert)"><span class="yr">2002–13</span><small>The courts</small></button>
+      <button class="ev" style="--ec: var(--sea)"><span class="yr">today</span><small>A school, a question</small></button>
+    </div>
+    <div class="panel in" id="tltext" style="--d:5" aria-live="polite"></div>
+  </div>
+</section>
+
+<!-- 11. Quiz -->
+<section class="slide" style="--accent: var(--sea)">
+  <div class="text wide center">
+    <p class="kicker in">Review in the forest</p>
+    <h2 class="in" style="--d:1">Quick quiz!</h2>
+    <div class="bar in" style="--d:2"></div>
+    <div class="quizgrid">
+      <div class="quiz panel in" style="--d:3" data-right="Yes — Ang, meaning roughly 'we people'. 'Jarawa' is a neighbouring people's word." data-wrong="Hint: it isn't the word in the title.">
+        <div class="q">What do the Jarawa call themselves?</div>
+        <div class="options"><button class="opt">Jarawa</button><button class="opt" data-correct>Ang</button><button class="opt">Önge</button></div>
+        <div class="feedback"></div>
+      </div>
+      <div class="quiz panel in" style="--d:4" data-right="Right — Great Andamanese and Ongan, with no demonstrated relationship to each other." data-wrong="Hint: more than one, in an archipelago 350 km long.">
+        <div class="q">How many unrelated language families did the Andamans hold?</div>
+        <div class="options"><button class="opt">One</button><button class="opt" data-correct>Two</button><button class="opt">Six</button></div>
+        <div class="feedback"></div>
+      </div>
+      <div class="quiz panel in" style="--d:5" data-right="Correct — the Supreme Court ordered it closed in 2002 and it is still in use." data-wrong="Hint: the order is older than most of this class.">
+        <div class="q">What happened to the court order to close the Andaman Trunk Road?</div>
+        <div class="options"><button class="opt">It was carried out</button><button class="opt">It was never issued</button><button class="opt" data-correct>It was issued and not enforced</button></div>
+        <div class="feedback"></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- 12. Closing -->
+<section class="slide end" style="--accent: var(--sea)">
+  <div class="text">
+    <h1 class="in" style="font-size:4.4rem">Ang</h1>
+    <p class="lead in" style="--d:1; margin-top:.8rem">"We people." Thank you! Questions?</p>
+    <p class="quote in" style="--d:2">Their neighbours met the outside world in 1858 and were almost entirely destroyed by it within two generations, taking ten languages with them. The Jarawa kept the world out until 1998. Then somebody built a road.</p>
+    <p class="note in" style="--d:3">Of all the languages in this course, this is the one whose future is least decided — and the one where the decisions are being made right now, by people who are not Jarawa.</p>
+  </div>
+  <details class="fine in" style="--d:4">
+    <summary>Sources &amp; image credits</summary>
+    <div class="box">
+      <h4>Sources</h4>
+      <ul>
+        <li><a href="https://en.wikipedia.org/wiki/Jarawa_language_(Andaman_Islands)">Jarawa language, Andaman Islands (Wikipedia)</a> — Ongan classification, speaker figures, the reserve</li>
+        <li><a href="https://en.wikipedia.org/wiki/Jarawas_(Andaman_Islands)">Jarawas, Andaman Islands (Wikipedia)</a> — history, the road, contact with settlements, <em>aao</em> and <em>aetaho</em></li>
+        <li><a href="https://en.wikipedia.org/wiki/%C3%96nge_language">Önge language (Wikipedia)</a> — the Jarawa–Önge cognate sets</li>
+        <li><a href="https://www.andamanese.org/other/jarawa">Andamanese.org (Anvita Abbi): Jarawa</a> — the name <em>Ang</em>, the Aka-Bea origin of "Jarawa", the school, the safaris</li>
+        <li>Blevins, "A long lost sister of Proto-Austronesian? Proto-Ongan, mother of Jarawa and Onge of the Andaman Islands," <em>Oceanic Linguistics</em> 46(1) (2007)</li>
+        <li><a href="https://www.theguardian.com/world/2012/jan/14/andaman-jarawa-india-human-safari">The Guardian (2012): India orders crackdown on "human safaris" in the Andaman Islands</a></li>
+        <li><a href="https://www.ibtimes.com/jarawa-tribe-human-safari-scandal-andaman-reaches-british-parliament-new-video-surfaces-406122">International Business Times: the human-safari scandal reaches the British Parliament</a></li>
+        <li><a href="https://www.thedailybeast.com/in-andaman-islands-indian-court-allows-return-of-a-human-safari/">"In Andaman Islands, Indian court allows return of a human safari"</a> — the 2013 interim ban and its reversal</li>
+        <li><a href="https://icmagazine.org/authorities-arrest-a-police-officer-suspected-of-forcing-jarawa-women-to-dance-for-tourists/">Intercontinental Cry: an update on the saga of "human safaris"</a> — the Supreme Court's question about isolation versus assimilation, and official Jarawa policy</li>
+        <li><a href="https://en.wikipedia.org/wiki/Society_for_Andaman_and_Nicobar_Ecology">Society for Andaman and Nicobar Ecology (Wikipedia)</a> — the litigation and the 2002 order</li>
+        <li><a href="https://en.wikipedia.org/wiki/Great_Andamanese_languages">Great Andamanese languages (Wikipedia)</a> — the collapse from the 1850s and the death of Boa Sr in 2010</li>
+        <li><a href="https://www.survivalinternational.org/tribes/jarawa">Survival International: the Jarawa</a></li>
+      </ul>
+      <h4>Images (Wikimedia Commons)</h4>
+      <ul id="credits"></ul>
+    </div>
+  </details>
+</section>
+
+</main>
+
+<nav class="controls">
+  <button id="prev" aria-label="Previous slide">‹</button>
+  <span id="counter">1 / 12</span>
+  <button id="next" aria-label="Next slide">›</button>
+  <button id="fs" aria-label="Fullscreen">⤢</button>
+</nav>
+<p class="hint">Use ← → to move. Press F for fullscreen.</p>
+
+<!-- Jarawa effects: the convoy, two families, cognates, the road stepper, the policy fork -->
+<script>
+(function () {
+  /* ---------- Background convoy ---------- */
+  var conv = document.querySelector("#andaman .convoy");
+  var CV = [];
+  for (var k = 0; k < 7; k++) {
+    var c = document.createElement("i");
+    c.style.animationDelay = (-k * 1.5) + "s";
+    c.dataset.th = (0.12 + k * 0.11).toFixed(2);
+    conv.appendChild(c);
+    CV.push(c);
+  }
+  function tune(x) {
+    CV.forEach(function (c) { c.style.opacity = parseFloat(c.dataset.th) < x ? ".95" : "0"; });
+  }
+  document.addEventListener("slidechange", function (e) {
+    var x = e.detail.index / (e.detail.total - 1);
+    document.body.style.setProperty("--t", x);
+    tune(x);
+  });
+  tune(0);
+
+  function single(selector, callback) {
+    var grp = document.querySelectorAll(selector);
+    grp.forEach(function (b) {
+      b.addEventListener("click", function () {
+        grp.forEach(function (x) { x.classList.remove("on"); });
+        b.classList.add("on");
+        callback(b);
+      });
+    });
+  }
+
+  /* ---------- Family tree ---------- */
+  var FAM = [
+    ["Great Andamanese", "A family of around ten related languages spoken across the northern and central Andamans. Not related to Ongan in any demonstrated way — despite being spoken on neighbouring islands. Almost all of these languages are now gone."],
+    ["Aka-Bea †", "One of the Great Andamanese languages, spoken in South Andaman, and the source of the word \u201cJarawa.\u201d The Aka-Bea were traditionally enemies of the Ang, which is why their word for them means something like \u201cpeople to be afraid of.\u201d Aka-Bea itself is extinct."],
+    ["Eight more †", "The rest of the Great Andamanese languages — Aka-Bo, Aka-Cari, Aka-Kede, Aka-Kol and others. All extinct. Boa Sr, the last speaker of Bo, died in 2010, and with her went a language that had been spoken on those islands for a very long time."],
+    ["Ongan", "The other family: Jarawa and Önge, and presumably the unknown language of North Sentinel. Some analysts call it Angan, from the peoples' own word for themselves. No demonstrated relatives outside the Andamans — though Juliette Blevins has argued for a deep link with Austronesian, a minority position."],
+    ["Önge", "Spoken on Little Andaman by fewer than a hundred people, nearly all monolingual, in a single settlement. The Önge population also collapsed after contact and resettlement. Jarawa's closest known relative — and itself endangered."],
+    ["Jarawa", "A few hundred speakers, with roughly 70% of the ethnic population recorded as speakers in the early 2000s. Among the least documented languages on earth relative to how much attention its speakers receive — there is far more published about Jarawa <em>people</em> than about Jarawa <em>grammar</em>."],
+    ["Sentinelese?", "The language of North Sentinel Island. We assume it is Ongan because of geography and the peoples' history, but <strong>nobody knows</strong>. The Sentinelese have refused contact, consistently and emphatically, and that refusal has been respected in Indian law. No wordlist exists. It may be the least-known language on the planet."]
+  ];
+  var famsg2 = document.getElementById("famsg2");
+  single(".fnode", function (b) {
+    var F = FAM[Number(b.dataset.f)];
+    famsg2.innerHTML = "<strong style='color:var(--sea)'>" + F[0] + "</strong><br>" + F[1];
+  });
+
+  /* ---------- Cognates ---------- */
+  var COG = [
+    ["water", "iŋ", "iŋe", "The simplest kind of evidence: a core word, almost identical in both languages. Water is not a word you borrow from your neighbours."],
+    ["coconut", "dag", "dage", "The same correspondence again — Önge keeps a final vowel, Jarawa has lost it. One pattern repeating across the vocabulary is what turns \u201cthese look similar\u201d into \u201cthese are related.\u201d"],
+    ["foreigner", "inen", "inene", "The same pattern once more. And consider what it means that both languages inherited a word for <em>outsider</em> from their common ancestor: the category existed long before any European ship arrived."],
+    ["resin torch", "pone", "—", "A shared item of forest technology. Vocabulary like this tells you about the ancestral way of life as well as the ancestral language — the same reasoning used for the Nivkh fish words and the Uilta reindeer terms."]
+  ];
+  var cg = document.getElementById("cgrid"), cgmsg = document.getElementById("cgmsg");
+  COG.forEach(function (c) {
+    ["gl3", "ja", "on2"].forEach(function (cls, j) {
+      var d = document.createElement("div");
+      d.className = "rw " + cls;
+      d.textContent = c[j];
+      d.addEventListener("click", function () { cgmsg.innerHTML = c[3]; });
+      cg.appendChild(d);
+    });
+  });
+  cgmsg.innerHTML = COG[0][3];
+
+  /* ---------- The road ---------- */
+  var ROAD = [
+    ["The 1970s — the road is built", "The Andaman Trunk Road is cut through the Jarawa reserve, land that had been set aside to protect them. It pushes the Middle Andaman Jarawa toward the west coast and splits their forest. Reports describe the construction as having been carried out illegally, over objections."],
+    ["2002 — the Supreme Court orders it closed", "After public-interest litigation brought by environmental and tribal-rights organisations, India's Supreme Court orders the section of the road through the reserve closed, prohibits new construction in Jarawa territory, and blocks planned extensions. This is a binding order of the country's highest court."],
+    ["2012 — the video", "<em>The Observer</em> publishes footage appearing to show Jarawa women being made to dance for tourists. International outrage follows; the Indian government orders a crackdown; the matter is raised in the British Parliament; a police officer is arrested. The road is still open — ten years after the order to close it."],
+    ["2013 — banned, then not", "In January the Supreme Court issues an interim order banning tourists from using the road. Traffic drops sharply and campaigners are hopeful. Within months the position is reversed, and the court asks the island administration whether it intends to keep the Jarawa isolated or to integrate them."],
+    ["Now — still open", "The road remains in use. The islands receive something like 200,000 tourists a year. Rules governing contact with Jarawa people exist and are repeatedly reported as broken. Twenty-plus years after an order of the Supreme Court of India, the highway through the reserve carries traffic every day."]
+  ];
+  var rdmsg = document.getElementById("rdmsg");
+  single(".rstop", function (b) {
+    var R = ROAD[Number(b.dataset.r)];
+    rdmsg.innerHTML = "<strong style='color:var(--amber)'>" + R[0] + "</strong><br>" + R[1];
+  });
+
+  /* ---------- Policy fork ---------- */
+  var POL = [
+    ["Isolate",
+     "<strong>The case for:</strong> it is the only policy with a track record of keeping a small, recently contacted population alive. Disease is the proven killer, and the road is the vector. Close it, enforce the reserve, and the Jarawa get to carry on.<br><br><strong>The cost:</strong> it means deciding, on their behalf, that they may not have hospitals, schooling or trade — and it treats a living people as something to be preserved. It also burdens settler communities who rely on the road."],
+    ["Integrate",
+     "<strong>The case for:</strong> the Jarawa are Indian citizens. Citizens are entitled to medicine, education and a say in the country they live in. Some Jarawa children have turned up at settler schools asking to be taught. Keeping people out of a state they belong to can be its own kind of harm.<br><br><strong>The cost:</strong> this is precisely what happened to the Great Andamanese after 1858. Integration at speed, into a population a thousand times larger, has historically meant disease, dependency, exploitation and the loss of the language within two generations."],
+    ["Let them choose",
+     "<strong>The case for:</strong> this is India's stated policy — protect the territory, limit intrusion, and let the Jarawa set the pace of their own engagement. It respects them as decision-makers rather than as either specimens or wards.<br><br><strong>The cost:</strong> it is the hardest to actually do. \u201cTheir pace\u201d means nothing if a road brings two hundred thousand tourists a year past their forest, if poachers empty it, and if the choice is really between hunger and the highway. Self-determination requires conditions in which a free choice is possible — and those conditions are what is missing."]
+  ];
+  var delmsg = document.getElementById("delmsg");
+  single("#optcols .oc", function (b) {
+    var P = POL[Number(b.dataset.o)];
+    delmsg.innerHTML = P[1];
+  });
+
+  /* ---------- Timeline ---------- */
+  var EVENTS = [
+    ["Two families", "The Andamanese have been on these islands for tens of thousands of years — the exact figure is disputed, with estimates ranging from around 26,000 to more than 50,000 years. Over that time two unrelated language families developed: Great Andamanese in the north and centre, Ongan in the south. Neither has a demonstrated relative anywhere else on earth."],
+    ["The penal colony", "The British established a penal settlement at Port Blair in 1858. The Great Andamanese made contact and were destroyed by introduced disease within a few decades; by 1961 nineteen remained. The Jarawa responded differently: they kept intruders out, by force, for the next 140 years. That decision is why there is a Jarawa module in this course at all."],
+    ["The road", "In the 1970s the Andaman Trunk Road was driven through the Jarawa reserve, splitting the forest and pushing communities westward. It connected settler towns and opened the reserve to traffic, poaching and eventually tourism. Everything in the rest of this timeline follows from it."],
+    ["Contact", "From the mid-1990s Jarawa individuals began approaching settlements, and from 1998 contact became regular and friendly. Measles outbreaks followed. Today some Jarawa use markets, jetties and hospitals near the road, and a government school offers Jarawa children literacy — reportedly in their own language, which is itself a contested decision."],
+    ["The courts", "The Supreme Court ordered the road closed in 2002. It was not closed. In 2012 the human-safari video triggered international pressure; in January 2013 the court banned tourist use of the road, then reversed course within months — and asked the island authorities whether they intended to isolate or assimilate the Jarawa."],
+    ["A school, a question", "The Jarawa now number a few hundred. Their language has no published dictionary and only a handful of academic descriptions, while photographs of them circulate worldwide. Whether Jarawa survives as a language depends almost entirely on decisions about land, disease and traffic — not on linguistics."]
+  ];
+  var tlText = document.getElementById("tltext");
+  var evs = document.querySelectorAll("#tl .ev");
+  function setEvent(i) {
+    evs.forEach(function (e, k) { e.classList.toggle("on", k === i); });
+    tlText.innerHTML = '<strong style="color:var(--sea); font-size:1.2rem">' + EVENTS[i][0] + "</strong><br>" + EVENTS[i][1];
+  }
+  evs.forEach(function (e, i) { e.addEventListener("click", function () { setEvent(i); }); });
+  setEvent(0);
+})();
+</script>
+<script src="../assets/deck.js"></script>
+</body>
+</html>
