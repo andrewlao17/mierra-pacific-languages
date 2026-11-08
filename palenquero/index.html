@@ -1,0 +1,666 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Palenquero: The Language of the First Free Town</title>
+<link rel="stylesheet" href="../assets/deck.css">
+<style>
+@import url("https://fonts.googleapis.com/css2?family=Zilla+Slab:wght@600;700&family=Inter:wght@400;500;700;900&display=swap");
+
+/* ---------- Palenquero theme: Caribbean Colombia, palisade, drums ---------- */
+:root {
+  --bg: #15100e;
+  --ink: #f6f0e4;
+  --muted: #d6cbb8;
+  --line: rgba(246, 240, 228, .22);
+  --panel: rgba(24, 18, 14, .86);
+  --mango: #f0a838;
+  --hibiscus: #d23c38;
+  --palm: #4a9158;
+  --indigo: #3a4a94;
+  --terra: #b4542c;
+  --rose: #d23c38;
+  --accent: var(--mango);
+  --serif: "Zilla Slab", Georgia, serif;
+  --sans: "Inter", system-ui, sans-serif;
+  --t: 0;
+  font-size: clamp(12px, 1.3vw, 28px);
+}
+h1 { font-family: var(--serif); font-size: 5.4rem; font-weight: 700; line-height: 1.04; }
+h2 { font-family: var(--serif); font-size: 2.6rem; font-weight: 700; line-height: 1.12; }
+.slide { padding: 7vh 4vw 8vh 6vw; }
+.text { max-width: 44vw; }
+.text.wide { max-width: 86vw; width: 86vw; }
+.stage {
+  right: 5vw; top: 6vh; bottom: 10vh; width: 38vw;
+  display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 1.1rem;
+}
+ul.dots li { font-size: 1.04rem; }
+.speak .line, .card .word { font-family: var(--sans); font-weight: 900; }
+.card.revealed .meaning { max-height: 15rem; }
+.btn { background: var(--mango); color: #2e1f06; }
+.syl.on { background: var(--mango); color: #2e1f06; }
+.loc .disc { border-color: var(--mango); box-shadow: 0 0 0 .55rem rgba(240,168,56,.16), 0 22px 40px rgba(0,0,0,.55); }
+.loc .tint { background: #cfe0a8; }
+.loc .sea { background: #1a5a7a; }
+.loc .tag { background: #1c1410; border-color: var(--mango); }
+.note { font-size: .82rem; color: var(--muted); }
+.quote { font-family: var(--serif); font-size: 1.7rem; font-weight: 700; line-height: 1.32; color: var(--mango); }
+
+/* ---------- Background: hills, palisade building itself, drums ---------- */
+#palenque { position: fixed; inset: 0; z-index: 0; overflow: hidden; pointer-events: none;
+  background: linear-gradient(180deg, #120b14 0%, #2d1a2c 36%, #6b3522 66%, #2a1a12 100%); }
+#palenque .sun { position: absolute; left: 58vw; width: 13vw; height: 13vw; border-radius: 50%;
+  top: calc(40vh - var(--t) * 22vh);
+  background: radial-gradient(circle at 50% 50%, #ffe7ad, #f0a838 52%, rgba(240,168,56,0) 72%);
+  opacity: calc(.45 + var(--t) * .55); transition: top 1.7s ease, opacity 1.7s ease; }
+#palenque .hills { position: absolute; left: 0; right: 0; bottom: 26vh; height: 26vh; }
+#palenque .hills svg, #palenque .fence svg { width: 100%; height: 100%; display: block; }
+#palenque .ground { position: absolute; left: 0; right: 0; bottom: 0; height: 28vh;
+  background: linear-gradient(180deg, #4a2d1c 0%, #2a1811 100%); }
+#palenque .fence { position: absolute; left: 0; right: 0; bottom: 18vh; height: 18vh;
+  clip-path: inset(0 calc(100% - var(--t) * 100%) 0 0); transition: clip-path 1.7s cubic-bezier(.3,.8,.3,1); }
+#palenque .palms { position: absolute; left: 0; right: 0; bottom: 24vh; height: 26vh; opacity: .9; }
+#palenque .palms svg { width: 100%; height: 100%; }
+#palenque .shade { position: absolute; inset: 0;
+  background: linear-gradient(90deg, rgba(8,5,4,.94) 0%, rgba(8,5,4,.74) 52%, rgba(8,5,4,.22) 100%); }
+
+/* ---------- Photos ---------- */
+.board { position: relative; margin: 0; width: var(--w, 19vw); padding: .6rem .6rem .5rem;
+  background: #f1e9d8; border-radius: .2rem; box-shadow: 0 18px 34px rgba(0,0,0,.6);
+  transform: rotate(var(--r, 0deg)); transition: transform .9s cubic-bezier(.2,.8,.2,1), opacity .7s ease; }
+.slide:not(.active) .board { opacity: 0; transform: translateY(46px) rotate(var(--r, 0deg)); }
+.slide.active .board { transition-delay: calc(.4s + var(--d, 0) * .16s); }
+.board img { display: block; width: 100%; aspect-ratio: var(--ar, 4 / 3); object-fit: cover; background: #cfc6b0; }
+.board figcaption { color: #241b12; font-size: .73rem; font-weight: 700; line-height: 1.25; margin: .4rem .1rem 0; font-family: var(--serif); }
+
+/* ---------- Shared controls ---------- */
+.switch { display: flex; gap: .4rem; margin: .4rem 0 .6rem; flex-wrap: wrap; }
+.sbtn { font: inherit; font-weight: 700; font-size: .92rem; color: var(--ink); background: var(--panel);
+  border: 2px solid var(--line); border-radius: .3rem; padding: .25em .9em; cursor: pointer; transition: transform .2s; }
+.sbtn:hover { transform: translateY(-2px); }
+.sbtn.on { background: var(--mango); border-color: var(--mango); color: #2e1f06; }
+.out { min-height: 3.2em; margin-top: .5rem; }
+
+/* ---------- Creole explainer ---------- */
+.steps3 { display: grid; gap: .4rem; }
+.s3 { font: inherit; text-align: left; font-weight: 700; font-size: .88rem; color: var(--ink); background: var(--panel);
+  border: 2px solid var(--line); border-left: 6px solid var(--sc, var(--mango)); border-radius: .3rem; padding: .45em .75em; cursor: pointer; }
+.s3:hover { transform: translateX(3px); }
+#crmsg { min-height: 6em; margin-top: .4rem; }
+
+/* ---------- Sentence machine ---------- */
+.sent2 { text-align: center; font-family: var(--sans); font-weight: 900; font-size: 1.7rem; line-height: 1.5; min-height: 2.6em; }
+.sent2 em { font-style: normal; background: rgba(240,168,56,.3); border-radius: .2rem; padding: 0 .15em; }
+.glossline { text-align: center; color: var(--muted); font-size: .88rem; min-height: 1.4em; }
+.rules3 { display: grid; gap: .35rem; margin-top: .5rem; }
+.r3 { font: inherit; text-align: left; font-weight: 700; font-size: .85rem; color: var(--ink); background: var(--panel);
+  border: 2px solid var(--line); border-left: 6px solid var(--rc); border-radius: .3rem; padding: .35em .7em; cursor: pointer; }
+.r3.done { opacity: .5; }
+.r3 small { display: block; font-weight: 400; font-size: .72rem; color: var(--muted); }
+#smsg2 { min-height: 3.6em; margin-top: .3rem; font-weight: 600; color: var(--mango); }
+
+/* ---------- Word origins ---------- */
+.wordpool { display: flex; gap: .3rem; flex-wrap: wrap; justify-content: center; margin-bottom: .5rem; }
+.wd2 { font: inherit; font-weight: 800; font-size: 1rem; color: var(--ink); background: var(--panel);
+  border: 2px solid var(--line); border-radius: .3rem; padding: .25em .7em; cursor: pointer; }
+.wd2.on { border-color: var(--mango); background: rgba(240,168,56,.2); }
+.wd2.done { opacity: .45; }
+.origins { display: grid; grid-template-columns: repeat(3, 1fr); gap: .35rem; }
+.og { font: inherit; font-weight: 700; font-size: .84rem; color: var(--ink); background: rgba(255,255,255,.05);
+  border: 2px solid var(--line); border-radius: .3rem; padding: .5em .3em; cursor: pointer; text-align: center; }
+.og:hover { border-color: var(--palm); }
+#womsg { min-height: 5em; margin-top: .4rem; }
+
+/* ---------- The ma problem ---------- */
+.opin { display: grid; gap: .4rem; }
+.op { font: inherit; text-align: left; font-weight: 700; font-size: .88rem; color: var(--ink); background: var(--panel);
+  border: 2px solid var(--line); border-radius: .3rem; padding: .45em .75em; cursor: pointer; }
+.op:hover { border-color: var(--hibiscus); }
+.op.on { border-color: var(--hibiscus); background: rgba(210,60,56,.14); }
+#opmsg { min-height: 6em; margin-top: .4rem; }
+
+/* ---------- Timeline ---------- */
+.tl { display: grid; grid-template-columns: repeat(6, 1fr); gap: .55rem; margin-top: 1rem; position: relative; padding-bottom: 1.4rem; }
+.tl::after { content: ""; position: absolute; left: 0; right: 0; bottom: .45rem; height: 3px; border-radius: 3px;
+  background: linear-gradient(90deg, var(--hibiscus), var(--mango), var(--palm)); }
+.ev { font: inherit; text-align: left; color: #1b1510; background: var(--ec); border: 0; border-radius: .3rem;
+  padding: .65rem .75rem; cursor: pointer; transition: transform .25s, box-shadow .25s; }
+.ev:hover { transform: translateY(-4px); }
+.ev.on { box-shadow: 0 0 0 3px #fff, 0 10px 24px rgba(0,0,0,.4); transform: translateY(-6px); }
+.ev .yr { font-family: var(--serif); font-weight: 700; font-size: 1.3rem; line-height: 1; display: block; }
+.ev small { display: block; font-weight: 700; font-size: .76rem; margin-top: .3rem; }
+#tltext { min-height: 5.4rem; margin-top: .4rem; }
+
+/* ---------- Quiz tint ---------- */
+.opt.right { background: var(--palm); }
+.opt.wrong { background: var(--hibiscus); }
+
+@media (max-width: 820px) {
+  .slide { padding: 6vh 6vw 12vh; }
+  h1 { font-size: 3.1rem; }
+  .text, .text.wide { max-width: none; width: auto; }
+  .stage { position: relative; inset: auto; width: 100%; margin-top: 1.5rem; }
+  .board { width: 74vw; }
+  .stage .panel, .stage .speak { width: 100% !important; max-width: none !important; }
+  .tl { grid-template-columns: repeat(2, 1fr); }
+  .origins { grid-template-columns: 1fr; }
+}
+</style>
+</head>
+<body data-map="BlankMap-Equirectangular.svg">
+
+<div id="palenque" aria-hidden="true">
+  <div class="sun"></div>
+  <div class="hills">
+    <svg viewBox="0 0 1600 260" preserveAspectRatio="none">
+      <path d="M0 260 V170 Q200 100 420 158 Q640 212 860 142 Q1080 76 1300 150 Q1450 198 1600 160 V260 Z" fill="#2e2a1c"/>
+    </svg>
+  </div>
+  <div class="palms">
+    <svg viewBox="0 0 1600 260" preserveAspectRatio="none">
+      <g stroke="#1d2a18" stroke-width="9" fill="none" stroke-linecap="round">
+        <path d="M160 260 q-14 -90 4 -140"/><path d="M164 120 q-50 -34 -86 -16 M164 118 q44 -40 88 -16 M164 116 q-30 -48 -74 -54 M164 116 q34 -50 80 -50"/>
+        <path d="M1320 260 q16 -84 -2 -128"/><path d="M1318 132 q-46 -30 -80 -14 M1318 130 q42 -36 82 -14 M1318 128 q-28 -44 -68 -50"/>
+      </g>
+    </svg>
+  </div>
+  <div class="fence">
+    <svg viewBox="0 0 1600 180" preserveAspectRatio="none">
+      <g fill="#3d2616">
+        <path d="M20 180 V40 l14 -22 l14 22 V180 Z"/><path d="M70 180 V26 l14 -22 l14 22 V180 Z"/><path d="M120 180 V46 l14 -22 l14 22 V180 Z"/>
+        <path d="M170 180 V30 l14 -22 l14 22 V180 Z"/><path d="M220 180 V48 l14 -22 l14 22 V180 Z"/><path d="M270 180 V28 l14 -22 l14 22 V180 Z"/>
+        <path d="M320 180 V44 l14 -22 l14 22 V180 Z"/><path d="M370 180 V32 l14 -22 l14 22 V180 Z"/><path d="M420 180 V46 l14 -22 l14 22 V180 Z"/>
+        <path d="M470 180 V26 l14 -22 l14 22 V180 Z"/><path d="M520 180 V42 l14 -22 l14 22 V180 Z"/><path d="M570 180 V30 l14 -22 l14 22 V180 Z"/>
+        <path d="M620 180 V48 l14 -22 l14 22 V180 Z"/><path d="M670 180 V28 l14 -22 l14 22 V180 Z"/><path d="M720 180 V44 l14 -22 l14 22 V180 Z"/>
+        <path d="M770 180 V34 l14 -22 l14 22 V180 Z"/><path d="M820 180 V46 l14 -22 l14 22 V180 Z"/><path d="M870 180 V26 l14 -22 l14 22 V180 Z"/>
+        <path d="M920 180 V42 l14 -22 l14 22 V180 Z"/><path d="M970 180 V30 l14 -22 l14 22 V180 Z"/><path d="M1020 180 V48 l14 -22 l14 22 V180 Z"/>
+        <path d="M1070 180 V28 l14 -22 l14 22 V180 Z"/><path d="M1120 180 V44 l14 -22 l14 22 V180 Z"/><path d="M1170 180 V32 l14 -22 l14 22 V180 Z"/>
+        <path d="M1220 180 V46 l14 -22 l14 22 V180 Z"/><path d="M1270 180 V26 l14 -22 l14 22 V180 Z"/><path d="M1320 180 V42 l14 -22 l14 22 V180 Z"/>
+        <path d="M1370 180 V30 l14 -22 l14 22 V180 Z"/><path d="M1420 180 V48 l14 -22 l14 22 V180 Z"/><path d="M1470 180 V28 l14 -22 l14 22 V180 Z"/>
+        <path d="M1520 180 V44 l14 -22 l14 22 V180 Z"/>
+      </g>
+      <rect x="0" y="86" width="1600" height="10" fill="#4a2f1b"/>
+    </svg>
+  </div>
+  <div class="ground"></div>
+  <div class="shade"></div>
+</div>
+<div class="progress"></div>
+
+<main>
+
+<!-- 1. Title -->
+<section class="slide" style="--accent: var(--mango)">
+  <div class="text">
+    <p class="kicker in">Rare Languages of the Asia-Pacific · Module 33 · the Spanish connection</p>
+    <h1 class="in" style="--d:1">Palenquero</h1>
+    <p class="in" style="--d:2; font-size:1.35rem; font-weight:900; color:var(--mango)">Lengua ri Palenge · San Basilio de Palenque, Colombia</p>
+    <div class="bar in" style="--d:3"></div>
+    <p class="lead in" style="--d:4">Almost every word comes from Spanish. Almost no Spanish speaker can understand a sentence of it. And the town that speaks it bought its freedom from the Spanish Crown in 1691</p>
+    <p class="muted in" style="--d:5">Watch the background: the palisade that gave the place its name is going up.</p>
+  </div>
+  <div class="stage">
+    <figure class="board" style="--w:24vw; --r:1.5deg; --d:0">
+      <img data-wiki="San Basilio de Palenque" data-width="1200" alt="San Basilio de Palenque, Colombia">
+      <figcaption>San Basilio de Palenque — often described as the first free town in the Americas</figcaption>
+    </figure>
+  </div>
+</section>
+
+<!-- 2. Where and who -->
+<section class="slide" data-tr="left" style="--accent: var(--palm)">
+  <div class="text">
+    <p class="kicker in">Where and who</p>
+    <h2 class="in" style="--d:1">A town built behind a fence</h2>
+    <div class="bar in" style="--d:2"></div>
+    <ul class="dots">
+      <li class="in" style="--d:3">A <em>palenque</em> was a fortified village built by people who escaped slavery. Dozens existed across the Spanish Americas. <strong>San Basilio de Palenque</strong>, about 60 km inland from Cartagena, is the one that survived.</li>
+      <li class="in" style="--d:4">Around <strong>1599</strong>, a group led by <strong>Benkos Biohó</strong> escaped into the forest and founded a settlement. Biohó declared himself king, the palenque drew more escapees, and the Spanish could not dislodge it.</li>
+      <li class="in" style="--d:5">In <strong>1691</strong> the Spanish Crown issued a royal decree granting the people of Palenque their freedom — on the condition that they stop taking in new escapees. Freedom, bought with a hard bargain.</li>
+      <li class="in" style="--d:6">The town has a few thousand people. Estimates of Palenquero put roughly <strong>2,000–3,000</strong> with full command and more with passive understanding. There are no monolingual speakers left — everyone also speaks Spanish.</li>
+    </ul>
+    <p class="note in" style="--d:7">Speakers do not usually call it Palenquero. They call it <span class="hl">Lengua</span> — "the language" — or <em>lengua ri Palenge</em>.</p>
+  </div>
+  <div class="stage">
+    <div class="loc" data-lat="10.1" data-lon="-75.2" data-zoom="5" style="--s:13vw; --d:0">
+      <div class="disc"><div class="lmap"></div><div class="tint"></div><div class="sea"></div><span class="pinpt"></span></div>
+      <span class="tag">San Basilio de Palenque, Bolívar, Colombia</span>
+    </div>
+    <div class="panel in" style="--d:4; width:34vw">
+      <strong>Why Cartagena matters</strong>
+      <p class="note" style="margin:.3rem 0 0">Cartagena was one of the two main ports of the Spanish slave trade in the Americas. Hundreds of thousands of enslaved Africans passed through it — and the people who escaped into the hills behind it brought their languages with them.</p>
+      <p class="note" style="margin:.4rem 0 0">Research over the past forty years points to one African language above all in Palenque's background: <strong>Kikongo</strong>, from west-central Africa. Possibly the only significant one.</p>
+    </div>
+  </div>
+</section>
+
+<!-- 3. What a creole is -->
+<section class="slide" data-tr="zoom" style="--accent: var(--mango)">
+  <div class="text">
+    <p class="kicker in">Clear the ground</p>
+    <h2 class="in" style="--d:1">What a creole actually is</h2>
+    <div class="bar in" style="--d:2"></div>
+    <p class="in" style="--d:3">"Creole" is one of the most misused words in popular writing about language. It does not mean broken, simplified, or a dialect of anything. Step through the panel.</p>
+    <p class="in" style="--d:4">The short version: when people with no shared language are thrown together — which is exactly what the slave trade did, deliberately — they build a <strong>pidgin</strong>. When children grow up with that pidgin, they turn it into a full language with full grammar. That is a <strong>creole</strong>.</p>
+    <p class="in" style="--d:5">Palenquero takes nearly all its vocabulary from Spanish, and nearly none of its grammar. That is why a Spanish speaker recognises the words and cannot follow the sentence.</p>
+    <p class="note in" style="--d:6">Compare the Michif module. Michif was made by people fluent in both parents. A creole is made by children out of material that was <em>not</em> a full language when they got it. Different process, different result — and both are complete human languages.</p>
+  </div>
+  <div class="stage">
+    <div class="panel in" style="--d:3; width:35vw">
+      <strong>How a creole forms:</strong>
+      <div class="steps3" id="steps3" style="margin-top:.5rem">
+        <button class="s3" data-s="0" style="--sc: var(--hibiscus)">1 · People with no shared language</button>
+        <button class="s3" data-s="1" style="--sc: var(--terra)">2 · A pidgin appears</button>
+        <button class="s3" data-s="2" style="--sc: var(--mango)">3 · Children arrive</button>
+        <button class="s3" data-s="3" style="--sc: var(--palm)">4 · A full language exists</button>
+      </div>
+      <p id="crmsg" aria-live="polite">Click each step.</p>
+    </div>
+  </div>
+</section>
+
+<!-- 4. Sentence machine -->
+<section class="slide" style="--accent: var(--mango)">
+  <div class="text wide center">
+    <p class="kicker in">Language lab</p>
+    <h2 class="in" style="--d:1">Turn Spanish into Palenquero</h2>
+    <div class="bar in" style="--d:2"></div>
+    <p class="in" style="--d:3; max-width:70vw; margin:0 auto">The words will barely change. The grammar changes completely. Start from a Spanish sentence and apply the rules of Lengua, one at a time.</p>
+    <div class="panel in" style="--d:4; max-width:56vw; margin:.9rem auto 0">
+      <div class="switch" id="sentsw" style="justify-content:center">
+        <button class="sbtn on" data-s="0">"You are not my mother"</button>
+        <button class="sbtn" data-s="1">"our house"</button>
+        <button class="sbtn" data-s="2">"the old woman"</button>
+      </div>
+      <div class="sent2" id="sent2"></div>
+      <div class="glossline" id="gloss3"></div>
+      <div class="rules3" id="rules3"></div>
+      <p id="smsg2" aria-live="polite"></p>
+    </div>
+    <p class="note in" style="--d:6; margin-top:.5rem">Negation at the very end of the sentence is the single most striking feature of Palenquero, and it is a pattern found in parts of west-central Africa — not in Spanish.</p>
+  </div>
+</section>
+
+<!-- 5. Word origins -->
+<section class="slide" data-tr="left" style="--accent: var(--palm)">
+  <div class="text">
+    <p class="kicker in">Where the words come from</p>
+    <h2 class="in" style="--d:1">Three sources in one vocabulary</h2>
+    <div class="bar in" style="--d:2"></div>
+    <p class="in" style="--d:3">The everyday vocabulary of Palenquero is overwhelmingly Spanish, reshaped by sound changes — <em>posada</em> became <strong>posá</strong>, <em>mujer</em> became <strong>mujé</strong>, <em>perro</em> became <strong>pelo</strong>.</p>
+    <p class="in" style="--d:4">Around <strong>300 words</strong> of African origin have been identified, most traced to <strong>Kikongo</strong>. And a handful look Portuguese — a trace of the Portuguese-run slave trade that brought people to Cartagena.</p>
+    <p class="in" style="--d:5">Sort the words in the panel. Some will surprise you.</p>
+    <p class="note in" style="--d:6">Note which words stayed African: the plural marker, two pronouns, words for cattle and for child. Those are not casual loans. A people's own pronouns are among the last things to be replaced.</p>
+  </div>
+  <div class="stage">
+    <div class="panel in" style="--d:3; width:35vw">
+      <strong>Click a word, then its source:</strong>
+      <div class="wordpool" id="wordpool" style="margin-top:.5rem"></div>
+      <div class="origins" id="origins">
+        <button class="og" data-o="sp">Spanish</button>
+        <button class="og" data-o="ki">Kikongo</button>
+        <button class="og" data-o="pt">Portuguese</button>
+      </div>
+      <p id="womsg" aria-live="polite">Nine words. Guess before you click.</p>
+    </div>
+  </div>
+</section>
+
+<!-- 6. Lengua and stigma -->
+<section class="slide" style="--accent: var(--hibiscus)">
+  <div class="text">
+    <p class="kicker in">Why it nearly died</p>
+    <h2 class="in" style="--d:1">"Don't speak like that"</h2>
+    <div class="bar in" style="--d:2"></div>
+    <ul class="dots">
+      <li class="in" style="--d:3">Through most of the 20th century, Palenqueros who left the village for Cartagena were mocked for how they spoke. The language was treated as evidence of being rural, Black and uneducated — three things Colombian society punished.</li>
+      <li class="in" style="--d:4">So parents did the rational thing: they stopped passing it on. By the <strong>mid-1980s</strong>, linguists visiting Palenque were convinced the language was finished. One who first came in 1985 has described attitudes toward anything Black as so negative that change seemed impossible.</li>
+      <li class="in" style="--d:5">That is the standard mechanism, and you have now seen it in a dozen modules: a language dies because speaking it costs you something, and parents love their children.</li>
+      <li class="in" style="--d:6">What makes Palenquero unusual is what happened next.</li>
+    </ul>
+    <p class="note in" style="--d:7">By the time the revival began, there were already no monolingual Palenquero speakers left. Every speaker was and is bilingual, and switches between Lengua and Spanish depending on who is present.</p>
+  </div>
+  <div class="stage">
+    <div class="cards in" style="--d:3; grid-template-columns:1fr; width:34vw">
+      <div class="card" style="--cardc: var(--hibiscus)"><div class="word">Why was it stigmatised?</div><div class="meaning">Because it marked you as Palenquero, and being Palenquero meant being descended from enslaved Africans in a society organised around that fact. The language was never the real target. It was just the most audible sign.</div><div class="tap">click to reveal</div></div>
+      <div class="card" style="--cardc: var(--mango)"><div class="word">What changed the attitude?</div><div class="meaning">Three things, researchers suggest. A boxer — <strong>Antonio Cervantes, "Kid Pambelé"</strong>, from Palenque, who became a world champion in the 1970s and made the town famous. An ethnoeducation movement from the late 1970s onward. And UNESCO's 2005 declaration, which turned the language from an embarrassment into an internationally recognised treasure.</div><div class="tap">click to reveal</div></div>
+      <div class="card" style="--cardc: var(--palm)"><div class="word">Did it work?</div><div class="meaning">Remarkably, yes — in attitude. Palenquero is now a source of pride, taught in the local school from preschool upward, and used publicly. In actual fluent use among young people, the picture is more complicated, which is slide ten.</div><div class="tap">click to reveal</div></div>
+    </div>
+  </div>
+</section>
+
+<!-- 7. Culture -->
+<section class="slide" data-tr="zoom" style="--accent: var(--terra)">
+  <div class="text">
+    <p class="kicker in">Cultural significance</p>
+    <h2 class="in" style="--d:1">Drums, age-sets and nine nights</h2>
+    <div class="bar in" style="--d:2"></div>
+    <ul class="dots">
+      <li class="in" style="--d:3">The great ceremony is the <span class="hl">lumbalú</span>, the funeral rite. The community is called together by the <em>pechiche</em> drum, and there follow <strong>nine days and nights</strong> of songs, dances and laments for the dead. Some of its chants preserve African language fragments that are not used anywhere else in daily speech.</li>
+      <li class="in" style="--d:4">Palenque society is organised partly by <span class="hl">kuagro</span>: groups of people of the same age who grow up together and keep mutual obligations for life. Your kuagro is a second family — and the word appears in everyday Palenquero sentences.</li>
+      <li class="in" style="--d:5">The village is also famous for its music — the Sexteto Tabalá and the champeta tradition — and for the <em>palenqueras</em>, women who sell fruit from bowls balanced on their heads and have become one of Colombia's best-known images.</li>
+      <li class="in" style="--d:6">In <strong>2005</strong> UNESCO proclaimed the Cultural Space of Palenque de San Basilio a Masterpiece of the Oral and Intangible Heritage of Humanity. The language sits at the centre of that designation.</li>
+    </ul>
+    <p class="note in" style="--d:7">Note how the pieces interlock: the funeral rite carries the oldest language, the age-sets carry the social structure, and the music carries both out into the world.</p>
+  </div>
+  <div class="stage">
+    <div class="speak panel compact in" data-tempo="540" style="--d:3; width:33vw">
+      <div class="line" data-syl="len·gua ri Pa·len·ge"></div><p class="gloss">the language of Palenque — what speakers call it</p>
+      <div class="line" data-syl="ma ngom·be"></div><p class="gloss">cattle — Kikongo word, Kikongo plural marker</p>
+      <button class="btn play">▶ Say them</button>
+      <p class="note" style="margin-top:.5rem">A 1979 photo book about Palenque was titled <em>Ma Ngombe</em> — "the cattle" — after the herding economy that sustained the free town.</p>
+    </div>
+  </div>
+</section>
+
+<!-- 8. Timeline -->
+<section class="slide" style="--accent: var(--mango)">
+  <div class="text wide">
+    <p class="kicker in">History</p>
+    <h2 class="in" style="--d:1">Four centuries behind the fence</h2>
+    <div class="bar in" style="--d:2"></div>
+    <p class="in" style="--d:3">Click each moment to explore it.</p>
+    <div class="tl in" id="tl" style="--d:4">
+      <button class="ev" style="--ec: var(--hibiscus)"><span class="yr">1599</span><small>The escape</small></button>
+      <button class="ev" style="--ec: #e8907a"><span class="yr">1621</span><small>Biohó hanged</small></button>
+      <button class="ev" style="--ec: var(--mango)"><span class="yr">1691</span><small>The royal decree</small></button>
+      <button class="ev" style="--ec: #e9c58c"><span class="yr">1900s</span><small>The shame</small></button>
+      <button class="ev" style="--ec: #a8cf9f"><span class="yr">1970s–92</span><small>The turn</small></button>
+      <button class="ev" style="--ec: var(--palm)"><span class="yr">2005 →</span><small>Masterpiece</small></button>
+    </div>
+    <div class="panel in" id="tltext" style="--d:5" aria-live="polite"></div>
+  </div>
+</section>
+
+<!-- 9. The revival -->
+<section class="slide" data-tr="left" style="--accent: var(--palm)">
+  <div class="text">
+    <p class="kicker in">The extraordinary part</p>
+    <h2 class="in" style="--d:1">A creole that came back</h2>
+    <div class="bar in" style="--d:2"></div>
+    <p class="in" style="--d:3">This is genuinely rare. Creole languages almost never get revived — they are usually the low-prestige partner in a two-language society, and the pressure runs one way only.</p>
+    <ul class="dots">
+      <li class="in" style="--d:4">From <strong>1992</strong>, the public school in Palenque began teaching Palenquero, as part of Colombia's <em>etnoeducación</em> framework. It is now taught from preschool through secondary school.</li>
+      <li class="in" style="--d:5">Community linguists from Palenque itself have compiled lexicons and teaching materials. The UNESCO designation in 2005 brought attention, funding and — crucially — status.</li>
+      <li class="in" style="--d:6">One linguist who had predicted the language's death has written about being wrong. Young people in Palenque now learn Lengua at school and claim it as theirs.</li>
+    </ul>
+    <p class="in" style="--d:7">But a revival is not a restoration. What the school produces is not the same thing the elders speak — and the next slide is about that gap, which is the most interesting problem in this module.</p>
+  </div>
+  <div class="stage">
+    <div class="panel in" style="--d:3; width:34vw">
+      <strong>Who speaks what, now</strong>
+      <p class="note" style="margin:.3rem 0 0"><strong>Elders:</strong> the most fluent speakers, who acquired Lengua as a first language. Many had little formal schooling in Spanish.</p>
+      <p class="note" style="margin:.3rem 0 0"><strong>Middle-aged adults:</strong> raised away from the language in childhood — and then the first cohort through the revival programme in the 1990s.</p>
+      <p class="note" style="margin:.3rem 0 0"><strong>Young people:</strong> learning it at school as a second language, with pride, but not yet using it with each other outside class.</p>
+      <p style="margin:.5rem 0 0">Three different relationships with one language, inside one small town.</p>
+    </div>
+  </div>
+</section>
+
+<!-- 10. The ma problem -->
+<section class="slide" style="--accent: var(--hibiscus)">
+  <div class="text">
+    <p class="kicker in">Think it through</p>
+    <h2 class="in" style="--d:1">The <em>ma</em> problem</h2>
+    <div class="bar in" style="--d:2"></div>
+    <p class="in" style="--d:3">In Palenquero, <strong>ma</strong> goes in front of a noun to mark the plural: <em>ma posá</em>, "houses." It comes from Kikongo, and it is the single most recognisably African piece of grammar in the language.</p>
+    <p class="in" style="--d:4">Researchers studying young learners found something unexpected. Students who learn Palenquero at school use <strong>ma</strong> constantly — including in front of <em>singular</em> nouns, where fluent elders never use it.</p>
+    <p class="in" style="--d:5">For them, <em>ma</em> has stopped being a plural marker. It has become a <strong>badge</strong>: the thing you put in a sentence to show that what you are speaking is Lengua and not Spanish.</p>
+    <p class="in" style="--d:6">So — is that a mistake to be corrected, or a language changing? Take a position in the panel before you read the arguments.</p>
+    <p class="note in" style="--d:7">One explanation researchers offer: the classes focus on vocabulary rather than grammar, with little correction and little conversation between learners and fluent elders. Learners are, in a sense, shadow-boxing.</p>
+  </div>
+  <div class="stage">
+    <div class="panel in" style="--d:3; width:35vw">
+      <strong>What should happen?</strong>
+      <div class="opin" id="opin" style="margin-top:.5rem">
+        <button class="op" data-o="0">It's an error. Teach the rule properly.</button>
+        <button class="op" data-o="1">It's a new variety. Let it be.</button>
+        <button class="op" data-o="2">It depends who gets to decide.</button>
+      </div>
+      <p id="opmsg" aria-live="polite">Pick one, then read the counter-arguments.</p>
+    </div>
+  </div>
+</section>
+
+<!-- 11. Quiz -->
+<section class="slide" style="--accent: var(--mango)">
+  <div class="text wide center">
+    <p class="kicker in">Review in the plaza</p>
+    <h2 class="in" style="--d:1">Quick quiz!</h2>
+    <div class="bar in" style="--d:2"></div>
+    <div class="quizgrid">
+      <div class="quiz panel in" style="--d:3" data-right="Yes — mostly Spanish words, grammar from elsewhere, so it isn't intelligible to Spanish speakers." data-wrong="Hint: think about words versus grammar.">
+        <div class="q">Why can't Spanish speakers understand Palenquero?</div>
+        <div class="options"><button class="opt">The words are African</button><button class="opt" data-correct>The grammar is not Spanish</button><button class="opt">It's spoken too fast</button></div>
+        <div class="feedback"></div>
+      </div>
+      <div class="quiz panel in" style="--d:4" data-right="Right — nu goes at the end: Bo é mamá mí nu." data-wrong="Hint: it's the opposite of where Spanish puts 'no'.">
+        <div class="q">Where does Palenquero put its negative word?</div>
+        <div class="options"><button class="opt">Before the verb</button><button class="opt" data-correct>At the end of the sentence</button><button class="opt">It has none</button></div>
+        <div class="feedback"></div>
+      </div>
+      <div class="quiz panel in" style="--d:5" data-right="Correct — a royal decree in 1691 granted freedom to Palenque de San Basilio." data-wrong="Hint: it happened about ninety years after the town was founded.">
+        <div class="q">When did the Spanish Crown recognise Palenque's freedom?</div>
+        <div class="options"><button class="opt">1599</button><button class="opt" data-correct>1691</button><button class="opt">1851</button></div>
+        <div class="feedback"></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- 12. Closing -->
+<section class="slide end" style="--accent: var(--mango)">
+  <div class="text">
+    <h1 class="in" style="font-size:4.4rem">Lengua suto</h1>
+    <p class="lead in" style="--d:1; margin-top:.8rem">"Our language." Thank you! Questions?</p>
+    <p class="quote in" style="--d:2">People who had been taken from Africa and sold in Cartagena escaped into the hills, built a fence, made a language out of the one their captors spoke, and were still speaking it four hundred years later.</p>
+    <p class="note in" style="--d:3">In 1985 linguists thought it had ten or twenty years left. It is now taught in the village school.</p>
+  </div>
+  <details class="fine in" style="--d:4">
+    <summary>Sources &amp; image credits</summary>
+    <div class="box">
+      <h4>Sources</h4>
+      <ul>
+        <li><a href="https://apics-online.info/surveys/48">Schwegler, "Palenquero," <em>Atlas of Pidgin and Creole Language Structures Online</em></a> — structure, speaker estimates, Kikongo substrate, negation types</li>
+        <li>Schwegler, <em>"Chi ma nkongo": Lengua y rito ancestrales en El Palenque de San Basilio</em> (1996) — the lumbalú chants</li>
+        <li>Lipski, <em>Palenquero and Spanish in Contact: Exploring the Interface</em> (2020)</li>
+        <li><a href="https://colombianistas.org/wordpress/wp-content/themes/pleasant/REC/REC%2047/Ensayos/47_9_Ensayo_Lipski.pdf">Lipski, "Lengua suto é ngande: Palenquero language revitalization"</a> — the <em>ma</em> findings, pronouns, grammar examples</li>
+        <li><a href="https://pure.psu.edu/en/publications/language-revitalization-as-l2-shadow-boxing/">Lipski, "Language revitalization as L2 shadow boxing," <em>Studies in Second Language Acquisition</em></a></li>
+        <li><a href="https://www.cambridge.org/core/journals/language-variation-and-change/article/variable-plural-marking-in-palenquero-creole/6E6BA62752F6F302BA36A7F28CFC2EF7">"Variable plural marking in Palenquero Creole," <em>Language Variation and Change</em></a></li>
+        <li><a href="https://en.wikipedia.org/wiki/Palenquero">Palenquero (Wikipedia)</a> — pronouns, <em>Bo é mamá mí nu</em>, the 300 African-origin words</li>
+        <li><a href="https://en.wikipedia.org/wiki/San_Basilio_de_Palenque">San Basilio de Palenque (Wikipedia)</a> — Benkos Biohó, the 1691 decree, lumbalú</li>
+        <li><a href="https://ich.unesco.org/en/RL/cultural-space-of-palenque-de-san-basilio-00102">UNESCO: Cultural Space of Palenque de San Basilio</a></li>
+        <li><a href="https://www.ram-wan.net/restrepo/documentos/palenque-dossier-unesco.pdf">Palenque de San Basilio: the UNESCO dossier</a> — the 1691 cédula, Kikongo vocabulary, <em>ma ngombe</em></li>
+        <li><a href="https://www.kjzz.org/2016-03-21/content-10257-saving-palenque-how-tiny-colombian-city-revived-its-native-tongue">KJZZ: "Saving Palenque: how a tiny Colombian city revived its native tongue"</a> — Schwegler on the 1985 outlook</li>
+        <li><a href="https://latinarepublic.com/2022/03/17/lengua-ri-palenge-the-mother-tongue-of-americas-first-free-town/">Latina Republic: "Lengua ri Palenge"</a> — gender agreement, postnominal possession, <em>ma</em> examples</li>
+        <li><a href="https://www.researchgate.net/publication/303993818_Sociolinguistic_variation_and_language_change_in_El_Palenque_de_San_Basilio_Colombia">"Sociolinguistic variation and language change in El Palenque de San Basilio"</a> — the three generations</li>
+        <li>Morton (2005) on the sociolinguistics of Palenque; de Granda (1968, 1971) on first identifying Palenquero as a creole</li>
+      </ul>
+      <h4>Images (Wikimedia Commons)</h4>
+      <ul id="credits"></ul>
+    </div>
+  </details>
+</section>
+
+</main>
+
+<nav class="controls">
+  <button id="prev" aria-label="Previous slide">‹</button>
+  <span id="counter">1 / 12</span>
+  <button id="next" aria-label="Next slide">›</button>
+  <button id="fs" aria-label="Fullscreen">⤢</button>
+</nav>
+<p class="hint">Use ← → to move. Press F for fullscreen.</p>
+
+<!-- Palenquero effects: the palisade, creole steps, sentence machine, word origins, the ma debate -->
+<script>
+(function () {
+  document.addEventListener("slidechange", function (e) {
+    document.body.style.setProperty("--t", e.detail.index / (e.detail.total - 1));
+  });
+
+  function single(selector, callback) {
+    var grp = document.querySelectorAll(selector);
+    grp.forEach(function (b) {
+      b.addEventListener("click", function () {
+        grp.forEach(function (x) { x.classList.remove("on"); });
+        b.classList.add("on");
+        callback(b);
+      });
+    });
+  }
+
+  /* ---------- Creole steps ---------- */
+  var CR = [
+    ["People with no shared language", "The transatlantic slave trade deliberately mixed people from different language groups on the same ship and the same plantation, precisely so they could not organise. The result was communities in which adults had no language in common at all."],
+    ["A pidgin appears", "Out of necessity, a makeshift system develops using words from the dominant language — here Spanish — with minimal, improvised grammar. A pidgin is nobody's mother tongue and it is genuinely limited: you can trade in it, but you cannot tell a joke or raise a child in it."],
+    ["Children arrive", "This is the crucial step. Children exposed to a pidgin do not learn it as given. They impose structure on it — regular grammar, tense marking, word order rules — drawing on whatever their parents' languages contributed and on whatever the human language faculty supplies. They build a full language in a generation."],
+    ["A full language exists", "The result is a creole: complete, expressive, rule-governed, with its own grammar that belongs to neither parent. Palenquero has tense and aspect markers, a plural system, a negation rule and pronouns — none of them Spanish. Calling it broken Spanish is like calling French broken Latin."]
+  ];
+  var crmsg = document.getElementById("crmsg");
+  document.querySelectorAll("#steps3 .s3").forEach(function (b) {
+    b.addEventListener("click", function () {
+      var C = CR[Number(b.dataset.s)];
+      crmsg.innerHTML = "<strong style='color:var(--mango)'>" + C[0] + "</strong><br>" + C[1];
+    });
+  });
+
+  /* ---------- Sentence machine ---------- */
+  var SENT = [
+    { start: "Tú no eres mi mamá",
+      gloss: "Spanish: \u201cYou are not my mother\u201d",
+      steps: [
+        ["swap the pronoun", "Bo no eres mi mamá", "Palenquero uses <strong>bo</strong> for \u201cyou\u201d, not Spanish <em>tú</em>. The pronoun set is its own: <em>i, bo, ele</em> in the singular; <em>suto, enú, ané</em> in the plural — and <em>enú</em> and <em>ané</em> come from Kikongo.", "var(--indigo)"],
+        ["simplify the verb", "Bo é mi mamá no", "Palenquero verbs do not conjugate the way Spanish ones do. <em>é</em> covers the job of <em>eres</em>, with separate little words carrying tense and aspect when they are needed.", "var(--terra)"],
+        ["move the possessive", "Bo é mamá mí no", "Possessives go <strong>after</strong> the noun, not before: <em>mamá mí</em>, <em>posá suto</em> (\u201cour house\u201d), <em>moná mi</em> (\u201cmy child\u201d).", "var(--palm)"],
+        ["negate at the end", "Bo é mamá mí nu", "And here is the signature. The negative word <strong>nu</strong> goes at the <em>end of the whole sentence</em> — a pattern found in parts of west-central Africa, and nowhere in Spanish.", "var(--hibiscus)"]
+      ],
+      final: "Bo é mamá mí nu" },
+    { start: "nuestra casa",
+      gloss: "Spanish: \u201cour house\u201d",
+      steps: [
+        ["reshape the noun", "nuestra posá", "Spanish <em>posada</em> became Palenquero <strong>posá</strong> — the kind of sound change that runs right through the vocabulary. <em>mujer</em> → <em>mujé</em>, <em>perro</em> → <em>pelo</em>.", "var(--terra)"],
+        ["move the possessive", "posá nuestra", "Possessor after the noun, again.", "var(--palm)"],
+        ["use the Palenquero pronoun", "posá suto", "\u201cOur\u201d is <strong>suto</strong>, the same form used for \u201cwe\u201d. There is one set of pronouns doing subject, object and possessive duty — no separate possessive forms to learn.", "var(--indigo)"]
+      ],
+      final: "posá suto" },
+    { start: "la mujer vieja",
+      gloss: "Spanish: \u201cthe old woman\u201d",
+      steps: [
+        ["reshape the words", "la mujé vieja", "<em>mujer</em> becomes <strong>mujé</strong>. Palenquero drops a lot of final consonants and reshapes syllables.", "var(--terra)"],
+        ["drop the gender agreement", "mujé bieho", "This is the one that startles Spanish speakers. Palenquero has <strong>no grammatical gender</strong>, so the adjective does not agree — a feminine noun takes what looks like the masculine form. Nothing is \u201cwrong\u201d; the category simply does not exist.", "var(--hibiscus)"],
+        ["make it plural, Palenquero-style", "ma mujé bieho", "To pluralise, put <strong>ma</strong> in <em>front</em> of the noun — once, not on every word. From Kikongo, and the most distinctive grammatical borrowing in the language.", "var(--mango)"]
+      ],
+      final: "ma mujé bieho" }
+  ];
+  var cur = 0, done = 0;
+  function renderSent() {
+    var S = SENT[cur];
+    document.getElementById("sent2").innerHTML = done === 0 ? S.start
+      : "<em>" + S.steps[done - 1][1] + "</em>";
+    document.getElementById("gloss3").textContent = S.gloss;
+    var box = document.getElementById("rules3");
+    box.innerHTML = "";
+    S.steps.forEach(function (st, i) {
+      var b = document.createElement("button");
+      b.className = "r3" + (i < done ? " done" : "");
+      b.style.setProperty("--rc", st[3]);
+      b.innerHTML = "<strong>" + st[0] + "</strong>";
+      b.addEventListener("click", function () {
+        if (i !== done) {
+          document.getElementById("smsg2").textContent = "Apply the rules in order — the next one is \u201c" + S.steps[done][0] + "\u201d.";
+          return;
+        }
+        done++;
+        renderSent();
+        document.getElementById("smsg2").innerHTML = st[2] +
+          (done === S.steps.length ? "<br><strong>Finished: " + S.final + "</strong> — every word recognisable, the sentence unintelligible." : "");
+      });
+      box.appendChild(b);
+    });
+    if (done === 0) document.getElementById("smsg2").textContent = "Click the first rule.";
+  }
+  single("#sentsw .sbtn", function (b) { cur = Number(b.dataset.s); done = 0; renderSent(); });
+  renderSent();
+
+  /* ---------- Word origins ---------- */
+  var WORDS = [
+    ["posá", "house", "sp", "From Spanish <em>posada</em>, \u201cinn, lodging\u201d — reshaped by the sound patterns of Palenquero."],
+    ["mujé", "woman", "sp", "From Spanish <em>mujer</em>. Final consonants drop routinely."],
+    ["pelo", "dog", "sp", "From Spanish <em>perro</em> — not <em>pelo</em> \u201chair\u201d. The r/l shift catches Spanish speakers out constantly."],
+    ["ngombe", "cattle", "ki", "Kikongo. A word that survived because the thing mattered: cattle herding sustained the free town, and a 1979 photo book about Palenque was titled <em>Ma Ngombe</em>."],
+    ["moná", "child", "ki", "Kikongo. Words for close kin are among the most resistant to replacement anywhere in the world."],
+    ["ma", "plural marker", "ki", "Kikongo — a plural prefix, carried into a Spanish-vocabulary language and still doing the same job. The single most important piece of African grammar in Palenquero."],
+    ["ané", "they", "ki", "Kikongo. A whole pronoun, intact. This is the strongest kind of evidence for the substrate: people keep their own pronouns longer than almost anything else."],
+    ["ele", "he / she", "pt", "Probably Portuguese <em>ele</em> rather than Spanish <em>él</em> — a trace of the Portuguese-dominated slave trade that supplied Cartagena."],
+    ["bae", "to go", "pt", "Also traced to Portuguese. A handful of core words in Palenquero point to Portuguese rather than Spanish, which is a clue about the route people travelled before they arrived."]
+  ];
+  var pool = document.getElementById("wordpool"), wpick = null, wdone = 0;
+  var womsg = document.getElementById("womsg");
+  WORDS.forEach(function (w, i) {
+    var b = document.createElement("button");
+    b.className = "wd2";
+    b.innerHTML = w[0] + " <span style='color:var(--muted); font-weight:400; font-size:.78rem'>" + w[1] + "</span>";
+    b.dataset.i = i;
+    b.addEventListener("click", function () {
+      if (b.classList.contains("done")) return;
+      pool.querySelectorAll(".wd2").forEach(function (x) { x.classList.remove("on"); });
+      b.classList.add("on"); wpick = b;
+      womsg.textContent = "Now choose where \u201c" + w[0] + "\u201d comes from.";
+    });
+    pool.appendChild(b);
+  });
+  document.querySelectorAll("#origins .og").forEach(function (o) {
+    o.addEventListener("click", function () {
+      if (!wpick) { womsg.textContent = "Pick a word first."; return; }
+      var W = WORDS[Number(wpick.dataset.i)];
+      if (o.dataset.o === W[2]) {
+        wpick.classList.add("done"); wpick.classList.remove("on"); wdone++;
+        womsg.innerHTML = "<strong style='color:var(--palm)'>Correct.</strong> " + W[3] +
+          (wdone === 9 ? "<br><br><strong>All nine.</strong> Spanish supplies most of the dictionary. Kikongo supplies the grammar and the words closest to the bone." : "");
+        wpick = null;
+      } else {
+        womsg.innerHTML = "<strong style='color:var(--hibiscus)'>Not that one.</strong> Try again — and think about what kind of word it is.";
+      }
+    });
+  });
+
+  /* ---------- The ma debate ---------- */
+  var OPIN = [
+    ["\u201cIt's an error.\u201d",
+     "The case for you: the elders are the only fluent speakers alive, and if what the school produces drifts away from their language, then what survives will not be Palenquero but something else wearing its name. Researchers note that classes often lack grammar instruction, correction and real conversation with fluent adults — fixable problems.<br><br>The case against: you are telling teenagers that the language they are proud of speaking is wrong. That is precisely what killed Palenquero the first time."],
+    ["\u201cIt's a new variety.\u201d",
+     "The case for you: every living language changes, and learners have always been one of the engines. Researchers describe what is emerging as a \u201cnew\u201d Palenquero — a real variety with its own patterns, spoken by people who have every right to it. Young speakers are even replacing <em>utere</em> with <em>enú</em> because they feel it is more authentically African.<br><br>The case against: this change is not coming from within the language. It is coming from Spanish-speaking learners misanalysing a marker. Calling that \u201cchange\u201d can be a way of avoiding the harder work of teaching properly."],
+    ["\u201cIt depends who decides.\u201d",
+     "This is the mature answer, and it is also the hardest. The people with the authority here are Palenqueros: the elders who speak it, the teachers who teach it, and the young people who will or will not use it in twenty years. Outside linguists can describe what is happening and point out consequences. They do not get a vote.<br><br>What they <em>can</em> do is make sure the community knows what the options cost — which is the most useful thing an outsider ever brings to a language revival."]
+  ];
+  var opmsg = document.getElementById("opmsg");
+  single("#opin .op", function (b) {
+    var O = OPIN[Number(b.dataset.o)];
+    opmsg.innerHTML = "<strong style='color:var(--hibiscus)'>" + O[0] + "</strong><br>" + O[1];
+  });
+
+  /* ---------- Timeline ---------- */
+  var EVENTS = [
+    ["The escape", "Around 1599, some thirty people escaped slavery in Cartagena and fled into the forest under the leadership of Benkos Biohó. They built a palenque — a fortified village — and it drew more escapees. Biohó declared himself king; the settlement held."],
+    ["Biohó hanged", "The Spanish negotiated with Biohó, then arrested him, accused him of plotting against them, and hanged him in 1621. His statue now stands in the village plaza, and the secondary school carries his name. The town he founded outlived the empire that executed him."],
+    ["The royal decree", "On 23 August 1691, from Madrid, the Spanish Crown issued a royal decree granting freedom to the people of Palenque de San Basilio — on condition that they accept no further escapees. It is why Palenque is often called the first free town in the Americas, and why it is the one palenque that survived."],
+    ["The shame", "Through the 20th century the language became a liability. Palenqueros working in Cartagena were mocked for it; parents stopped teaching it; by the mid-1980s visiting linguists expected it to disappear within a generation. Nobody banned it. It was simply made expensive to speak."],
+    ["The turn", "Three things shifted the ground: Antonio Cervantes — \u201cKid Pambelé\u201d — a boxer from Palenque who became world champion in the 1970s and put the town on the national map; an ethnoeducation movement from the late 1970s; and, from 1992, Palenquero taught in the village school."],
+    ["Masterpiece", "In 2005 UNESCO proclaimed the Cultural Space of Palenque de San Basilio a Masterpiece of the Oral and Intangible Heritage of Humanity, with the language at the centre of the designation. Palenquero is now taught from preschool to secondary school, and the question has changed from whether it will survive to what form it will survive in."]
+  ];
+  var tlText = document.getElementById("tltext");
+  var evs = document.querySelectorAll("#tl .ev");
+  function setEvent(i) {
+    evs.forEach(function (e, k) { e.classList.toggle("on", k === i); });
+    tlText.innerHTML = '<strong style="color:var(--mango); font-size:1.2rem">' + EVENTS[i][0] + "</strong><br>" + EVENTS[i][1];
+  }
+  evs.forEach(function (e, i) { e.addEventListener("click", function () { setEvent(i); }); });
+  setEvent(0);
+})();
+</script>
+<script src="../assets/deck.js"></script>
+</body>
+</html>
