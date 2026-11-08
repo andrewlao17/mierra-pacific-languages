@@ -1,0 +1,631 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Dumi: The Language With a Thousand Verbs for One Verb</title>
+<link rel="stylesheet" href="../assets/deck.css">
+<style>
+@import url("https://fonts.googleapis.com/css2?family=Literata:wght@600;700&family=Hind:wght@400;500;600;700&display=swap");
+
+/* ---------- Dumi theme: eastern Nepal hills, millet gold, rhododendron ---------- */
+:root {
+  --bg: #0c141d;
+  --ink: #f2f2ea;
+  --muted: #c4d0d4;
+  --line: rgba(242, 242, 234, .22);
+  --panel: rgba(12, 26, 34, .86);
+  --terrace: #7aa85a;
+  --millet: #dcae45;
+  --rhodo: #c9414f;
+  --slate: #5b7b96;
+  --mist: #d8e4e8;
+  --rose: #c9414f;
+  --accent: var(--millet);
+  --serif: "Literata", Georgia, serif;
+  --sans: "Hind", system-ui, sans-serif;
+  --t: 0;
+  font-size: clamp(12px, 1.3vw, 28px);
+}
+h1 { font-family: var(--serif); font-size: 5.2rem; font-weight: 700; line-height: 1.06; }
+h2 { font-family: var(--serif); font-size: 2.5rem; font-weight: 700; line-height: 1.14; }
+.slide { padding: 7vh 4vw 8vh 6vw; }
+.text { max-width: 44vw; }
+.text.wide { max-width: 86vw; width: 86vw; }
+.stage {
+  right: 5vw; top: 6vh; bottom: 10vh; width: 38vw;
+  display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 1.1rem;
+}
+ul.dots li { font-size: 1.04rem; }
+.card .word { font-family: var(--sans); font-weight: 700; }
+.card.revealed .meaning { max-height: 15rem; }
+.btn { background: var(--millet); color: #2c2206; }
+.loc .disc { border-color: var(--millet); box-shadow: 0 0 0 .55rem rgba(220,174,69,.16), 0 22px 40px rgba(0,0,0,.55); }
+.loc .tint { background: #cfe0bb; }
+.loc .sea { background: #17475c; }
+.loc .tag { background: #0e1e26; border-color: var(--millet); }
+.note { font-size: .82rem; color: var(--muted); }
+.quote { font-family: var(--serif); font-size: 1.65rem; font-weight: 700; line-height: 1.34; color: var(--millet); }
+.dev { font-family: var(--sans); }
+
+/* ---------- Background: paradigm grid filling in, over the hills ---------- */
+#hills2 { position: fixed; inset: 0; z-index: 0; overflow: hidden; pointer-events: none;
+  background: linear-gradient(180deg, #070e16 0%, #122536 46%, #22465a 70%, #10222c 100%); }
+#hills2 .grid { position: absolute; inset: 0 0 32vh 0; display: grid;
+  grid-template-columns: repeat(14, 1fr); grid-auto-rows: 2.6vh; gap: 2px; padding: 3vh 2vw; opacity: .22; }
+#hills2 .cell { border: 1px solid rgba(220,174,69,.3); border-radius: 2px; background: transparent;
+  transition: background 1.3s ease, border-color 1.3s ease; }
+#hills2 .cell.on { background: rgba(220,174,69,.4); border-color: rgba(220,174,69,.7); }
+#hills2 .ridge2 { position: absolute; left: 0; right: 0; }
+#hills2 .ridge2 svg { width: 100%; height: 100%; display: block; }
+#hills2 .rA { bottom: 22vh; height: 34vh; opacity: .55; }
+#hills2 .rB { bottom: 10vh; height: 30vh; opacity: .8; }
+#hills2 .rC { bottom: 0; height: 26vh; }
+#hills2 .mist2 { position: absolute; left: -10%; right: -10%; height: 13vh; bottom: 24vh;
+  background: linear-gradient(180deg, rgba(216,228,232,0), rgba(216,228,232,.4), rgba(216,228,232,0));
+  filter: blur(9px); animation: drift2 40s linear infinite alternate; }
+@keyframes drift2 { to { transform: translateX(10%); } }
+#hills2 .shade { position: absolute; inset: 0;
+  background: linear-gradient(90deg, rgba(3,8,12,.95) 0%, rgba(3,8,12,.76) 52%, rgba(3,8,12,.24) 100%); }
+
+/* ---------- Photos ---------- */
+.board { position: relative; margin: 0; width: var(--w, 19vw); padding: .6rem .6rem .5rem;
+  background: #ece9dc; border-radius: .2rem; box-shadow: 0 18px 34px rgba(0,0,0,.6);
+  transform: rotate(var(--r, 0deg)); transition: transform .9s cubic-bezier(.2,.8,.2,1), opacity .7s ease; }
+.slide:not(.active) .board { opacity: 0; transform: translateY(46px) rotate(var(--r, 0deg)); }
+.slide.active .board { transition-delay: calc(.4s + var(--d, 0) * .16s); }
+.board img { display: block; width: 100%; aspect-ratio: var(--ar, 4 / 3); object-fit: cover; background: #c9c5b4; }
+.board figcaption { color: #1e241c; font-size: .73rem; font-weight: 700; line-height: 1.25; margin: .4rem .1rem 0; font-family: var(--serif); }
+
+/* ---------- Shared controls ---------- */
+.switch { display: flex; gap: .4rem; margin: .4rem 0 .6rem; flex-wrap: wrap; }
+.sbtn { font: inherit; font-weight: 600; font-size: .92rem; color: var(--ink); background: var(--panel);
+  border: 2px solid var(--line); border-radius: .3rem; padding: .25em .9em; cursor: pointer; transition: transform .2s; }
+.sbtn:hover { transform: translateY(-2px); }
+.sbtn.on { background: var(--millet); border-color: var(--millet); color: #2c2206; }
+.out { min-height: 3.2em; margin-top: .5rem; }
+
+/* ---------- Paradigm machine ---------- */
+.pgrid { display: grid; grid-template-columns: 4.6rem repeat(3, 1fr); gap: .25rem; font-size: .78rem; }
+.pgrid div { padding: .3rem .1rem; text-align: center; border-radius: .2rem; }
+.pgrid .hd2 { font-weight: 700; color: var(--muted); font-size: .68rem; letter-spacing: .05em; text-transform: uppercase; }
+.pgrid .cel { background: rgba(255,255,255,.06); border: 2px solid transparent; cursor: pointer; font-weight: 600; }
+.pgrid .cel:hover { border-color: var(--millet); }
+.pgrid .cel.on { background: rgba(220,174,69,.3); border-color: var(--millet); }
+.pgrid .cel.used { background: rgba(122,168,90,.22); }
+.counter { font-family: var(--serif); font-size: 2.2rem; color: var(--millet); text-align: center; line-height: 1.1; }
+#pgmsg { min-height: 5.4em; margin-top: .4rem; }
+
+/* ---------- Dual / clusivity ---------- */
+.wegrid { display: grid; grid-template-columns: repeat(2, 1fr); gap: .4rem; }
+.we { font: inherit; text-align: left; font-weight: 600; font-size: .86rem; color: var(--ink); background: var(--panel);
+  border: 2px solid var(--line); border-radius: .3rem; padding: .5em .7em; cursor: pointer; }
+.we:hover { border-color: var(--terrace); }
+.we.on { border-color: var(--terrace); background: rgba(122,168,90,.16); }
+.we b { display: block; font-family: var(--sans); font-size: 1rem; color: var(--terrace); }
+#wemsg { min-height: 5em; margin-top: .4rem; }
+
+/* ---------- Numbers ---------- */
+.numrow { display: grid; gap: .35rem; }
+.nr { display: grid; grid-template-columns: 5rem 1fr; gap: .5rem; align-items: center; cursor: pointer; }
+.nr span { font-family: var(--serif); font-weight: 700; font-size: 1rem; text-align: right; }
+.nr .nb { height: 1.3rem; border-radius: .2rem; background: var(--slate); transition: background .3s; }
+.nr.on .nb { background: var(--millet); }
+#nummsg { min-height: 5.4em; margin-top: .4rem; }
+
+/* ---------- Who writes the grammar ---------- */
+.whogrid { display: grid; grid-template-columns: 1fr 1fr; gap: .5rem; }
+.who { background: var(--panel); border: 2px solid var(--line); border-radius: .35rem; padding: .55rem .6rem; cursor: pointer; }
+.who:hover { border-color: var(--millet); }
+.who.on { border-color: var(--millet); background: rgba(220,174,69,.1); }
+.who h5 { margin: 0 0 .2rem; font-family: var(--serif); font-size: 1rem; color: var(--millet); }
+.who p { margin: 0; font-size: .8rem; color: var(--muted); }
+#whomsg { min-height: 6em; margin-top: .4rem; }
+
+/* ---------- Timeline ---------- */
+.tl { display: grid; grid-template-columns: repeat(6, 1fr); gap: .55rem; margin-top: 1rem; position: relative; padding-bottom: 1.4rem; }
+.tl::after { content: ""; position: absolute; left: 0; right: 0; bottom: .45rem; height: 3px; border-radius: 3px;
+  background: linear-gradient(90deg, var(--terrace), var(--millet), var(--rhodo)); }
+.ev { font: inherit; text-align: left; color: #141c14; background: var(--ec); border: 0; border-radius: .3rem;
+  padding: .65rem .75rem; cursor: pointer; transition: transform .25s, box-shadow .25s; }
+.ev:hover { transform: translateY(-4px); }
+.ev.on { box-shadow: 0 0 0 3px #fff, 0 10px 24px rgba(0,0,0,.4); transform: translateY(-6px); }
+.ev .yr { font-family: var(--serif); font-weight: 700; font-size: 1.22rem; line-height: 1; display: block; }
+.ev small { display: block; font-weight: 600; font-size: .76rem; margin-top: .3rem; }
+#tltext { min-height: 5.4rem; margin-top: .4rem; }
+
+/* ---------- Quiz tint ---------- */
+.opt.right { background: var(--terrace); }
+.opt.wrong { background: var(--rhodo); }
+
+@media (max-width: 820px) {
+  .slide { padding: 6vh 6vw 12vh; }
+  h1 { font-size: 3rem; }
+  .text, .text.wide { max-width: none; width: auto; }
+  .stage { position: relative; inset: auto; width: 100%; margin-top: 1.5rem; }
+  .board { width: 74vw; }
+  .stage .panel { width: 100% !important; max-width: none !important; }
+  .tl { grid-template-columns: repeat(2, 1fr); }
+  .whogrid, .wegrid { grid-template-columns: 1fr; }
+  #hills2 .grid { grid-template-columns: repeat(8, 1fr); }
+}
+</style>
+</head>
+<body data-map="BlankMap-Equirectangular.svg">
+
+<div id="hills2" aria-hidden="true">
+  <div class="grid" id="bggrid"></div>
+  <div class="ridge2 rA"><svg viewBox="0 0 1600 340" preserveAspectRatio="none"><path d="M0 340 V160 L200 70 L400 150 L620 40 L840 140 L1060 60 L1300 150 L1600 90 V340 Z" fill="#1c3647"/></svg></div>
+  <div class="ridge2 rB"><svg viewBox="0 0 1600 300" preserveAspectRatio="none"><path d="M0 300 V180 L220 110 L440 190 L680 120 L900 196 L1140 126 L1380 200 L1600 150 V300 Z" fill="#234a44"/></svg></div>
+  <div class="ridge2 rC">
+    <svg viewBox="0 0 1600 260" preserveAspectRatio="none">
+      <path d="M0 260 V140 Q300 100 640 150 Q980 200 1600 140 V260 Z" fill="#2c4a2a"/>
+      <g stroke="#3f6a38" stroke-width="4" fill="none">
+        <path d="M0 170 Q300 130 640 180 Q980 230 1600 170"/><path d="M0 196 Q300 156 640 206 Q980 256 1600 196"/>
+        <path d="M0 222 Q300 182 640 232 Q980 282 1600 222"/>
+      </g>
+    </svg>
+  </div>
+  <div class="mist2"></div>
+  <div class="shade"></div>
+</div>
+<div class="progress"></div>
+
+<main>
+
+<!-- 1. Title -->
+<section class="slide" style="--accent: var(--millet)">
+  <div class="text">
+    <p class="kicker in">Rare Languages of the Asia-Pacific · Module 36</p>
+    <h1 class="in" style="--d:1">Dumi</h1>
+    <p class="in dev" style="--d:2; font-size:1.3rem; font-weight:700; color:var(--millet)">दुमी · Khotang district, eastern Nepal</p>
+    <div class="bar in" style="--d:3"></div>
+    <p class="lead in" style="--d:4">English has five forms of the verb "see." Dumi has hundreds — because the verb has to tell you who is doing it <em>and</em> who it is being done to, and how many of each there are</p>
+    <p class="muted in" style="--d:5">Watch the grid behind: it is a verb paradigm, filling in.</p>
+  </div>
+  <div class="stage">
+    <figure class="board" style="--w:24vw; --r:1.5deg; --d:0">
+      <img data-wiki="Khotang District" data-width="1200" alt="Khotang district, eastern Nepal">
+      <figcaption>Khotang — terraced middle hills between the Himalaya and the plains</figcaption>
+    </figure>
+  </div>
+</section>
+
+<!-- 2. Where and who -->
+<section class="slide" data-tr="left" style="--accent: var(--terrace)">
+  <div class="text">
+    <p class="kicker in">Where and who</p>
+    <h2 class="in" style="--d:1">The Kirat hills</h2>
+    <div class="bar in" style="--d:2"></div>
+    <ul class="dots">
+      <li class="in" style="--d:3">Dumi is spoken around the Tap and Rava rivers in northern <strong>Khotang district</strong>, in the middle hills of eastern Nepal — terraced slopes of millet and maize, a long way below the high Himalaya and a long way above the plains.</li>
+      <li class="in" style="--d:4">Its speakers are <strong>Dumi Rai</strong>, one group among the <strong>Kirat</strong> peoples of eastern Nepal. The Rai alone speak something like <strong>two dozen different languages</strong> — not dialects, separate languages, often mutually unintelligible between neighbouring valleys.</li>
+      <li class="in" style="--d:5">The 2011 census recorded about <strong>7,600</strong> ethnic Dumi; the 2021 census about <strong>8,600</strong>. How many speak Dumi is a much harder question, and it gets a slide of its own.</li>
+      <li class="in" style="--d:6">Three dialects are usually named — <strong>Kharbari, Lamdija</strong> and <strong>Makpa</strong> — with Makpa the most distinct, and the place where the language has held on best.</li>
+    </ul>
+    <p class="note in" style="--d:7">Dumi belongs to the <strong>Kiranti</strong> group, within the Sino-Tibetan family. Its distant relatives include Tibetan, Burmese and Mandarin — which tells you how much a family tree can hide.</p>
+  </div>
+  <div class="stage">
+    <div class="loc" data-lat="27.3" data-lon="86.8" data-zoom="6" style="--s:13vw; --d:0">
+      <div class="disc"><div class="lmap"></div><div class="tint"></div><div class="sea"></div><span class="pinpt"></span></div>
+      <span class="tag">Khotang district, Koshi Province, Nepal</span>
+    </div>
+    <div class="panel in" style="--d:4; width:34vw">
+      <strong>Why so many languages in such a small area?</strong>
+      <p class="note" style="margin:.3rem 0 0">The middle hills are a landscape of steep ridges and deep river gorges. A village two valleys away might be a two-day walk. Communities stayed small, married locally and stayed put — and their speech drifted apart over centuries into genuinely separate languages.</p>
+      <p class="note" style="margin:.4rem 0 0">You saw exactly the same pattern in Arunachal Pradesh and Papua New Guinea. Mountains and languages go together.</p>
+    </div>
+  </div>
+</section>
+
+<!-- 3. Nepal's languages -->
+<section class="slide" data-tr="zoom" style="--accent: var(--slate)">
+  <div class="text">
+    <p class="kicker in">The context</p>
+    <h2 class="in" style="--d:1">A hundred and twenty languages, one school</h2>
+    <div class="bar in" style="--d:2"></div>
+    <ul class="dots">
+      <li class="in" style="--d:3">Nepal has well over <strong>120 languages</strong> from at least four different families. <strong>Nepali</strong>, an Indo-European language related to Hindi, is spoken by something like 17 million people and is the national language.</li>
+      <li class="in" style="--d:4">For much of the 20th century, state policy ran on the principle of one nation, one language. Nepali was the sole medium of education, the language of government, courts and advancement.</li>
+      <li class="in" style="--d:5">Every Dumi speaker is <strong>bilingual</strong> in Nepali. The reverse is not true, and has never needed to be.</li>
+      <li class="in" style="--d:6">Things changed on paper after 1990 and again under the 2015 constitution, which recognises the right to mother-tongue education. Turning that into actual classes, in a language with no textbooks and no trained teachers, is the hard part — and it is where Dumi is now.</li>
+    </ul>
+    <p class="note in" style="--d:7">Linguists who survey Nepal's Kiranti languages classify most as "threatened" and a handful, Dumi among them, as already "shifting" — the stage at which children are no longer learning it.</p>
+  </div>
+  <div class="stage">
+    <div class="panel in" style="--d:3; width:34vw">
+      <strong>Two dozen Rai languages</strong>
+      <p class="note" style="margin:.3rem 0 0">Bantawa, Chamling, Kulung, Thulung, Khaling, Puma, Chintang, Wambule, Sampang, Yamphu, Lohorung, Mewahang, Dungmali, Nachhiring, Jero, Tilung, Koyee, Sam, Chhulung, Phangduwali, Dumi…</p>
+      <p class="note" style="margin:.4rem 0 0">Each is a distinct language. Several are in worse shape than Dumi. A few have already gone. The whole group is, collectively, one of the great understudied regions of world linguistics — and one of the fastest-shrinking.</p>
+    </div>
+  </div>
+</section>
+
+<!-- 4. The verb -->
+<section class="slide" style="--accent: var(--millet)">
+  <div class="text">
+    <p class="kicker in">Language lab</p>
+    <h2 class="in" style="--d:1">The verb that knows everything</h2>
+    <div class="bar in" style="--d:2"></div>
+    <p class="in" style="--d:3">In English, "see" barely changes: <em>see, sees, saw, seen, seeing</em>. Five forms, and the verb tells you almost nothing about who is involved. You need separate words — <em>I, you, them</em> — to do that job.</p>
+    <p class="in" style="--d:4">Kiranti verbs do it differently. The verb agrees with <strong>both</strong> the subject and the object at once. Linguists call this <strong>biactantial agreement</strong>, and it means "I see you" and "you see me" use <em>completely different verb forms</em>, not just different pronouns.</p>
+    <p class="in" style="--d:5">Now multiply. Dumi distinguishes <strong>three persons</strong> and <strong>three numbers</strong> — singular, dual and plural — for the subject <em>and</em> the object. Use the grid, then read the counter.</p>
+    <p class="note in" style="--d:6">George van Driem's 1993 grammar of Dumi devotes a substantial part of its length to the verb. His earlier paper on Dumi verbal morphology was a book-length study of the verb alone.</p>
+  </div>
+  <div class="stage">
+    <div class="panel in" style="--d:3; width:35vw">
+      <strong>Pick who is doing it, and to whom:</strong>
+      <div class="pgrid" id="pgrid" style="margin-top:.5rem"></div>
+      <div class="counter" id="counter">1</div>
+      <div class="note" style="text-align:center" id="clbl">distinct verb forms so far</div>
+      <div class="switch" style="justify-content:center; margin-top:.4rem">
+        <button class="sbtn" id="multiply">now add tense and negation</button>
+        <button class="sbtn" id="presetall">fill the whole grid</button>
+      </div>
+      <p id="pgmsg" aria-live="polite">Click any cell. Each one is a different word.</p>
+    </div>
+  </div>
+</section>
+
+<!-- 5. Dual and clusivity -->
+<section class="slide" data-tr="left" style="--accent: var(--terrace)">
+  <div class="text">
+    <p class="kicker in">Language lab</p>
+    <h2 class="in" style="--d:1">Four different ways to say "we"</h2>
+    <div class="bar in" style="--d:2"></div>
+    <p class="in" style="--d:3">English has one word for "we," and it is permanently ambiguous. "We're going to the shop" — am I inviting you, or telling you I am leaving? Dumi, like other Kiranti languages, does not have that problem.</p>
+    <ul class="dots">
+      <li class="in" style="--d:4">It distinguishes <strong>dual</strong> from <strong>plural</strong>: there is a form meaning "we two" and a different one meaning "we three or more."</li>
+      <li class="in" style="--d:5">And it distinguishes <strong>inclusive</strong> from <strong>exclusive</strong>: whether "we" includes the person you are talking to.</li>
+      <li class="in" style="--d:6">Combine those and you get four distinct words where English has one. Click them in the panel.</li>
+    </ul>
+    <p class="in" style="--d:7">This is not decoration. In a village where everyone is related and who is included in a plan matters enormously, "we two, not you" and "we all, including you" are different social acts — and the grammar makes you choose.</p>
+    <p class="note in" style="--d:8">You met clusivity before, in the Pazeh module in Taiwan. The dual is rarer still, and Kiranti languages carry both — and then build them into the verb as well as the pronouns.</p>
+  </div>
+  <div class="stage">
+    <div class="panel in" style="--d:3; width:35vw">
+      <strong>Which "we" do you mean?</strong>
+      <div class="wegrid" id="wegrid" style="margin-top:.5rem">
+        <button class="we" data-w="0"><b>we two, with you</b>you and I</button>
+        <button class="we" data-w="1"><b>we two, not you</b>someone else and I</button>
+        <button class="we" data-w="2"><b>we all, with you</b>everyone here, you included</button>
+        <button class="we" data-w="3"><b>we all, not you</b>my group, not yours</button>
+      </div>
+      <p id="wemsg" aria-live="polite">Click each one and imagine saying it to a friend.</p>
+    </div>
+  </div>
+</section>
+
+<!-- 6. Culture -->
+<section class="slide" style="--accent: var(--rhodo)">
+  <div class="text">
+    <p class="kicker in">Cultural significance</p>
+    <h2 class="in" style="--d:1">Mundhum and the dance</h2>
+    <div class="bar in" style="--d:2"></div>
+    <ul class="dots">
+      <li class="in" style="--d:3">Kirat religious life runs on <span class="hl">Mundhum</span> — a vast body of <strong>oral scripture</strong>: origin stories, genealogies, ritual instructions and moral teaching, memorised and recited rather than written. Each Kirat group has its own.</li>
+      <li class="in" style="--d:4">Mundhum is recited by ritual specialists in a <strong>special register</strong> of the language: archaic vocabulary, paired phrases and formulas that nobody uses in ordinary speech. It is the deepest layer of the language and the hardest to document.</li>
+      <li class="in" style="--d:5">The great festival is <span class="hl">Sakela</span> (also Sakewa), danced twice a year — in spring when the planting begins and in autumn after the harvest — in a circle, following a leader, with movements drawn from the farming year and from birds and animals.</li>
+      <li class="in" style="--d:6">Ancestors matter continuously, not just at festivals. The household hearth, the lineage, the land and the dead are tied together, and the words for all of it are Dumi words.</li>
+    </ul>
+    <p class="note in" style="--d:7">Here is a detail that matters for the language's survival: Dumi speakers may use Nepali all day and still prefer to <strong>pray in Dumi</strong>. Ritual is often the last place a shifting language is used — which is both a lifeline and a warning sign.</p>
+  </div>
+  <div class="stage">
+    <div class="cards in" style="--d:3; grid-template-columns:1fr; width:34vw">
+      <div class="card" style="--cardc: var(--rhodo)"><div class="word">Why does oral scripture matter here?</div><div class="meaning">Because it cannot be separated from the language. A written scripture can be translated and keep working. A tradition held in memory, in a special register, performed aloud by trained reciters, dies with the last person who can perform it — and the ordinary vocabulary of the village is not enough to reconstruct it.</div><div class="tap">click to reveal</div></div>
+      <div class="card" style="--cardc: var(--terrace)"><div class="word">Is the culture also declining?</div><div class="meaning">No — and this is now a familiar pattern in this course. Kirat identity has become stronger and more politically visible in Nepal over recent decades, Sakela is danced publicly in cities and in the diaspora, and young Rai people claim the heritage proudly. The culture is rising. The languages are not.</div><div class="tap">click to reveal</div></div>
+      <div class="card" style="--cardc: var(--millet)"><div class="word">What about writing?</div><div class="meaning">Dumi has been written mainly in Devanagari, the script used for Nepali. Some Kirat groups promote the Kirat Rai script (Sirijanga), tied to the identity movement. Script choice is never only technical: it is a statement about who you are and who you are not.</div><div class="tap">click to reveal</div></div>
+    </div>
+  </div>
+</section>
+
+<!-- 7. The numbers -->
+<section class="slide" data-tr="zoom" style="--accent: var(--slate)">
+  <div class="text">
+    <p class="kicker in">The number problem</p>
+    <h2 class="in" style="--d:1">Eight speakers, or two thousand five hundred?</h2>
+    <div class="bar in" style="--d:2"></div>
+    <p class="in" style="--d:3">Published figures for Dumi range from <strong>under 10</strong> to <strong>2,500</strong>. That is not a rounding error. It is a disagreement about what the question means.</p>
+    <p class="in" style="--d:4">Click the figures in the panel and work out what each one is actually measuring.</p>
+    <p class="note in" style="--d:5">The pattern you should take away: in a country where ethnic identity is politically significant, a census question about your mother tongue is partly a question about who you are. People answer honestly — about identity. That is not the same as a count of fluent speakers, and the two should never be quoted as if they were.</p>
+  </div>
+  <div class="stage">
+    <div class="panel in" style="--d:3; width:35vw">
+      <strong>Four published figures for Dumi:</strong>
+      <div class="numrow" id="numrow" style="margin-top:.5rem">
+        <div class="nr" data-n="0"><span>&lt;8</span><div class="nb" style="width:4%"></div></div>
+        <div class="nr" data-n="1"><span>1,353</span><div class="nb" style="width:34%"></div></div>
+        <div class="nr" data-n="2"><span>2,500</span><div class="nb" style="width:62%"></div></div>
+        <div class="nr" data-n="3"><span>8,638</span><div class="nb" style="width:96%"></div></div>
+      </div>
+      <p id="nummsg" aria-live="polite">Click a figure.</p>
+    </div>
+  </div>
+</section>
+
+<!-- 8. Who writes the grammar -->
+<section class="slide" style="--accent: var(--millet)">
+  <div class="text">
+    <p class="kicker in">Think about the discipline</p>
+    <h2 class="in" style="--d:1">Who gets to write the grammar?</h2>
+    <div class="bar in" style="--d:2"></div>
+    <p class="in" style="--d:3">This module contains a shift that has happened across linguistics in one generation, and Dumi shows it unusually clearly.</p>
+    <p class="in" style="--d:4">In <strong>1993</strong>, the first real grammar of Dumi was published by a Dutch linguist, George van Driem, working from roughly three months of fieldwork in a village in Khotang. It is a serious, careful book, and without it we would know far less.</p>
+    <p class="in" style="--d:5">Two decades later, grammars and dictionaries of Kiranti languages — Dumi among them — are increasingly being written by <strong>Rai linguists who grew up speaking them</strong>, with doctorates and university positions in Nepal.</p>
+    <p class="in" style="--d:6">Compare the two in the panel. The point is not that one is good and the other bad. It is that the second kind barely existed in 1993, and now it does.</p>
+  </div>
+  <div class="stage">
+    <div class="panel in" style="--d:3; width:35vw">
+      <strong>Two kinds of grammar:</strong>
+      <div class="whogrid" style="margin-top:.5rem">
+        <div class="who" data-w="0"><h5>The visiting linguist</h5><p>Three months in the village, 1993</p></div>
+        <div class="who" data-w="1"><h5>The mother-tongue linguist</h5><p>A lifetime, plus a doctorate</p></div>
+      </div>
+      <p id="whomsg" aria-live="polite">Click each.</p>
+    </div>
+  </div>
+</section>
+
+<!-- 9. Timeline -->
+<section class="slide" data-tr="left" style="--accent: var(--terrace)">
+  <div class="text wide">
+    <p class="kicker in">History</p>
+    <h2 class="in" style="--d:1">From the Kirat hills to the census form</h2>
+    <div class="bar in" style="--d:2"></div>
+    <p class="in" style="--d:3">Click each moment to explore it.</p>
+    <div class="tl in" id="tl" style="--d:4">
+      <button class="ev" style="--ec: var(--terrace)"><span class="yr">ancient</span><small>The Kirat</small></button>
+      <button class="ev" style="--ec: #b6d4a0"><span class="yr">1770s</span><small>Absorbed into Nepal</small></button>
+      <button class="ev" style="--ec: var(--millet)"><span class="yr">1960–90</span><small>One nation, one language</small></button>
+      <button class="ev" style="--ec: #e8cf96"><span class="yr">1993</span><small>The first grammar</small></button>
+      <button class="ev" style="--ec: #e4a3a8"><span class="yr">2007–15</span><small>New constitutions</small></button>
+      <button class="ev" style="--ec: var(--rhodo)"><span class="yr">today</span><small>Shifting</small></button>
+    </div>
+    <div class="panel in" id="tltext" style="--d:5" aria-live="polite"></div>
+  </div>
+</section>
+
+<!-- 10. Now -->
+<section class="slide" style="--accent: var(--rhodo)">
+  <div class="text">
+    <p class="kicker in">Why it matters now</p>
+    <h2 class="in" style="--d:1">What a Kiranti verb is worth</h2>
+    <div class="bar in" style="--d:2"></div>
+    <ul class="dots">
+      <li class="in" style="--d:3"><strong>For the Dumi:</strong> it is the language of Mundhum, of the ancestors, of the land in Khotang, and of a distinct identity inside a large and diverse state.</li>
+      <li class="in" style="--d:4"><strong>For linguistics:</strong> the Kiranti verb is one of the most complex agreement systems ever described, and the family is a crucial test case for how Sino-Tibetan languages work. Chinese, famously, has almost no verb agreement at all. Dumi has an enormous amount. Both are in the same family.</li>
+      <li class="in" style="--d:5">That contrast is a genuine scientific problem — and you cannot settle it without the small languages, because they are where the complicated end of the family lives.</li>
+      <li class="in" style="--d:6"><strong>What exists now:</strong> van Driem's grammar, newer grammars and dictionaries by Rai scholars, academic surveys, and community organisations working on teaching materials. What does not exist is a generation of children learning Dumi at home.</li>
+    </ul>
+    <p class="note in" style="--d:7">Nepal's constitution gives communities the right to mother-tongue education. Whether that becomes real for a language of a few thousand people, in a district with hard roads and tight budgets, is a political question, not a linguistic one.</p>
+  </div>
+  <div class="stage">
+    <div class="panel in" style="--d:3; width:34vw">
+      <strong>The Sino-Tibetan puzzle</strong>
+      <p style="margin:.3rem 0 0">Mandarin Chinese: verbs do not change for person or number at all.</p>
+      <p style="margin:.3rem 0 0">Dumi: verbs change for the person <em>and</em> number of both participants, plus tense, negation and more.</p>
+      <p style="margin:.5rem 0 0">Same family. One of them started out that way and the other changed — and working out which is one of the live questions in the field. The answer is in the small Himalayan languages, and the clock on them is running.</p>
+    </div>
+    <div class="panel in" style="--d:5; width:34vw">
+      <strong>Your turn:</strong> Nepal has 120 languages and a limited budget for education. Write one rule for deciding which languages get school programmes — then describe who your rule leaves out.
+    </div>
+  </div>
+</section>
+
+<!-- 11. Quiz -->
+<section class="slide" style="--accent: var(--millet)">
+  <div class="text wide center">
+    <p class="kicker in">Review on the terraces</p>
+    <h2 class="in" style="--d:1">Quick quiz!</h2>
+    <div class="bar in" style="--d:2"></div>
+    <div class="quizgrid">
+      <div class="quiz panel in" style="--d:3" data-right="Yes — the verb agrees with subject and object at once, so every combination is a different form." data-wrong="Hint: think about what the verb has to keep track of.">
+        <div class="q">Why does Dumi have so many verb forms?</div>
+        <div class="options"><button class="opt">It has many tenses</button><button class="opt" data-correct>Verbs agree with subject and object</button><button class="opt">Every noun has its own verb</button></div>
+        <div class="feedback"></div>
+      </div>
+      <div class="quiz panel in" style="--d:4" data-right="Right — dual versus plural, and inclusive versus exclusive, give four." data-wrong="Hint: 'we two' and 'we all', each with or without you.">
+        <div class="q">How many ways can Dumi say "we"?</div>
+        <div class="options"><button class="opt">One</button><button class="opt">Two</button><button class="opt" data-correct>Four</button></div>
+        <div class="feedback"></div>
+      </div>
+      <div class="quiz panel in" style="--d:5" data-right="Correct — census figures count identity; fieldwork counts fluency." data-wrong="Hint: what is a census question actually asking?">
+        <div class="q">Why do speaker estimates for Dumi range from 8 to 2,500?</div>
+        <div class="options"><button class="opt">Bad arithmetic</button><button class="opt" data-correct>They measure different things</button><button class="opt">The language grew</button></div>
+        <div class="feedback"></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- 12. Closing -->
+<section class="slide end" style="--accent: var(--millet)">
+  <div class="text">
+    <h1 class="in" style="font-size:4.4rem">One verb, a thousand shapes</h1>
+    <p class="lead in" style="--d:1; margin-top:.8rem">Thank you! Questions?</p>
+    <p class="quote in" style="--d:2">A few thousand people on a few hillsides in Khotang maintain one of the most elaborate grammatical systems ever described — and have done so, without writing it down, for as long as anyone can measure.</p>
+    <p class="note in" style="--d:3">The people who will write the next grammar of Dumi are far more likely to be named Rai than van Driem. That is the single most hopeful sentence in this module.</p>
+  </div>
+  <details class="fine in" style="--d:4">
+    <summary>Sources &amp; image credits</summary>
+    <div class="box">
+      <h4>Sources</h4>
+      <ul>
+        <li>van Driem, <em>A Grammar of Dumi</em> (Mouton Grammar Library, Berlin, 1993)</li>
+        <li>van Driem, "The verbal morphology of Dumi Rai simplicia" (1988)</li>
+        <li>van Driem, "South Asia and the Middle East," in Moseley (ed.), <em>Encyclopedia of the World's Endangered Languages</em> (Routledge, 2007)</li>
+        <li><a href="http://elcat.colo.hawaii.edu/lang/4113">Endangered Languages Project: Dumi</a> — the competing speaker figures and dialect names</li>
+        <li><a href="https://en.wikipedia.org/wiki/Dumi_language">Dumi language (Wikipedia)</a> — location, dialects, ergative alignment, census figures</li>
+        <li><a href="https://www.academia.edu/1814568/Documentation_of_Dumi_language">"Documentation of Dumi language"</a> — the Makpa dialect, bilingualism, intergenerational transmission</li>
+        <li><a href="https://www.researchgate.net/publication/366511005_Some_Sociolinguistic_and_Morphosyntactic_Features_in_Dumi">Rai, "Some sociolinguistic and morphosyntactic features in Dumi"</a> — written by a mother-tongue Dumi linguist</li>
+        <li><a href="https://www.academia.edu/47781951/Status_of_Kirati_Languages_In_The_Context_of_Nepalese_Languages">"Status of Kirati languages in the context of Nepalese languages"</a> — the EGIDS classifications and the list of Rai languages</li>
+        <li><a href="https://elibrary.tucl.edu.np/JQ99OgQIizUxyjI9nB0on9OyLkqsGIf4/api/core/bitstreams/e6f5ec81-d9ca-4d75-8896-540d23263606/content">Tribhuvan University thesis on Dumi kinship terms</a> — the 2001 census figures for Dumi Rai and Dumi speakers</li>
+        <li>Ebert, <em>The Structure of Kiranti Languages</em> — on Kiranti verb agreement</li>
+        <li><a href="https://en.wikipedia.org/wiki/Kiranti_languages">Kiranti languages (Wikipedia)</a></li>
+        <li><a href="https://en.wikipedia.org/wiki/Khaling_language">Khaling language (Wikipedia)</a> — for comparison within the Rai group</li>
+      </ul>
+      <h4>Images (Wikimedia Commons)</h4>
+      <ul id="credits"></ul>
+    </div>
+  </details>
+</section>
+
+</main>
+
+<nav class="controls">
+  <button id="prev" aria-label="Previous slide">‹</button>
+  <span id="counter">1 / 12</span>
+  <button id="next" aria-label="Next slide">›</button>
+  <button id="fs" aria-label="Fullscreen">⤢</button>
+</nav>
+<p class="hint">Use ← → to move. Press F for fullscreen.</p>
+
+<!-- Dumi effects: paradigm grid, the verb machine, four kinds of we, census figures, who writes grammars -->
+<script>
+(function () {
+  /* ---------- Background paradigm grid ---------- */
+  var bg = document.getElementById("bggrid");
+  var CELLS = [];
+  for (var k = 0; k < 210; k++) {
+    var c = document.createElement("div");
+    c.className = "cell";
+    c.dataset.th = (Math.random()).toFixed(3);
+    bg.appendChild(c);
+    CELLS.push(c);
+  }
+  function tune(x) { CELLS.forEach(function (c) { c.classList.toggle("on", parseFloat(c.dataset.th) < x); }); }
+  document.addEventListener("slidechange", function (e) {
+    var x = e.detail.index / (e.detail.total - 1);
+    document.body.style.setProperty("--t", x);
+    tune(x);
+  });
+  tune(0);
+
+  function single(selector, callback) {
+    var grp = document.querySelectorAll(selector);
+    grp.forEach(function (b) {
+      b.addEventListener("click", function () {
+        grp.forEach(function (x) { x.classList.remove("on"); });
+        b.classList.add("on");
+        callback(b);
+      });
+    });
+  }
+
+  /* ---------- Paradigm machine ---------- */
+  var SUBJ = ["I / we", "you", "he / they"];
+  var OBJ = ["me / us", "you", "him / them"];
+  var pg = document.getElementById("pgrid");
+  pg.innerHTML = '<div class="hd2">subject ↓</div><div class="hd2">→ me/us</div><div class="hd2">→ you</div><div class="hd2">→ him/them</div>';
+  var used = 0, multiplied = false;
+  var MSG = [
+    "One cell, one word. In English you would say \u201cI see you\u201d with three separate words; here the verb itself carries all of it.",
+    "A different cell is a <strong>different verb form</strong> — not a different pronoun attached to the same verb. Keep going.",
+    "Notice that \u201cI see you\u201d and \u201cyou see me\u201d are not mirror images of one word. They are two unrelated-looking forms that a learner has to memorise separately."
+  ];
+  for (var s = 0; s < 3; s++) {
+    var lab = document.createElement("div");
+    lab.className = "hd2";
+    lab.textContent = SUBJ[s];
+    pg.appendChild(lab);
+    for (var o = 0; o < 3; o++) {
+      var cel = document.createElement("div");
+      cel.className = "cel";
+      cel.textContent = "•";
+      cel.dataset.k = s + "" + o;
+      cel.addEventListener("click", function () {
+        if (!this.classList.contains("used")) { this.classList.add("used"); used++; render(); }
+        document.getElementById("pgmsg").innerHTML = MSG[Math.min(2, used - 1)];
+      });
+      pg.appendChild(cel);
+    }
+  }
+  function render() {
+    var n = multiplied ? used * 9 * 4 : used;
+    document.getElementById("counter").textContent = n.toLocaleString();
+    document.getElementById("clbl").textContent = multiplied
+      ? "forms, once you add dual/plural, tense and negation"
+      : "distinct verb forms so far";
+  }
+  document.getElementById("multiply").addEventListener("click", function () {
+    multiplied = true; render();
+    document.getElementById("pgmsg").innerHTML =
+      "<strong>And that is still an underestimate.</strong> This grid shows only three persons. Dumi also distinguishes <em>dual</em> from <em>plural</em> — for the subject and the object — and then layers tense, negation and mood on top. A single Kiranti verb root generates <strong>hundreds</strong> of distinct inflected forms, and a speaker produces the right one without thinking.";
+  });
+  document.getElementById("presetall").addEventListener("click", function () {
+    pg.querySelectorAll(".cel").forEach(function (c) { c.classList.add("used"); });
+    used = 9; render();
+    document.getElementById("pgmsg").innerHTML =
+      "Nine cells for three persons. Press the other button and watch what happens when the real system is switched on.";
+  });
+  render();
+
+  /* ---------- Four kinds of we ---------- */
+  var WE = [
+    ["we two, including you", "Dual and inclusive. \u201cShall we two go?\u201d — said to the one person you are going with. In English this needs a gesture or a name to be clear. Here it is built into the word, and getting it wrong is a social error, not a grammatical one."],
+    ["we two, excluding you", "Dual and exclusive. \u201cThe two of us are going\u201d — meaning me and someone else, and not you. In English, saying this to someone's face requires tact. In Dumi, the grammar says it for you, which is either kinder or blunter depending on how you look at it."],
+    ["we all, including you", "Plural and inclusive. The form you would use to rally a group you are part of — \u201clet's all go.\u201d This is the \u201cwe\u201d of community decisions."],
+    ["we all, excluding you", "Plural and exclusive. \u201cOur family does it this way\u201d — and you are not in our family. One word that draws a boundary.<br><br><strong>Now the harder part:</strong> these four distinctions also show up <em>inside the verb</em>, which is one reason the paradigm on the last slide is so large."]
+  ];
+  var wemsg = document.getElementById("wemsg");
+  single("#wegrid .we", function (b) {
+    var W = WE[Number(b.dataset.w)];
+    wemsg.innerHTML = "<strong style='color:var(--terrace)'>" + W[0] + "</strong><br>" + W[1];
+  });
+
+  /* ---------- Numbers ---------- */
+  var NUMS = [
+    ["Fewer than 8 — van Driem, 2007",
+     "A specialist's estimate of people who speak Dumi <em>fully and fluently</em>, published in an encyclopedia of endangered languages. This is the strictest possible reading: elderly speakers with complete command of the verb system and the ritual register. By this measure Dumi is critically endangered."],
+    ["1,353 — the 2001 census",
+     "People who told the census that they speak Dumi, out of 5,757 who identified as Dumi Rai. A quarter of the ethnic group. This counts self-reported ability, which covers everything from fluency to a few remembered words."],
+    ["2,500 — Ethnologue, 2017",
+     "A reference-work estimate of native speakers, with a further thousand listed as second-language speakers. Compilers tend to work from census data and local reports, so this sits closer to the self-reported end."],
+    ["8,638 — the 2021 census",
+     "This is not a speaker figure at all. It is the number of people who identified as <strong>ethnically Dumi</strong> in the most recent national census. It gets quoted as a language figure surprisingly often — and the gap between this number and the first one on this list is the whole story of the module."]
+  ];
+  var nummsg = document.getElementById("nummsg");
+  document.querySelectorAll("#numrow .nr").forEach(function (r) {
+    r.addEventListener("click", function () {
+      document.querySelectorAll("#numrow .nr").forEach(function (x) { x.classList.remove("on"); });
+      r.classList.add("on");
+      var N = NUMS[Number(r.dataset.n)];
+      nummsg.innerHTML = "<strong style='color:var(--millet)'>" + N[0] + "</strong><br>" + N[1];
+    });
+  });
+
+  /* ---------- Who writes the grammar ---------- */
+  var WHO = [
+    ["The visiting linguist",
+     "George van Driem went to Khotang and spent around three months in a village, working with elderly speakers, and produced <em>A Grammar of Dumi</em> in 1993 — a detailed description published by a major academic press.<br><br><strong>Strengths:</strong> rigorous comparative training, a framework for describing what he found, and access to publication. Without this book, Dumi would be close to undescribed.<br><br><strong>Limits:</strong> three months. No access to the ritual register, to humour, to what people say when they argue. And the book is in English, published in Berlin, priced for university libraries — not for Khotang."],
+    ["The mother-tongue linguist",
+     "A generation of Rai scholars now hold doctorates in linguistics from Nepali universities and write grammars and dictionaries of their own languages — Dumi, Koyee, Chintang, Puma and others.<br><br><strong>Strengths:</strong> native intuitions, lifelong access to the community, the ability to notice what an outsider cannot hear, and a personal stake in the language continuing.<br><br><strong>Limits:</strong> funding, and the reality that academic careers reward international publication over village teaching materials.<br><br><strong>The real point:</strong> the best current work is collaborative, and the question \u201cwho owns the description of this language?\u201d now has a better answer than it did in 1993."]
+  ];
+  var whomsg = document.getElementById("whomsg");
+  single(".who", function (b) {
+    var W = WHO[Number(b.dataset.w)];
+    whomsg.innerHTML = W[1];
+  });
+
+  /* ---------- Timeline ---------- */
+  var EVENTS = [
+    ["The Kirat", "The Kirat peoples of the eastern hills appear in South Asian texts going back a very long way, and Kirat tradition holds that they ruled the Kathmandu Valley in antiquity. What is certain is that the Rai and Limbu communities of the eastern hills have been there for a very long time, speaking a cluster of closely related but mutually unintelligible Kiranti languages."],
+    ["Absorbed into Nepal", "In the 1770s the expanding Gorkha kingdom conquered the eastern hills and brought the Kirat territories into the new state of Nepal. Land arrangements, administration and later schooling all came in Nepali. The Kiranti languages continued at home for another two centuries — but their domain had been fixed."],
+    ["One nation, one language", "Under the Panchayat system from 1960 to 1990, national unity policy promoted Nepali as the single language of the nation. Education ran in Nepali; other languages had no official place. For a language like Dumi, with a few thousand speakers in hard hill country, that was decisive."],
+    ["The first grammar", "George van Driem published <em>A Grammar of Dumi</em> in 1993, based on fieldwork in Khotang. At that point he judged the number of fully fluent speakers to be very small indeed. It remains the foundational description — and it was written at what may have been the last moment it could have been."],
+    ["New constitutions", "Political change after 1990, the end of the monarchy, and the constitutions of 2007 and 2015 brought formal recognition of Nepal's linguistic diversity, including a right to education in the mother tongue. Ethnic organisations, including Kirat Rai bodies, became significant public actors."],
+    ["Shifting", "Surveys now classify Dumi as \u201cshifting\u201d — the stage at which the language is still spoken by adults but is no longer being learned by children. New grammars, dictionaries and teaching materials are being produced, several by Dumi and other Rai scholars. Whether that converts into child speakers is the open question."]
+  ];
+  var tlText = document.getElementById("tltext");
+  var evs = document.querySelectorAll("#tl .ev");
+  function setEvent(i) {
+    evs.forEach(function (e, k) { e.classList.toggle("on", k === i); });
+    tlText.innerHTML = '<strong style="color:var(--millet); font-size:1.2rem">' + EVENTS[i][0] + "</strong><br>" + EVENTS[i][1];
+  }
+  evs.forEach(function (e, i) { e.addEventListener("click", function () { setEvent(i); }); });
+  setEvent(0);
+})();
+</script>
+<script src="../assets/deck.js"></script>
+</body>
+</html>
